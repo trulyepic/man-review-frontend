@@ -29,7 +29,9 @@ const FilteredSeriesPage = () => {
     if (!seriesType || loading) return;
 
     setLoading(true);
-    controllerRef.current?.abort(); // cancel any previous call
+    setPage(pageToLoad); // ✅ update page early
+
+    controllerRef.current?.abort();
     controllerRef.current = new AbortController();
 
     try {
@@ -39,18 +41,13 @@ const FilteredSeriesPage = () => {
         seriesType.toUpperCase()
       );
 
-      const filtered = all.filter((s) => s.type === seriesType.toUpperCase());
+      const ids = new Set(items.map((i) => i.id));
+      const unique = all.filter((s) => !ids.has(s.id));
 
-      setItems((prev) => {
-        const ids = new Set(prev.map((i) => i.id));
-        const unique = filtered.filter((s) => !ids.has(s.id));
-        return [...prev, ...unique];
-      });
+      setItems((prev) => [...prev, ...unique]);
 
-      if (filtered.length < PAGE_SIZE) {
+      if (all.length < PAGE_SIZE) {
         setHasMore(false);
-      } else {
-        setPage((prev) => prev + 1);
       }
     } catch (err: any) {
       if (err.name !== "AbortError") {
@@ -92,7 +89,7 @@ const FilteredSeriesPage = () => {
       <div className="w-full max-w-7xl py-6">
         <InfiniteScroll
           dataLength={items.length}
-          next={() => loadSeries(page)}
+          next={() => loadSeries(page + 1)}
           hasMore={hasMore}
           loader={<p className="text-center py-6 text-gray-500">Loading...</p>}
           endMessage={
