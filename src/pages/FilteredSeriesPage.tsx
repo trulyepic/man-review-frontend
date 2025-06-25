@@ -1,8 +1,9 @@
 import { useParams } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   fetchRankedSeriesPaginated,
   deleteSeries,
+  searchSeries,
   type RankedSeries,
   type Series,
 } from "../api/manApi";
@@ -10,11 +11,13 @@ import ManCard from "../components/ManCard";
 import { useUser } from "../login/UserContext";
 import EditSeriesModal from "../components/EditSeriesModal";
 import InfiniteScroll from "react-infinite-scroll-component";
+import { useSearch } from "../components/SearchContext";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 25;
 
 const FilteredSeriesPage = () => {
   const { seriesType } = useParams();
+  const { searchTerm } = useSearch();
   const [items, setItems] = useState<RankedSeries[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -26,10 +29,11 @@ const FilteredSeriesPage = () => {
   const isAdmin = user?.role === "ADMIN";
 
   const loadSeries = async (pageToLoad: number) => {
-    if (!seriesType || loading) return;
+    if (!seriesType || loading || !hasMore) return;
+
+    console.log(`[loadSeries] Fetching page ${pageToLoad}...`);
 
     setLoading(true);
-    setPage(pageToLoad); // ✅ update page early
 
     controllerRef.current?.abort();
     controllerRef.current = new AbortController();
@@ -38,15 +42,21 @@ const FilteredSeriesPage = () => {
       const all = await fetchRankedSeriesPaginated(
         pageToLoad,
         PAGE_SIZE,
-        seriesType.toUpperCase()
+        seriesType.toUpperCase(),
+        controllerRef.current.signal
       );
+
+      console.log(`[loadSeries] Received ${all.length} items from API`);
 
       const ids = new Set(items.map((i) => i.id));
       const unique = all.filter((s) => !ids.has(s.id));
 
+      console.log(`[loadSeries] ${unique.length} new unique items`);
+
       setItems((prev) => [...prev, ...unique]);
 
       if (all.length < PAGE_SIZE) {
+        console.log("[loadSeries] End of data reached.");
         setHasMore(false);
       }
     } catch (err: any) {
@@ -59,19 +69,119 @@ const FilteredSeriesPage = () => {
     }
   };
 
-  // Reset state when type changes
+  // 🔁 Reset and load default items when type changes
   useEffect(() => {
     if (!seriesType) return;
+
+    // Cancel any in-flight request
+    controllerRef.current?.abort();
 
     setItems([]);
     setPage(1);
     setHasMore(true);
 
-    // Delay call to next tick to prevent double render issues
-    setTimeout(() => {
-      loadSeries(1);
-    }, 0);
+    const controller = new AbortController();
+    controllerRef.current = controller;
+
+    const loadInitial = async () => {
+      try {
+        setLoading(true);
+        const all = await fetchRankedSeriesPaginated(
+          1,
+          PAGE_SIZE,
+          seriesType.toUpperCase(),
+          controller.signal
+        );
+
+        setItems(all);
+        setPage(1);
+        if (all.length < PAGE_SIZE) {
+          setHasMore(false);
+        }
+      } catch (err: any) {
+        if (err.name !== "AbortError") {
+          console.error("Initial load failed:", err);
+          alert("Failed to load series");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (!searchTerm.trim()) {
+      loadInitial();
+    }
+
+    // Cleanup on unmount or seriesType change
+    return () => {
+      controller.abort();
+    };
   }, [seriesType]);
+
+  // 🔍 Watch for search term changes
+  useEffect(() => {
+    if (!seriesType) return;
+
+    const controller = new AbortController();
+    controllerRef.current?.abort();
+    controllerRef.current = controller;
+
+    const fetchSearch = async () => {
+      try {
+        setLoading(true);
+        const all = await searchSeries(searchTerm.trim());
+        const filtered = all.filter(
+          (s) => s.type.toUpperCase() === seriesType.toUpperCase()
+        );
+        setItems(filtered);
+        setHasMore(false); // disable infinite scroll for search
+      } catch (err) {
+        console.error("Search failed:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const resetToDefault = async () => {
+      setItems([]);
+      setPage(1);
+      setHasMore(true);
+      try {
+        const all = await fetchRankedSeriesPaginated(
+          1,
+          PAGE_SIZE,
+          seriesType.toUpperCase(),
+          controller.signal
+        );
+        setItems(all);
+        if (all.length < PAGE_SIZE) setHasMore(false);
+      } catch (err: any) {
+        if (err.name !== "AbortError") {
+          console.error("Reset fetch failed:", err);
+          alert("Failed to load series");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (searchTerm.trim()) {
+      fetchSearch();
+    } else {
+      resetToDefault();
+    }
+
+    return () => {
+      controller.abort();
+    };
+  }, [searchTerm, seriesType]);
+
+  useEffect(() => {
+    if (!searchTerm.trim() && page > 1) {
+      console.log(`[useEffect:page] Triggering loadSeries(${page})`);
+      loadSeries(page);
+    }
+  }, [page]);
 
   const handleDelete = async (id: number) => {
     if (!confirm("Are you sure you want to delete this series?")) return;
@@ -89,8 +199,9 @@ const FilteredSeriesPage = () => {
       <div className="w-full max-w-7xl py-6">
         <InfiniteScroll
           dataLength={items.length}
-          next={() => loadSeries(page + 1)}
-          hasMore={hasMore}
+          //   next={() => loadSeries(page + 1)}
+          next={() => setPage((prev) => prev + 1)}
+          hasMore={!searchTerm && hasMore}
           loader={<p className="text-center py-6 text-gray-500">Loading...</p>}
           endMessage={
             <p className="text-center py-6 text-gray-400">
