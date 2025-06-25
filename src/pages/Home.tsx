@@ -5,13 +5,16 @@ import EditSeriesModal from "../components/EditSeriesModal";
 import {
   deleteSeries,
   fetchRankedSeriesPaginated,
+  searchSeries,
   type RankedSeries,
   type Series,
 } from "../api/manApi";
 import { useUser } from "../login/UserContext";
 import InfiniteScroll from "react-infinite-scroll-component";
+import { useSearchParams } from "react-router-dom";
+import { useSearch } from "../components/SearchContext";
 
-const PAGE_SIZE = 24;
+const PAGE_SIZE = 25;
 
 const Home = () => {
   const [showModal, setShowModal] = useState(false);
@@ -20,12 +23,15 @@ const Home = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get("search") || "";
+  const { searchTerm } = useSearch();
 
   const { user } = useUser();
   const isAdmin = user?.role === "ADMIN";
 
   const loadSeries = async () => {
-    if (loading || !hasMore) return;
+    if (!hasMore) return;
     setLoading(true);
 
     try {
@@ -41,24 +47,53 @@ const Home = () => {
         setHasMore(false);
       }
     } catch (err) {
-      console.error("Failed to fetch series:", err);
-      alert("Failed to load series. Please try again later.");
+      console.error("Failed to fetch ranked series:", err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (page === 1) {
-      // Don't run twice for initial render
-      loadSeries();
-    }
-  }, []);
+    const fetchData = async () => {
+      if (searchTerm.trim()) {
+        try {
+          setLoading(true);
+          const results = await searchSeries(searchTerm);
+          setItems(results);
+          setHasMore(false);
+        } catch (err) {
+          console.error("Search failed:", err);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setLoading(true);
+        setHasMore(true);
+        setItems([]);
+        setPage(1);
+
+        try {
+          const results = await fetchRankedSeriesPaginated(1, PAGE_SIZE);
+          setItems(results);
+          if (results.length < PAGE_SIZE) {
+            setHasMore(false);
+          }
+        } catch (err) {
+          console.error("Failed to fetch default ranked series:", err);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchData();
+  }, [searchTerm]);
 
   useEffect(() => {
-    if (page === 1) return; // skip initial, already handled above
-    loadSeries();
-  }, [page]);
+    if (!searchTerm) {
+      loadSeries();
+    }
+  }, [page, searchTerm]);
 
   const handleDelete = async (id: number) => {
     if (!confirm("Are you sure you want to delete this series?")) return;
@@ -89,7 +124,7 @@ const Home = () => {
         <InfiniteScroll
           dataLength={items.length}
           next={() => setPage((prev) => prev + 1)}
-          hasMore={hasMore}
+          hasMore={!searchTerm && hasMore}
           loader={<p className="text-center py-6 text-gray-500">Loading...</p>}
           endMessage={
             <p className="text-center py-6 text-gray-400">

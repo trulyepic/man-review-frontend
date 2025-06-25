@@ -199,11 +199,13 @@ export const fetchRankedSeries = async (): Promise<RankedSeries[]> => {
 export const fetchRankedSeriesPaginated = async (
   page: number,
   size: number,
-  type?: string
+  type?: string,
+  signal?: AbortSignal // ✅ Optional
 ): Promise<RankedSeries[]> => {
   const typeQuery = type ? `&type=${type}` : "";
   const response = await fetch(
-    `${BASE_URL}/series/rankings?page=${page}&page_size=${size}${typeQuery}`
+    `${BASE_URL}/series/rankings?page=${page}&page_size=${size}${typeQuery}`,
+    { signal } // ✅ Safe even if signal is undefined
   );
   if (!response.ok) throw new Error("Failed to fetch ranked series");
   return await response.json();
@@ -231,6 +233,14 @@ export const editSeries = async (
     throw new Error("Failed to update series");
   }
 
+  return await response.json();
+};
+
+export const searchSeries = async (query: string): Promise<RankedSeries[]> => {
+  const response = await fetch(
+    `${BASE_URL}/series/search?query=${encodeURIComponent(query)}`
+  );
+  if (!response.ok) throw new Error("Search failed");
   return await response.json();
 };
 
