@@ -146,14 +146,15 @@ const SeriesDetailPage = () => {
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-4">
         {/* Left Side: Title + Info */}
         <div className="flex-1 min-w-0">
-          <h1 className="text-3xl font-bold mb-1 truncate" title={series.title}>
+          {/* <h1 className="text-3xl font-bold mb-1 truncate" title={series.title}> */}
+          <h1 className="text-3xl font-bold mb-1 break-words whitespace-normal">
             {series.title}
           </h1>
           <div className="flex flex-wrap gap-x-2 gap-y-1 text-sm text-gray-600 capitalize">
             <span>{series.type}</span>
             <span>|</span>
             <span>{series.genre}</span>
-            {seriesDetail?.author && (
+            {/* {seriesDetail?.author && (
               <>
                 <span>|</span>
                 <span
@@ -171,6 +172,22 @@ const SeriesDetailPage = () => {
                   className="text-gray-700 truncate max-w-[10rem]"
                   title={seriesDetail.artist}
                 >
+                  <strong>Artist:</strong> {seriesDetail.artist}
+                </span>
+              </>
+            )} */}
+            {seriesDetail?.author && (
+              <>
+                <span>|</span>
+                <span className="text-gray-700 whitespace-normal break-words">
+                  <strong>Author:</strong> {seriesDetail.author}
+                </span>
+              </>
+            )}
+            {seriesDetail?.artist && (
+              <>
+                <span>|</span>
+                <span className="text-gray-700 whitespace-normal break-words">
                   <strong>Artist:</strong> {seriesDetail.artist}
                 </span>
               </>
