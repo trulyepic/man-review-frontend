@@ -3,6 +3,9 @@ import { useParams, useLocation } from "react-router-dom";
 import SeriesDetail from "../components/SeriesDetail";
 import AddSeriesDetailModal from "../components/AddSeriesDetailModal";
 import { getCurrentUser, getSeriesDetailById } from "../api/manApi";
+import { UserIcon } from "lucide-react";
+import { UsersIcon } from "@heroicons/react/24/outline";
+import { UserCircleIcon, UserPlusIcon } from "@heroicons/react/24/solid";
 // import { getDominantColorFromImage } from "../util/getDominantColor";
 
 const dummyData = {
@@ -258,14 +261,21 @@ const RatingCard = ({
     </p>
     {count !== undefined && (
       <div className="absolute bottom-2 right-3 text-xs text-gray-500 flex items-center gap-1">
-        <svg
+        {/* <svg
           xmlns="http://www.w3.org/2000/svg"
           className="w-4 h-4 text-blue-300"
           viewBox="0 0 24 24"
           fill="currentColor"
         >
           <path d="M12 12c2.21 0 4-1.79 4-4S14.21 4 12 4 8 5.79 8 8s1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-        </svg>
+        </svg> */}
+
+        {count > 1 ? (
+          <UsersIcon className="w-5 h-5 text-blue-400" />
+        ) : (
+          <UserIcon className="w-5 h-5 text-blue-400" />
+        )}
+
         {count}
       </div>
     )}

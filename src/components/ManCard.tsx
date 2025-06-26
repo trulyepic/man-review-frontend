@@ -5,6 +5,7 @@ import {
 } from "@heroicons/react/24/solid";
 import { Palette, Pencil } from "lucide-react";
 import { Link } from "react-router-dom";
+import UserIcon from "./icons/UserIcon";
 
 type Props = {
   id: number;
@@ -116,7 +117,15 @@ const ManCard = ({
             </p>
           )}
           <div className="flex items-center space-x-1 text-sm text-gray-700 mt-1">
-            <TrophyIcon className="w-4 h-4 text-blue-300" />
+            <UserIcon className="w-5 h-5 text-blue-400" />
+            {/* <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-4 h-4 text-blue-300"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M12 12c2.21 0 4-1.79 4-4S14.21 4 12 4 8 5.79 8 8s1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+            </svg> */}
             <span>{votes.toLocaleString()}</span>
           </div>
         </div>
