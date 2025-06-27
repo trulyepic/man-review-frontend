@@ -3,7 +3,7 @@ import {
   TrophyIcon,
   PencilSquareIcon,
 } from "@heroicons/react/24/solid";
-import { Palette, Pencil } from "lucide-react";
+import { Palette, Pencil, RatIcon, StarIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import UserIcon from "./icons/UserIcon";
 
@@ -20,6 +20,7 @@ type Props = {
   isAdmin: boolean;
   author?: string;
   artist?: string;
+  avgScore?: number;
 };
 
 const ManCard = ({
@@ -35,9 +36,10 @@ const ManCard = ({
   isAdmin,
   author,
   artist,
+  avgScore,
 }: Props) => {
   // console.log("ManCard - Title:", title, "| Rank:", rank);
-
+  console.log("avgScore:", avgScore);
   return (
     <div className="relative w-40">
       {/* Rank badge */}
@@ -87,7 +89,36 @@ const ManCard = ({
           >
             {title}
           </h3>
-          <p className="text-xs text-gray-500 capitalize">{type}</p>
+
+          {/* {avgScore !== undefined && avgScore !== null && (
+            <div className="absolute top-2 right-2 bg-white/80 text-blue-600 text-sm font-semibold px-2 py-1 rounded shadow-md z-10">
+              {avgScore.toFixed(1)}
+            </div>
+          )} */}
+
+          {/* <p className="text-xs text-gray-500 capitalize">{type}</p> */}
+          <p className="text-xs text-gray-500 capitalize flex items-center gap-2.5">
+            {type}
+            {avgScore !== undefined && avgScore !== null && (
+              <span
+                className={`flex items-center gap-0.5 font-medium ${
+                  avgScore >= 9
+                    ? "text-green-600"
+                    : avgScore >= 7.5
+                    ? "text-blue-500"
+                    : avgScore >= 5
+                    ? "text-yellow-500"
+                    : avgScore >= 3
+                    ? "text-orange-400"
+                    : "text-red-500"
+                }`}
+              >
+                <StarIcon className="w-3.5 h-3.5" strokeWidth={2.5} />
+                {avgScore.toFixed(1)}
+              </span>
+            )}
+          </p>
+
           {author && (
             <p
               className="text-sm text-gray-600 flex items-center gap-1"

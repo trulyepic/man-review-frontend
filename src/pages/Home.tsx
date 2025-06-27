@@ -145,6 +145,7 @@ const Home = () => {
                 type={item.type}
                 author={item.author}
                 artist={item.artist}
+                avgScore={item.final_score}
                 onDelete={handleDelete}
                 isAdmin={isAdmin}
                 onEdit={() => setEditItem(item)}
