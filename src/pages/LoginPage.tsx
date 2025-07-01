@@ -12,8 +12,8 @@ const LoginPage = () => {
   const handleLogin = async () => {
     try {
       const data = await login({ username, password });
-      setUser(data.user); // sets context
-      localStorage.setItem("token", data.access_token); // optional: move to login()
+      setUser(data.user);
+      localStorage.setItem("token", data.access_token);
       localStorage.setItem("user", JSON.stringify(data.user));
       navigate("/");
     } catch (err) {
@@ -23,7 +23,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-100">
+    <div className="flex-grow bg-gray-100 flex items-center justify-center min-h-[calc(100vh-100px)] px-4">
       <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
         <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
         <input
@@ -31,14 +31,14 @@ const LoginPage = () => {
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className="w-full p-2 mb-4 border rounded"
+          className="w-full p-2 mb-4 border rounded bg-blue-50"
         />
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-2 mb-6 border rounded"
+          className="w-full p-2 mb-6 border rounded bg-blue-50"
         />
         <button
           onClick={handleLogin}
