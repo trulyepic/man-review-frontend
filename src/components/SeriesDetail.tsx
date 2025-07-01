@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { voteOnSeries } from "../api/manApi";
 import { useUser } from "../login/UserContext";
 import { Check } from "lucide-react";
+import type { SeriesDetailData } from "../types/types";
 
 type Category =
   | "Story"
@@ -10,6 +11,30 @@ type Category =
   | "Art"
   | "Drama / Fighting";
 
+// type Props = {
+//   series: {
+//     id: number;
+//     title: string;
+//     genre: string;
+//     type: string;
+//     description: string;
+//   };
+//   updateRating: (category: string, avg: number) => void;
+//   seriesDetail?: {
+//     story_total: number;
+//     story_count: number;
+//     characters_total: number;
+//     characters_count: number;
+//     worldbuilding_total: number;
+//     worldbuilding_count: number;
+//     art_total: number;
+//     art_count: number;
+//     drama_or_fight_total: number;
+//     drama_or_fight_count: number;
+//     voted_categories?: string[];
+//     vote_scores?: Record<string, number>;
+//   } | null;
+// };
 type Props = {
   series: {
     id: number;
@@ -19,20 +44,7 @@ type Props = {
     description: string;
   };
   updateRating: (category: string, avg: number) => void;
-  seriesDetail?: {
-    story_total: number;
-    story_count: number;
-    characters_total: number;
-    characters_count: number;
-    worldbuilding_total: number;
-    worldbuilding_count: number;
-    art_total: number;
-    art_count: number;
-    drama_or_fight_total: number;
-    drama_or_fight_count: number;
-    voted_categories?: string[];
-    vote_scores?: Record<string, number>;
-  } | null;
+  seriesDetail?: SeriesDetailData | null;
 };
 
 const categories: Category[] = [
@@ -64,20 +76,28 @@ const SeriesDetail = ({ series, updateRating, seriesDetail }: Props) => {
   const { user } = useUser();
   const isLoggedIn = !!user;
 
-  const [totals, setTotals] = useState<
-    Record<Category, { total: number; count: number }>
-  >(
+  // const [totals, setTotals] = useState<
+  //   Record<Category, { total: number; count: number }>
+  // >(
+  //   () =>
+  //     Object.fromEntries(
+  //       categories.map((cat) => [cat, { total: 0, count: 0 }])
+  //     ) as Record<Category, { total: number; count: number }>
+  // );
+  type TotalsRecord = Record<Category, { total: number; count: number }>;
+
+  const [, setTotals] = useState<TotalsRecord>(
     () =>
       Object.fromEntries(
         categories.map((cat) => [cat, { total: 0, count: 0 }])
-      ) as Record<Category, { total: number; count: number }>
+      ) as TotalsRecord
   );
 
   // Sync backend data after load
   useEffect(() => {
     if (!seriesDetail) return;
 
-    const initTotals: typeof totals = {
+    const initTotals: TotalsRecord = {
       Story: {
         total: seriesDetail.story_total,
         count: seriesDetail.story_count,

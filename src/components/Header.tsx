@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useUser } from "../login/UserContext";
 import { useState } from "react";
 import { useSearch } from "./SearchContext";
+import myLogo from "../images/logo/myLogo.png";
 
 const Header = () => {
   const { user, setUser } = useUser();
@@ -36,6 +37,7 @@ const Header = () => {
           <NavLink to="/" className="text-blue-400 text-xl font-bold -ml-12">
             Toon Ranks
           </NavLink>
+
           <NavLink
             to="/"
             className={({ isActive }) =>
@@ -68,6 +70,22 @@ const Header = () => {
           >
             Manhua
           </NavLink>
+
+          {/* External site: img collections */}
+          <a
+            href="https://ex-hibt.com/collection-homepage/59"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-sm font-medium text-gray-700 hover:text-blue-500"
+            title="Visit img collections"
+          >
+            <img
+              src={myLogo}
+              alt="img collections"
+              className="w-5 h-5 object-contain"
+            />
+            Ex-hibt Collections
+          </a>
         </div>
 
         {/* Right side */}

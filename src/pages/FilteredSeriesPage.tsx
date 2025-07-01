@@ -12,6 +12,7 @@ import { useUser } from "../login/UserContext";
 import EditSeriesModal from "../components/EditSeriesModal";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useSearch } from "../components/SearchContext";
+import ShimmerLoader from "../components/ShimmerLoader";
 
 const PAGE_SIZE = 25;
 
@@ -59,8 +60,8 @@ const FilteredSeriesPage = () => {
         console.log("[loadSeries] End of data reached.");
         setHasMore(false);
       }
-    } catch (err: any) {
-      if (err.name !== "AbortError") {
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name !== "AbortError") {
         console.error("Failed to fetch series:", err);
         alert("Failed to load series");
       }
@@ -98,9 +99,9 @@ const FilteredSeriesPage = () => {
         if (all.length < PAGE_SIZE) {
           setHasMore(false);
         }
-      } catch (err: any) {
-        if (err.name !== "AbortError") {
-          console.error("Initial load failed:", err);
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name !== "AbortError") {
+          console.error("Failed to fetch series:", err);
           alert("Failed to load series");
         }
       } finally {
@@ -155,9 +156,9 @@ const FilteredSeriesPage = () => {
         );
         setItems(all);
         if (all.length < PAGE_SIZE) setHasMore(false);
-      } catch (err: any) {
-        if (err.name !== "AbortError") {
-          console.error("Reset fetch failed:", err);
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name !== "AbortError") {
+          console.error("Failed to fetch series:", err);
           alert("Failed to load series");
         }
       } finally {
@@ -199,36 +200,45 @@ const FilteredSeriesPage = () => {
       <div className="w-full max-w-7xl py-6">
         <InfiniteScroll
           dataLength={items.length}
-          //   next={() => loadSeries(page + 1)}
           next={() => setPage((prev) => prev + 1)}
           hasMore={!searchTerm && hasMore}
-          loader={<p className="text-center py-6 text-gray-500">Loading...</p>}
+          loader={
+            items.length > 0 ? (
+              <p className="text-center py-6 text-gray-500">Loading...</p>
+            ) : null
+          }
           endMessage={
-            <p className="text-center py-6 text-gray-400">
-              🎉 You’ve seen everything.
-            </p>
+            !loading && items.length > 0 ? (
+              <p className="text-center py-6 text-gray-400">
+                🎉 You’ve seen everything.
+              </p>
+            ) : null
           }
         >
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {items.map((item) => (
-              <ManCard
-                key={item.id}
-                id={item.id}
-                rank={item.rank ?? "-"}
-                title={item.title}
-                genre={item.genre}
-                votes={item.vote_count}
-                coverUrl={item.cover_url}
-                type={item.type}
-                author={item.author}
-                artist={item.artist}
-                avgScore={item.final_score}
-                onDelete={handleDelete}
-                isAdmin={isAdmin}
-                onEdit={() => setEditItem(item)}
-              />
-            ))}
-          </div>
+          {items.length === 0 && loading ? (
+            <ShimmerLoader />
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {items.map((item) => (
+                <ManCard
+                  key={item.id}
+                  id={item.id}
+                  rank={item.rank ?? "-"}
+                  title={item.title}
+                  genre={item.genre}
+                  votes={item.vote_count}
+                  coverUrl={item.cover_url}
+                  type={item.type}
+                  author={item.author}
+                  artist={item.artist}
+                  avgScore={item.final_score}
+                  onDelete={handleDelete}
+                  isAdmin={isAdmin}
+                  onEdit={() => setEditItem(item)}
+                />
+              ))}
+            </div>
+          )}
         </InfiniteScroll>
 
         {editItem && (

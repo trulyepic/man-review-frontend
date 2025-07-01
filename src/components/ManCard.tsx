@@ -1,9 +1,5 @@
-import {
-  TrashIcon,
-  TrophyIcon,
-  PencilSquareIcon,
-} from "@heroicons/react/24/solid";
-import { Palette, Pencil, RatIcon, StarIcon } from "lucide-react";
+import { TrashIcon, PencilSquareIcon } from "@heroicons/react/24/solid";
+import { Palette, Pencil, StarIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import UserIcon from "./icons/UserIcon";
 

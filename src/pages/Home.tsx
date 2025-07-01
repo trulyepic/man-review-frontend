@@ -11,8 +11,8 @@ import {
 } from "../api/manApi";
 import { useUser } from "../login/UserContext";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { useSearchParams } from "react-router-dom";
 import { useSearch } from "../components/SearchContext";
+import ShimmerLoader from "../components/ShimmerLoader";
 
 const PAGE_SIZE = 25;
 
@@ -23,10 +23,8 @@ const Home = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [searchParams] = useSearchParams();
-  const searchQuery = searchParams.get("search") || "";
-  const { searchTerm } = useSearch();
 
+  const { searchTerm } = useSearch();
   const { user } = useUser();
   const isAdmin = user?.role === "ADMIN";
 
@@ -36,16 +34,13 @@ const Home = () => {
 
     try {
       const newItems = await fetchRankedSeriesPaginated(page, PAGE_SIZE);
-
       setItems((prev) => {
         const newIds = new Set(prev.map((item) => item.id));
         const filtered = newItems.filter((item) => !newIds.has(item.id));
         return [...prev, ...filtered];
       });
 
-      if (newItems.length < PAGE_SIZE) {
-        setHasMore(false);
-      }
+      if (newItems.length < PAGE_SIZE) setHasMore(false);
     } catch (err) {
       console.error("Failed to fetch ranked series:", err);
     } finally {
@@ -68,16 +63,14 @@ const Home = () => {
         }
       } else {
         setLoading(true);
-        setHasMore(true);
         setItems([]);
         setPage(1);
+        setHasMore(true);
 
         try {
           const results = await fetchRankedSeriesPaginated(1, PAGE_SIZE);
           setItems(results);
-          if (results.length < PAGE_SIZE) {
-            setHasMore(false);
-          }
+          if (results.length < PAGE_SIZE) setHasMore(false);
         } catch (err) {
           console.error("Failed to fetch default ranked series:", err);
         } finally {
@@ -90,9 +83,7 @@ const Home = () => {
   }, [searchTerm]);
 
   useEffect(() => {
-    if (!searchTerm) {
-      loadSeries();
-    }
+    if (!searchTerm) loadSeries();
   }, [page, searchTerm]);
 
   const handleDelete = async (id: number) => {
@@ -114,7 +105,7 @@ const Home = () => {
           <div className="flex justify-end mb-4">
             <button
               onClick={() => setShowModal(true)}
-              className="px-5 py-2.5 rounded-md font-medium text-gray-800 bg-white/70 backdrop-blur-sm border border-gray-300 shadow-md hover:bg-white hover:shadow-lg hover:text-black transition-all duration-200 "
+              className="px-5 py-2.5 rounded-md font-medium text-gray-800 bg-white/70 backdrop-blur-sm border border-gray-300 shadow-md hover:bg-white hover:shadow-lg hover:text-black transition-all duration-200"
             >
               + Add Series
             </button>
@@ -132,26 +123,30 @@ const Home = () => {
             </p>
           }
         >
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {items.map((item) => (
-              <ManCard
-                key={item.id}
-                id={item.id}
-                rank={item.rank ?? "-"}
-                title={item.title}
-                genre={item.genre}
-                votes={item.vote_count}
-                coverUrl={item.cover_url}
-                type={item.type}
-                author={item.author}
-                artist={item.artist}
-                avgScore={item.final_score}
-                onDelete={handleDelete}
-                isAdmin={isAdmin}
-                onEdit={() => setEditItem(item)}
-              />
-            ))}
-          </div>
+          {items.length === 0 && loading ? (
+            <ShimmerLoader />
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {items.map((item) => (
+                <ManCard
+                  key={item.id}
+                  id={item.id}
+                  rank={item.rank ?? "-"}
+                  title={item.title}
+                  genre={item.genre}
+                  votes={item.vote_count}
+                  coverUrl={item.cover_url}
+                  type={item.type}
+                  author={item.author}
+                  artist={item.artist}
+                  avgScore={item.final_score}
+                  onDelete={handleDelete}
+                  isAdmin={isAdmin}
+                  onEdit={() => setEditItem(item)}
+                />
+              ))}
+            </div>
+          )}
         </InfiniteScroll>
 
         {showModal && <AddSeriesModal onClose={() => setShowModal(false)} />}
