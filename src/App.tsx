@@ -7,19 +7,32 @@ import SignupPage from "./pages/SignupPage";
 import SeriesDetailPage from "./pages/SeriesDetailPage";
 import FilteredSeriesPage from "./pages/FilteredSeriesPage";
 import { SearchProvider } from "./components/SearchContext";
+import Footer from "./components/Footer";
+import ContactPage from "./pages/ContactPage";
+import AboutPage from "./pages/AboutPage";
 
 function App() {
   return (
     <SearchProvider>
       <Router>
-        <Header />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
-          <Route path="/series/:id" element={<SeriesDetailPage />} />
-          <Route path="/type/:seriesType" element={<FilteredSeriesPage />} />
-        </Routes>
+        <div className="flex flex-col min-h-screen">
+          <Header />
+          <main className="flex-grow">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+              <Route path="/series/:id" element={<SeriesDetailPage />} />
+              <Route path="/contact" element={<ContactPage />} />
+              <Route
+                path="/type/:seriesType"
+                element={<FilteredSeriesPage />}
+              />
+              <Route path="/about" element={<AboutPage />} />
+            </Routes>
+          </main>
+          <Footer />
+        </div>
       </Router>
     </SearchProvider>
   );

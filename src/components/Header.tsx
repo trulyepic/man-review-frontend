@@ -34,7 +34,7 @@ const Header = () => {
         {/* Left side */}
         <div className="flex items-center space-x-6 text-lg font-semibold">
           <NavLink to="/" className="text-blue-400 text-xl font-bold -ml-12">
-            ManScope
+            Toon Ranks
           </NavLink>
           <NavLink
             to="/"
