@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { TrashIcon, PencilSquareIcon } from "@heroicons/react/24/solid";
 import { Palette, Pencil, StarIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import UserIcon from "./icons/UserIcon";
+import ShimmerBox from "./ShimmerBox";
 
 type Props = {
   id: number;
@@ -34,8 +36,8 @@ const ManCard = ({
   artist,
   avgScore,
 }: Props) => {
-  // console.log("ManCard - Title:", title, "| Rank:", rank);
-  console.log("avgScore:", avgScore);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
   return (
     <div className="relative w-40">
       {/* Rank badge */}
@@ -65,37 +67,29 @@ const ManCard = ({
         </div>
       )}
 
-      {/* Cover image */}
-      <Link
-        to={`/series/${id}`}
-        state={{ title, genre, type }}
-        className="block "
-      >
-        <img
-          src={coverUrl}
-          alt={title}
-          className="rounded-md shadow transition-transform duration-300 ease-in-out hover:scale-105"
-        />
+      {/* Card image and content */}
+      <Link to={`/series/${id}`} state={{ title, genre, type }} className="block">
+        <div className="relative w-full">
+          {!imageLoaded && <ShimmerBox className="w-full h-60" />}
+
+          <img
+            src={coverUrl}
+            alt={title}
+            onLoad={() => setImageLoaded(true)}
+            className={`rounded-md shadow transition-opacity duration-500 w-full object-cover ${
+              imageLoaded ? "opacity-100" : "opacity-0 absolute top-0 left-0"
+            }`}
+          />
+        </div>
 
         {/* Content */}
         <div className="mt-2 space-y-0.5">
-          <h3
-            className="text-base font-semibold truncate w-full cursor-pointer"
-            title={title}
-          >
+          <h3 className="text-base font-semibold truncate w-full" title={title}>
             {title}
           </h3>
-
-          {/* {avgScore !== undefined && avgScore !== null && (
-            <div className="absolute top-2 right-2 bg-white/80 text-blue-600 text-sm font-semibold px-2 py-1 rounded shadow-md z-10">
-              {avgScore.toFixed(1)}
-            </div>
-          )} */}
-
-          {/* <p className="text-xs text-gray-500 capitalize">{type}</p> */}
           <p className="text-xs text-gray-500 capitalize flex items-center gap-2.5">
             {type}
-            {avgScore !== undefined && avgScore !== null && (
+            {avgScore !== undefined && (
               <span
                 className={`flex items-center gap-0.5 font-medium ${
                   avgScore >= 9
@@ -116,43 +110,23 @@ const ManCard = ({
           </p>
 
           {author && (
-            <p
-              className="text-sm text-gray-600 flex items-center gap-1"
-              title={author}
-            >
+            <p className="text-sm text-gray-600 flex items-center gap-1" title={author}>
               <Pencil className="w-4 h-4 text-gray-700 flex-shrink-0" />
-              <span
-                className="truncate"
-                style={{ maxWidth: "calc(100% - 1.25rem)" }}
-              >
+              <span className="truncate" style={{ maxWidth: "calc(100% - 1.25rem)" }}>
                 {author}
               </span>
             </p>
           )}
           {artist && (
-            <p
-              className="text-sm text-gray-600 flex items-center gap-1"
-              title={artist}
-            >
+            <p className="text-sm text-gray-600 flex items-center gap-1" title={artist}>
               <Palette className="w-4 h-4 text-gray-700 flex-shrink-0" />
-              <span
-                className="truncate"
-                style={{ maxWidth: "calc(100% - 1.25rem)" }}
-              >
+              <span className="truncate" style={{ maxWidth: "calc(100% - 1.25rem)" }}>
                 {artist}
               </span>
             </p>
           )}
           <div className="flex items-center space-x-1 text-sm text-gray-700 mt-1">
             <UserIcon className="w-5 h-5 text-blue-400" />
-            {/* <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-4 h-4 text-blue-300"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
-              <path d="M12 12c2.21 0 4-1.79 4-4S14.21 4 12 4 8 5.79 8 8s1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-            </svg> */}
             <span>{votes.toLocaleString()}</span>
           </div>
         </div>

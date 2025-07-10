@@ -116,7 +116,14 @@ const Home = () => {
           dataLength={items.length}
           next={() => setPage((prev) => prev + 1)}
           hasMore={!searchTerm && hasMore}
-          loader={<p className="text-center py-6 text-gray-500">Loading...</p>}
+          // loader={<p className="text-center py-6 text-gray-500">Loading...</p>}
+          loader={
+                items.length > 0 ? (
+                  <div className="flex justify-center py-6">
+                    <div className="w-6 h-6 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : null
+              }
           endMessage={
             <p className="text-center py-6 text-gray-400">
               🎉 You’ve seen everything.
