@@ -1,0 +1,19 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - echo "VITE_APP_BASE_URL=https://man-review-backend-production.up.railway.app" >> .env
+    build:
+      commands:
+        - npm install
+        - npm run build
+  artifacts:
+    baseDirectory: dist
+    files:
+      - "**/*"
+      - public/sitemap.xml
+      - public/robots.txt
+  cache:
+    paths:
+      - node_modules/**/*
