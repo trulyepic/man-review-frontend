@@ -162,9 +162,9 @@ export const createSeriesDetail = async (
 
 export const getSeriesDetailById = async (seriesId: number) => {
   const token = localStorage.getItem("token");
-  const res = await fetch(`http://localhost:8000/series-details/${seriesId}`, {
+  const res = await fetch(`${BASE_URL}/series-details/${seriesId}`, {
     headers: {
-      Authorization: `Bearer ${token}`, // This was missing before
+      Authorization: `Bearer ${token}`,
     },
   });
   if (!res.ok) throw new Error("Failed to fetch series detail");
