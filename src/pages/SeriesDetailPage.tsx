@@ -131,12 +131,13 @@ const SeriesDetailPage = () => {
             className="w-full rounded-lg shadow mb-6"
           />
 
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-4">
+          {/* Series title and metadata */}
+          <div className="flex flex-col sm:flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
             <div className="flex-1 min-w-0">
               <h1 className="text-3xl font-bold mb-1 break-words whitespace-normal">
                 {series.title}
               </h1>
-              <div className="flex flex-wrap gap-x-2 gap-y-1 text-sm text-gray-600 capitalize">
+              <div className="flex flex-wrap gap-x-2 gap-y-1 text-sm text-gray-600 capitalize break-words">
                 <span>{series.type}</span>
                 <span>|</span>
                 <span>{series.genre}</span>
@@ -160,21 +161,19 @@ const SeriesDetailPage = () => {
             </div>
 
             {avgScore && (
-              <div className="shrink-0 self-start">
-                <div className="relative">
-                  <div className="rounded-3xl px-6 py-2 shadow-md">
-                    <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-xs text-gray-600 uppercase tracking-wider">
-                      Avg. Rating
-                    </span>
-                    <span
-                      className="text-5xl text-gray-900 leading-none tracking-tight"
-                      style={{
-                        textShadow: "2px 2px 4px rgba(0, 0, 0, 0.25)",
-                        fontWeight: 750,
-                      }}
-                    >
-                      {avgScore}/10
-                    </span>
+              <div className="shrink-0 self-start md:self-auto md:ml-6">
+                <div className="rounded-3xl px-6 py-3 shadow-md text-center">
+                  <div className="text-xs text-gray-600 uppercase tracking-wider mb-1">
+                    Avg. Rating
+                  </div>
+                  <div
+                    className="text-5xl text-gray-900 leading-none tracking-tight"
+                    style={{
+                      textShadow: "2px 2px 4px rgba(0, 0, 0, 0.25)",
+                      fontWeight: 750,
+                    }}
+                  >
+                    {avgScore}/10
                   </div>
                 </div>
               </div>
