@@ -13,6 +13,7 @@ import { useUser } from "../login/UserContext";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useSearch } from "../components/SearchContext";
 import ShimmerLoader from "../components/ShimmerLoader";
+import { Helmet } from "react-helmet";
 
 const PAGE_SIZE = 25;
 
@@ -99,79 +100,129 @@ const Home = () => {
   };
 
   return (
-    <div className="flex justify-center px-4">
-      <div className="w-full max-w-7xl py-6">
-        {isAdmin && (
-          <div className="flex justify-end mb-4">
-            <button
-              onClick={() => setShowModal(true)}
-              className="px-5 py-2.5 rounded-md font-medium text-gray-800 bg-white/70 backdrop-blur-sm border border-gray-300 shadow-md hover:bg-white hover:shadow-lg hover:text-black transition-all duration-200"
-            >
-              + Add Series
-            </button>
-          </div>
-        )}
+    <>
+      <Helmet>
+        <title>Toon Ranks | Top Manga, Manhwa, and Manhua</title>
+        <meta
+          name="description"
+          content="Browse the top-ranked Manga, Manhwa, and Manhua. Vote, review, and explore amazing series on Toon Ranks!"
+        />
+        <meta
+          property="og:title"
+          content="Toon Ranks | Top Manga, Manhwa, and Manhua"
+        />
+        <meta
+          property="og:description"
+          content="Vote, review, and explore top-rated manga and webtoons!"
+        />
+        <meta
+          property="og:image"
+          content="https://toonranks.com/android-chrome-512x512.png"
+        />
+        <meta property="og:url" content="https://toonranks.com/" />
+        <meta property="og:type" content="website" />
 
-        <InfiniteScroll
-          dataLength={items.length}
-          next={() => setPage((prev) => prev + 1)}
-          hasMore={!searchTerm && hasMore}
-          // loader={<p className="text-center py-6 text-gray-500">Loading...</p>}
-          loader={
-                items.length > 0 ? (
-                  <div className="flex justify-center py-6">
-                    <div className="w-6 h-6 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" />
-                  </div>
-                ) : null
-              }
-          endMessage={
-            <p className="text-center py-6 text-gray-400">
-              🎉 You’ve seen everything.
-            </p>
-          }
-        >
-          {items.length === 0 && loading ? (
-            <ShimmerLoader />
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              {items.map((item) => (
-                <ManCard
-                  key={item.id}
-                  id={item.id}
-                  rank={item.rank ?? "-"}
-                  title={item.title}
-                  genre={item.genre}
-                  votes={item.vote_count}
-                  coverUrl={item.cover_url}
-                  type={item.type}
-                  author={item.author}
-                  artist={item.artist}
-                  avgScore={item.final_score}
-                  onDelete={handleDelete}
-                  isAdmin={isAdmin}
-                  onEdit={() => setEditItem(item)}
-                />
-              ))}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Toon Ranks" />
+        <meta
+          name="twitter:description"
+          content="Discover and rate the best manga, manhwa, and manhua."
+        />
+        <meta
+          name="twitter:image"
+          content="https://toonranks.com/android-chrome-512x512.png"
+        />
+
+        <link rel="canonical" href="https://toonranks.com/" />
+
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "Toon Ranks",
+            url: "https://toonranks.com",
+            potentialAction: {
+              "@type": "SearchAction",
+              target: "https://toonranks.com/?search={search_term_string}",
+              "query-input": "required name=search_term_string",
+            },
+          })}
+        </script>
+      </Helmet>
+      <div className="flex justify-center px-4">
+        <div className="w-full max-w-7xl py-6">
+          {isAdmin && (
+            <div className="flex justify-end mb-4">
+              <button
+                onClick={() => setShowModal(true)}
+                className="px-5 py-2.5 rounded-md font-medium text-gray-800 bg-white/70 backdrop-blur-sm border border-gray-300 shadow-md hover:bg-white hover:shadow-lg hover:text-black transition-all duration-200"
+              >
+                + Add Series
+              </button>
             </div>
           )}
-        </InfiniteScroll>
 
-        {showModal && <AddSeriesModal onClose={() => setShowModal(false)} />}
-        {editItem && (
-          <EditSeriesModal
-            id={editItem.id}
-            initialData={editItem}
-            onClose={() => setEditItem(null)}
-            onSuccess={() => {
-              setItems([]);
-              setPage(1);
-              setHasMore(true);
-              loadSeries(); // Refresh after edit
-            }}
-          />
-        )}
+          <InfiniteScroll
+            dataLength={items.length}
+            next={() => setPage((prev) => prev + 1)}
+            hasMore={!searchTerm && hasMore}
+            // loader={<p className="text-center py-6 text-gray-500">Loading...</p>}
+            loader={
+              items.length > 0 ? (
+                <div className="flex justify-center py-6">
+                  <div className="w-6 h-6 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : null
+            }
+            endMessage={
+              <p className="text-center py-6 text-gray-400">
+                🎉 You’ve seen everything.
+              </p>
+            }
+          >
+            {items.length === 0 && loading ? (
+              <ShimmerLoader />
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                {items.map((item) => (
+                  <ManCard
+                    key={item.id}
+                    id={item.id}
+                    rank={item.rank ?? "-"}
+                    title={item.title}
+                    genre={item.genre}
+                    votes={item.vote_count}
+                    coverUrl={item.cover_url}
+                    type={item.type}
+                    author={item.author}
+                    artist={item.artist}
+                    avgScore={item.final_score}
+                    onDelete={handleDelete}
+                    isAdmin={isAdmin}
+                    onEdit={() => setEditItem(item)}
+                  />
+                ))}
+              </div>
+            )}
+          </InfiniteScroll>
+
+          {showModal && <AddSeriesModal onClose={() => setShowModal(false)} />}
+          {editItem && (
+            <EditSeriesModal
+              id={editItem.id}
+              initialData={editItem}
+              onClose={() => setEditItem(null)}
+              onSuccess={() => {
+                setItems([]);
+                setPage(1);
+                setHasMore(true);
+                loadSeries(); // Refresh after edit
+              }}
+            />
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

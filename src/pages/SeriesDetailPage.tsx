@@ -7,6 +7,7 @@ import { UserIcon } from "lucide-react";
 import { UsersIcon } from "@heroicons/react/24/outline";
 import SeriesDetailShimmer from "../components/SeriesDetailShimmer";
 import type { SeriesDetailData } from "../types/types";
+import { Helmet } from "react-helmet";
 
 const dummyData = {
   id: 1,
@@ -109,115 +110,199 @@ const SeriesDetailPage = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 md:px-10 py-6">
-      {isAdmin && (
-        <div className="flex justify-end mb-4">
-          <button
-            onClick={() => setShowEditModal(true)}
-            className="px-5 py-2.5 rounded-md font-medium text-gray-800 bg-white/70 backdrop-blur-sm border border-gray-300 shadow-md hover:bg-white hover:shadow-lg hover:text-black transition-all duration-200"
-          >
-            ✏️ Edit Series Detail
-          </button>
-        </div>
-      )}
+    <>
+      <Helmet>
+        <title>{series.title} | Toon Ranks</title>
+        <meta
+          name="description"
+          content={
+            seriesDetail?.synopsis?.slice(0, 150) ??
+            "Explore detailed information and ratings for this manga/manhwa/manhua series."
+          }
+        />
+        <link rel="canonical" href={`https://toonranks.com/series/${id}`} />
 
-      {!seriesDetail ? (
-        <SeriesDetailShimmer />
-      ) : (
-        <>
-          <img
-            src={seriesDetail.series_cover_url}
-            alt={series.title}
-            className="w-full rounded-lg shadow mb-6"
-          />
+        {/* Open Graph Meta Tags */}
+        <meta property="og:type" content="article" />
+        <meta property="og:title" content={`${series.title} | Toon Ranks`} />
+        <meta
+          property="og:description"
+          content={
+            seriesDetail?.synopsis?.slice(0, 150) ??
+            "Explore detailed information and ratings for this manga/manhwa/manhua series."
+          }
+        />
+        <meta
+          property="og:image"
+          content={
+            seriesDetail?.series_cover_url ||
+            "https://toonranks.com/android-chrome-512x512.png"
+          }
+        />
+        <meta
+          property="og:url"
+          content={`https://toonranks.com/series/${id}`}
+        />
 
-          {/* Series title and metadata */}
-          <div className="flex flex-col sm:flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-3xl font-bold mb-1 break-words whitespace-normal">
-                {series.title}
-              </h1>
-              <div className="flex flex-wrap gap-x-2 gap-y-1 text-sm text-gray-600 capitalize break-words">
-                <span>{series.type}</span>
-                <span>|</span>
-                <span>{series.genre}</span>
-                {seriesDetail?.author && (
-                  <>
-                    <span>|</span>
-                    <span className="text-gray-700 whitespace-normal break-words">
-                      <strong>Author:</strong> {seriesDetail.author}
-                    </span>
-                  </>
-                )}
-                {seriesDetail?.artist && (
-                  <>
-                    <span>|</span>
-                    <span className="text-gray-700 whitespace-normal break-words">
-                      <strong>Artist:</strong> {seriesDetail.artist}
-                    </span>
-                  </>
-                )}
-              </div>
-            </div>
+        {/* Twitter Card Tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${series.title} | Toon Ranks`} />
+        <meta
+          name="twitter:description"
+          content={
+            seriesDetail?.synopsis?.slice(0, 150) ??
+            "Explore detailed information and ratings for this manga/manhwa/manhua series."
+          }
+        />
+        <meta
+          name="twitter:image"
+          content={
+            seriesDetail?.series_cover_url ||
+            "https://toonranks.com/android-chrome-512x512.png"
+          }
+        />
 
-            {avgScore && (
-              <div className="shrink-0 self-start md:self-auto md:ml-6">
-                <div className="rounded-3xl px-6 py-3 shadow-md text-center">
-                  <div className="text-xs text-gray-600 uppercase tracking-wider mb-1">
-                    Avg. Rating
-                  </div>
-                  <div
-                    className="text-5xl text-gray-900 leading-none tracking-tight"
-                    style={{
-                      textShadow: "2px 2px 4px rgba(0, 0, 0, 0.25)",
-                      fontWeight: 750,
-                    }}
-                  >
-                    {avgScore}/10
-                  </div>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CreativeWorkSeries",
+            name: series.title,
+            genre: series.genre,
+            author: seriesDetail?.author
+              ? { "@type": "Person", name: seriesDetail.author }
+              : undefined,
+            creator: seriesDetail?.artist
+              ? { "@type": "Person", name: seriesDetail.artist }
+              : undefined,
+            image: seriesDetail?.series_cover_url,
+            url: `https://toonranks.com/series/${id}`,
+            description: seriesDetail?.synopsis?.slice(0, 300),
+            aggregateRating:
+              avgScore !== "-"
+                ? {
+                    "@type": "AggregateRating",
+                    ratingValue: Number(avgScore),
+                    bestRating: 10,
+                    ratingCount: Object.values(counts).reduce(
+                      (a, b) => a + b,
+                      0
+                    ),
+                  }
+                : undefined,
+          })}
+        </script>
+      </Helmet>
+
+      <div className="max-w-5xl mx-auto px-4 md:px-10 py-6">
+        {isAdmin && (
+          <div className="flex justify-end mb-4">
+            <button
+              onClick={() => setShowEditModal(true)}
+              className="px-5 py-2.5 rounded-md font-medium text-gray-800 bg-white/70 backdrop-blur-sm border border-gray-300 shadow-md hover:bg-white hover:shadow-lg hover:text-black transition-all duration-200"
+            >
+              ✏️ Edit Series Detail
+            </button>
+          </div>
+        )}
+
+        {!seriesDetail ? (
+          <SeriesDetailShimmer />
+        ) : (
+          <>
+            <img
+              src={seriesDetail.series_cover_url}
+              alt={series.title}
+              className="w-full rounded-lg shadow mb-6"
+            />
+
+            {/* Series title and metadata */}
+            <div className="flex flex-col sm:flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-3xl font-bold mb-1 break-words whitespace-normal">
+                  {series.title}
+                </h1>
+                <div className="flex flex-wrap gap-x-2 gap-y-1 text-sm text-gray-600 capitalize break-words">
+                  <span>{series.type}</span>
+                  <span>|</span>
+                  <span>{series.genre}</span>
+                  {seriesDetail?.author && (
+                    <>
+                      <span>|</span>
+                      <span className="text-gray-700 whitespace-normal break-words">
+                        <strong>Author:</strong> {seriesDetail.author}
+                      </span>
+                    </>
+                  )}
+                  {seriesDetail?.artist && (
+                    <>
+                      <span>|</span>
+                      <span className="text-gray-700 whitespace-normal break-words">
+                        <strong>Artist:</strong> {seriesDetail.artist}
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
-            )}
-          </div>
 
-          <div className="bg-white shadow rounded p-4 mb-6">
-            <h2 className="text-xl font-semibold mb-2">Synopsis</h2>
-            <p className="text-gray-700">
-              {seriesDetail.synopsis || "No synopsis available yet."}
-            </p>
-          </div>
+              {avgScore && (
+                <div className="shrink-0 self-start md:self-auto md:ml-6">
+                  <div className="rounded-3xl px-6 py-3 shadow-md text-center">
+                    <div className="text-xs text-gray-600 uppercase tracking-wider mb-1">
+                      Avg. Rating
+                    </div>
+                    <div
+                      className="text-5xl text-gray-900 leading-none tracking-tight"
+                      style={{
+                        textShadow: "2px 2px 4px rgba(0, 0, 0, 0.25)",
+                        fontWeight: 750,
+                      }}
+                    >
+                      {avgScore}/10
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            {Object.entries(ratings).map(([label, score]) => (
-              <RatingCard
-                key={label}
-                label={label}
-                score={score}
-                count={counts[label]}
+            <div className="bg-white shadow rounded p-4 mb-6">
+              <h2 className="text-xl font-semibold mb-2">Synopsis</h2>
+              <p className="text-gray-700">
+                {seriesDetail.synopsis || "No synopsis available yet."}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              {Object.entries(ratings).map(([label, score]) => (
+                <RatingCard
+                  key={label}
+                  label={label}
+                  score={score}
+                  count={counts[label]}
+                />
+              ))}
+            </div>
+
+            <div className="bg-white p-4 shadow rounded">
+              <h2 className="text-xl font-semibold mb-4">
+                Determine Series Rank
+              </h2>
+              <SeriesDetail
+                series={series}
+                updateRating={updateRating}
+                seriesDetail={seriesDetail}
               />
-            ))}
-          </div>
+            </div>
+          </>
+        )}
 
-          <div className="bg-white p-4 shadow rounded">
-            <h2 className="text-xl font-semibold mb-4">
-              Determine Series Rank
-            </h2>
-            <SeriesDetail
-              series={series}
-              updateRating={updateRating}
-              seriesDetail={seriesDetail}
-            />
-          </div>
-        </>
-      )}
-
-      {showEditModal && (
-        <AddSeriesDetailModal
-          seriesId={series.id}
-          onClose={() => setShowEditModal(false)}
-        />
-      )}
-    </div>
+        {showEditModal && (
+          <AddSeriesDetailModal
+            seriesId={series.id}
+            onClose={() => setShowEditModal(false)}
+          />
+        )}
+      </div>
+    </>
   );
 };
 

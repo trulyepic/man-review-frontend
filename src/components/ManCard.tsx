@@ -39,7 +39,7 @@ const ManCard = ({
   const [imageLoaded, setImageLoaded] = useState(false);
 
   return (
-    <div className="relative w-40">
+    <article className="relative w-40">
       {/* Rank badge */}
       <div className="absolute top-2 left-2 text-[1.2rem] font-bold text-white bg-black/70 px-2 py-1 rounded-full z-10 shadow-md ring-2 ring-white">
         {rank !== null && rank !== undefined && typeof rank === "number"
@@ -68,25 +68,43 @@ const ManCard = ({
       )}
 
       {/* Card image and content */}
-      <Link to={`/series/${id}`} state={{ title, genre, type }} className="block">
-        <div className="relative w-full">
+      <Link
+        to={`/series/${id}`}
+        state={{ title, genre, type }}
+        className="block"
+      >
+        {/* <div className="relative w-full">
           {!imageLoaded && <ShimmerBox className="w-full h-60" />}
 
           <img
             src={coverUrl}
-            alt={title}
+            alt={`Cover for ${title}`}
             onLoad={() => setImageLoaded(true)}
             className={`rounded-md shadow transition-opacity duration-500 w-full object-cover ${
               imageLoaded ? "opacity-100" : "opacity-0 absolute top-0 left-0"
+            }`}
+          />
+        </div> */}
+        <div className="relative w-full group overflow-hidden rounded-md">
+          {!imageLoaded && <ShimmerBox className="w-full h-60" />}
+
+          <img
+            src={coverUrl}
+            alt={`Cover for ${title}`}
+            onLoad={() => setImageLoaded(true)}
+            className={`transition-all duration-300 ease-in-out w-full h-60 object-cover shadow rounded-md ${
+              imageLoaded
+                ? "opacity-100 group-hover:scale-105 group-hover:shadow-lg"
+                : "opacity-0 absolute top-0 left-0"
             }`}
           />
         </div>
 
         {/* Content */}
         <div className="mt-2 space-y-0.5">
-          <h3 className="text-base font-semibold truncate w-full" title={title}>
+          <h2 className="text-base font-semibold truncate w-full" title={title}>
             {title}
-          </h3>
+          </h2>
           <p className="text-xs text-gray-500 capitalize flex items-center gap-2.5">
             {type}
             {avgScore !== undefined && (
@@ -110,17 +128,29 @@ const ManCard = ({
           </p>
 
           {author && (
-            <p className="text-sm text-gray-600 flex items-center gap-1" title={author}>
+            <p
+              className="text-sm text-gray-600 flex items-center gap-1"
+              title={author}
+            >
               <Pencil className="w-4 h-4 text-gray-700 flex-shrink-0" />
-              <span className="truncate" style={{ maxWidth: "calc(100% - 1.25rem)" }}>
+              <span
+                className="truncate"
+                style={{ maxWidth: "calc(100% - 1.25rem)" }}
+              >
                 {author}
               </span>
             </p>
           )}
           {artist && (
-            <p className="text-sm text-gray-600 flex items-center gap-1" title={artist}>
+            <p
+              className="text-sm text-gray-600 flex items-center gap-1"
+              title={artist}
+            >
               <Palette className="w-4 h-4 text-gray-700 flex-shrink-0" />
-              <span className="truncate" style={{ maxWidth: "calc(100% - 1.25rem)" }}>
+              <span
+                className="truncate"
+                style={{ maxWidth: "calc(100% - 1.25rem)" }}
+              >
                 {artist}
               </span>
             </p>
@@ -131,7 +161,7 @@ const ManCard = ({
           </div>
         </div>
       </Link>
-    </div>
+    </article>
   );
 };
 

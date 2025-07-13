@@ -8,6 +8,7 @@ import { useUser } from "../login/UserContext";
 import { useState } from "react";
 import { useSearch } from "./SearchContext";
 import myLogo from "../images/logo/myLogo.png";
+import myHomeLogo from "../images/logo/myHomeLogo.png";
 
 const Header = () => {
   const { user, setUser } = useUser();
@@ -52,8 +53,16 @@ const Header = () => {
 
         {/* Left side */}
         <div className="flex items-center space-x-6 text-lg font-semibold min-w-0">
-          <NavLink to="/" className="text-blue-400 text-xl font-bold md:-ml-12">
+          {/* <NavLink to="/" className="text-blue-400 text-xl font-bold md:-ml-12">
             Toon Ranks
+          </NavLink> */}
+          <NavLink to="/" className="flex items-center md:-ml-13">
+            <img
+              src={myHomeLogo}
+              alt="Toon Ranks Logo"
+              // className="w-8 h-8 md:w-10 md:h-10 object-contain"
+              className="w-12 h-12 object-contain"
+            />
           </NavLink>
 
           {/* Desktop nav only */}
