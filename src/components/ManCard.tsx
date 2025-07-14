@@ -4,6 +4,7 @@ import { Palette, Pencil, StarIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import UserIcon from "./icons/UserIcon";
 import ShimmerBox from "./ShimmerBox";
+import { formatScore } from "../util/formatScore";
 
 type Props = {
   id: number;
@@ -122,7 +123,9 @@ const ManCard = ({
                 }`}
               >
                 <StarIcon className="w-3.5 h-3.5" strokeWidth={2.5} />
-                {avgScore.toFixed(1)}
+                {/* {avgScore.toFixed(3)} */}
+                {/* {cleanScore(avgScore)} */}
+                {formatScore(avgScore, 3)}
               </span>
             )}
           </p>
@@ -164,5 +167,17 @@ const ManCard = ({
     </article>
   );
 };
+
+// function cleanScore(value: number | string, sliceLength = 6): string {
+//   const str = String(value).slice(0, sliceLength);
+//   const num = Number(str);
+
+//   // Ensure at least one decimal place
+//   if (Number.isInteger(num)) {
+//     return `${num}.0`;
+//   }
+
+//   return num.toString();
+// }
 
 export default ManCard;
