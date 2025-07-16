@@ -39,9 +39,9 @@ export interface RankedSeries {
   artist?: string;
 }
 
-const BASE_URL = "http://localhost:8000";
+// const BASE_URL = "http://localhost:8000";
 
-// const BASE_URL = import.meta.env.VITE_APP_BASE_URL;
+const BASE_URL = import.meta.env.VITE_APP_BASE_URL;
 
 export const createSeries = async (data: SeriesPayload): Promise<Series> => {
   const formData = new FormData();
@@ -284,4 +284,16 @@ export const verifyEmail = async (token: string): Promise<string> => {
   }
   const data = await response.json();
   return data.message;
+};
+
+export const googleOAuthLogin = async (token: string) => {
+  const response = await fetch(`${BASE_URL}/auth/google-oauth`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+
+  if (!response.ok) throw new Error("Google OAuth login failed");
+
+  return await response.json();
 };

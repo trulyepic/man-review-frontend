@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../api/manApi";
 import { useUser } from "../login/UserContext";
+import GoogleOAuthButton from "../components/GoogleOAuthButton";
 
 const LoginPage = () => {
   const [username, setUsername] = useState("");
@@ -63,6 +64,9 @@ const LoginPage = () => {
         >
           Login
         </button>
+        <div className="my-4">
+          <GoogleOAuthButton />
+        </div>
       </div>
     </div>
   );
