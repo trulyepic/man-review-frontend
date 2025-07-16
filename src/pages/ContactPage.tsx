@@ -1,5 +1,7 @@
 // src/pages/ContactPage.tsx
 
+import SocialLinks from "../components/SocialLinks";
+
 const ContactPage = () => {
   return (
     <div className="max-w-4xl mx-auto py-16 px-4">
@@ -15,6 +17,9 @@ const ContactPage = () => {
         >
           trulyepickstudios@gmail.com
         </a>
+        <p className="text-gray-700 mt-6">
+          Or follow us on <SocialLinks /> to stay updated!
+        </p>
       </p>
     </div>
   );

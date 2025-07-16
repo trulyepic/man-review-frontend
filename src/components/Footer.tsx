@@ -1,3 +1,5 @@
+import SocialLinks from "./SocialLinks";
+
 const Footer = () => {
   return (
     <footer className="mt-12 bg-gray-100 border-t border-gray-200 py-10">
@@ -18,6 +20,7 @@ const Footer = () => {
           <span className="text-gray-400 pointer-events-none select-none">
             Terms
           </span>
+          <SocialLinks variant="footer" />
           <a
             href="https://github.com/trulyepic/man-review-frontend"
             target="_blank"

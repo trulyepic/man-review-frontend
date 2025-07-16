@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useSearch } from "./SearchContext";
 import myLogo from "../images/logo/myLogo.png";
 import myHomeLogo from "../images/logo/myHomeLogo.png";
+import SocialLinks from "./SocialLinks";
 
 const Header = () => {
   const { user, setUser } = useUser();
@@ -99,6 +100,7 @@ const Header = () => {
             >
               Manhua
             </NavLink>
+            <SocialLinks variant="header" />
             <a
               href="https://ex-hibt.com/collection-homepage/59"
               target="_blank"
@@ -109,7 +111,7 @@ const Header = () => {
               <img
                 src={myLogo}
                 alt="img collections"
-                className="w-5 h-5 object-contain"
+                className="w-5 h-5 object-contain "
               />
               Ex-hibt Collections
             </a>
@@ -196,6 +198,8 @@ const Header = () => {
           >
             Manhua
           </NavLink>
+          <SocialLinks variant="header" />
+
           <a
             href="https://ex-hibt.com/collection-homepage/59"
             target="_blank"
@@ -209,6 +213,8 @@ const Header = () => {
             />
             Ex-hibt Collections
           </a>
+
+          {/* Search form for mobile */}
 
           <form onSubmit={handleSearchSubmit} className="flex gap-2">
             <input
