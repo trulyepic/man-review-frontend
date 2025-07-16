@@ -10,6 +10,8 @@ import { SearchProvider } from "./components/SearchContext";
 import Footer from "./components/Footer";
 import ContactPage from "./pages/ContactPage";
 import AboutPage from "./pages/AboutPage";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
+import CheckYourEmailPage from "./pages/CheckYourEmailPage";
 
 function App() {
   return (
@@ -24,6 +26,11 @@ function App() {
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/series/:id" element={<SeriesDetailPage />} />
               <Route path="/contact" element={<ContactPage />} />
+              <Route path="/verify-email" element={<VerifyEmailPage />} />
+              <Route
+                path="/check-your-email"
+                element={<CheckYourEmailPage />}
+              />
               <Route
                 path="/type/:seriesType"
                 element={<FilteredSeriesPage />}

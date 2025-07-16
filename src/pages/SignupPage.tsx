@@ -1,29 +1,33 @@
 import { useState } from "react";
-import { login, signup } from "../api/manApi";
+import { signup } from "../api/manApi";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../login/UserContext";
 
 const SignupPage = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
   const { setUser } = useUser();
   const navigate = useNavigate();
 
   const handleSignup = async () => {
-    try {
-      await signup({ username, password });
-      // Auto-login after successful signup
-      const data = await login({ username, password });
-      setUser(data.user);
-      localStorage.setItem("token", data.access_token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+    if (!username.trim() || !password.trim() || !email.trim()) {
+      alert("All fields are required.");
+      return;
+    }
 
-      navigate("/");
+    try {
+      await signup({ username, password, email });
+
+      alert("Signup successful! Please verify your email.");
+      navigate("/check-your-email");
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Something went wrong";
       if (message.includes("409")) {
         alert("Username already exists. Try a different one.");
+      } else if (message.includes("422")) {
+        alert("Invalid email. Only Gmail or Yahoo addresses are allowed.");
       } else {
         alert("Signup failed");
       }
@@ -40,6 +44,13 @@ const SignupPage = () => {
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
+          className="w-full p-2 mb-4 border rounded"
+        />
+        <input
+          type="email"
+          placeholder="Email (Gmail or Yahoo only)"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           className="w-full p-2 mb-4 border rounded"
         />
         <input

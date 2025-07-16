@@ -98,7 +98,7 @@ const Home = () => {
       console.error(err);
     }
   };
-
+  console.log("Items:", items);
   return (
     <>
       <Helmet>

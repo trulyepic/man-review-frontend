@@ -39,9 +39,9 @@ export interface RankedSeries {
   artist?: string;
 }
 
-// const BASE_URL = "http://localhost:8000";
+const BASE_URL = "http://localhost:8000";
 
-const BASE_URL = import.meta.env.VITE_APP_BASE_URL;
+// const BASE_URL = import.meta.env.VITE_APP_BASE_URL;
 
 export const createSeries = async (data: SeriesPayload): Promise<Series> => {
   const formData = new FormData();
@@ -92,7 +92,12 @@ export const login = async (credentials: {
     body: JSON.stringify(credentials),
   });
 
-  if (!response.ok) throw new Error("Login failed");
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(
+      `${response.status}: ${errorData.detail || "Login failed"}`
+    );
+  }
 
   const data = await response.json();
   localStorage.setItem("token", data.access_token);
@@ -100,10 +105,23 @@ export const login = async (credentials: {
   return data;
 };
 
+// export const signup = async (credentials: {
+//   username: string;
+//   password: string;
+// }) => {
+//   const response = await fetch(`${BASE_URL}/auth/signup`, {
+//     method: "POST",
+//     headers: { "Content-Type": "application/json" },
+//     body: JSON.stringify(credentials),
+//   });
+
+//   if (!response.ok) throw new Error(`${response.status}: Signup failed`);
+// };
 export const signup = async (credentials: {
   username: string;
   password: string;
-}) => {
+  email: string;
+}): Promise<{ message: string; token: string }> => {
   const response = await fetch(`${BASE_URL}/auth/signup`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -111,6 +129,8 @@ export const signup = async (credentials: {
   });
 
   if (!response.ok) throw new Error(`${response.status}: Signup failed`);
+
+  return await response.json();
 };
 
 export const addSeriesDetail = async (
@@ -255,4 +275,13 @@ export const getCurrentUser = () => {
 export const logout = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
+};
+
+export const verifyEmail = async (token: string): Promise<string> => {
+  const response = await fetch(`${BASE_URL}/auth/verify-email?token=${token}`);
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+  const data = await response.json();
+  return data.message;
 };
