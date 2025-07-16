@@ -1,5 +1,7 @@
 // src/pages/AboutPage.tsx
 
+import SocialLinks from "../components/SocialLinks";
+
 const AboutPage = () => {
   return (
     <div className="max-w-4xl mx-auto py-16 px-4">
@@ -20,7 +22,9 @@ const AboutPage = () => {
         series detail.
       </p>
       <p className="text-gray-700 mb-4 leading-relaxed">
-        Want to contribute or suggest improvements? Reach out via our{" "}
+        Want to contribute or suggest improvements? Reach out via our Follow us
+        on <SocialLinks /> for daily top rankings, teasers, and community
+        highlights!
         <a href="/contact" className="text-blue-500 hover:underline">
           Contact page
         </a>{" "}
