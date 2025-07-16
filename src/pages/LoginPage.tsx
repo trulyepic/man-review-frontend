@@ -18,8 +18,8 @@ const LoginPage = () => {
       localStorage.setItem("token", data.access_token);
       localStorage.setItem("user", JSON.stringify(data.user));
       navigate("/");
-    } catch (err: any) {
-      const msg = err.message || "";
+    } catch (err) {
+      const msg = (err as Error).message || "";
       console.error("Login error:", msg);
 
       // Extract status code and message cleanly

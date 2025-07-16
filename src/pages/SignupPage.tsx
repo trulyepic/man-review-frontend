@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { signup } from "../api/manApi";
 import { useNavigate } from "react-router-dom";
-import { useUser } from "../login/UserContext";
+// import { useUser } from "../login/UserContext";
 
 const SignupPage = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
-  const { setUser } = useUser();
+  // const { setUser } = useUser();
   const navigate = useNavigate();
 
   const handleSignup = async () => {
