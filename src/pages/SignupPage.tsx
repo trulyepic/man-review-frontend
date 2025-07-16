@@ -2,6 +2,7 @@ import { useState } from "react";
 import { signup } from "../api/manApi";
 import { useNavigate } from "react-router-dom";
 // import { useUser } from "../login/UserContext";
+import GoogleOAuthButton from "../components/GoogleOAuthButton";
 
 const SignupPage = () => {
   const [username, setUsername] = useState("");
@@ -66,6 +67,9 @@ const SignupPage = () => {
         >
           Sign Up
         </button>
+        <div className="my-4 text-center text-sm text-gray-500"></div>
+
+        <GoogleOAuthButton />
       </div>
     </div>
   );
