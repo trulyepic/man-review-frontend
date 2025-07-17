@@ -159,7 +159,7 @@ const Header = () => {
 
             {/* Socials and Ex-hibt Link */}
             <div className="flex items-center gap-4">
-              <SocialLinks variant="header" />
+              {/* <SocialLinks variant="header" /> */}
               <a
                 href="https://ex-hibt.com/collection-homepage/59"
                 target="_blank"

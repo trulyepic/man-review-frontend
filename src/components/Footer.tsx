@@ -4,9 +4,10 @@ const Footer = () => {
   return (
     <footer className="mt-12 bg-gray-100 border-t border-gray-200 py-10">
       <div className="max-w-7xl mx-auto text-center text-sm text-gray-500 px-4">
-        <p className="text-base font-medium">
-          &copy; {new Date().getFullYear()} ManReview. All rights reserved.
-        </p>
+        {/* Social Links */}
+        <div className="mb-4 flex justify-center space-x-4">
+          <SocialLinks variant="footer" />
+        </div>
         <div className="mt-4 flex justify-center space-x-6 text-blue-500 text-sm">
           <a href="/about" className="hover:underline">
             About
@@ -20,7 +21,7 @@ const Footer = () => {
           <span className="text-gray-400 pointer-events-none select-none">
             Terms
           </span>
-          <SocialLinks variant="footer" />
+          {/* <SocialLinks variant="footer" /> */}
           <a
             href="https://github.com/trulyepic/man-review-frontend"
             target="_blank"
@@ -30,6 +31,9 @@ const Footer = () => {
             GitHub
           </a>
         </div>
+        <p className="text-sm my-3">
+          &copy; {new Date().getFullYear()} ManReview. All rights reserved.
+        </p>
       </div>
     </footer>
   );
