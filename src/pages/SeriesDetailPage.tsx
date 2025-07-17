@@ -8,6 +8,7 @@ import { UsersIcon } from "@heroicons/react/24/outline";
 import SeriesDetailShimmer from "../components/SeriesDetailShimmer";
 import type { SeriesDetailData } from "../types/types";
 import { Helmet } from "react-helmet";
+import RatingInfoTooltip from "../components/RatingInfoTooltip";
 
 const dummyData = {
   id: 1,
@@ -249,6 +250,7 @@ const SeriesDetailPage = () => {
                   <div className="rounded-3xl px-6 py-3 shadow-md text-center">
                     <div className="text-xs text-gray-600 uppercase tracking-wider mb-1">
                       Avg. Rating
+                      <RatingInfoTooltip />
                     </div>
                     <div
                       className="text-5xl text-gray-900 leading-none tracking-tight"

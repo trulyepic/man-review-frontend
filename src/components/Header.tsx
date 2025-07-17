@@ -10,6 +10,7 @@ import { useSearch } from "./SearchContext";
 import myLogo from "../images/logo/myLogo.png";
 import myHomeLogo from "../images/logo/myHomeLogo.png";
 import SocialLinks from "./SocialLinks";
+import { useEffect, useRef } from "react";
 
 const Header = () => {
   const { user, setUser } = useUser();
@@ -17,6 +18,9 @@ const Header = () => {
   const [showSearch, setShowSearch] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { searchTerm, setSearchTerm } = useSearch();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] =
+    useState<string>("Categories");
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -36,6 +40,24 @@ const Header = () => {
       setMobileMenuOpen(false);
     }
   };
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown if clicked outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <header className="border-b shadow-md">
@@ -67,54 +89,92 @@ const Header = () => {
           </NavLink>
 
           {/* Desktop nav only */}
-          <div className="hidden lg:flex items-center space-x-6">
+          <div className="hidden lg:flex items-center gap-6 text-gray-700">
+            {/* Dropdown for Categories */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setIsDropdownOpen((prev) => !prev)}
+                className="hover:text-blue-500 font-medium focus:outline-none"
+              >
+                {selectedCategory || "Categories"} ▾
+              </button>
+
+              {isDropdownOpen && (
+                <div className="absolute left-0 top-full mt-2 bg-white border rounded shadow-md w-40 z-50">
+                  <div className="flex flex-col">
+                    <NavLink
+                      to="/"
+                      onClick={() => {
+                        setIsDropdownOpen(false);
+                        setSelectedCategory("All");
+                      }}
+                      className="block px-4 py-2 hover:bg-blue-50"
+                    >
+                      All
+                    </NavLink>
+                    <NavLink
+                      to="/type/MANHWA"
+                      onClick={() => {
+                        setIsDropdownOpen(false);
+                        setSelectedCategory("Manhwa");
+                      }}
+                      className="block px-4 py-2 hover:bg-blue-50"
+                    >
+                      Manhwa
+                    </NavLink>
+                    <NavLink
+                      to="/type/MANGA"
+                      onClick={() => {
+                        setIsDropdownOpen(false);
+                        setSelectedCategory("Manga");
+                      }}
+                      className="block px-4 py-2 hover:bg-blue-50"
+                    >
+                      Manga
+                    </NavLink>
+                    <NavLink
+                      to="/type/MANHUA"
+                      onClick={() => {
+                        setIsDropdownOpen(false);
+                        setSelectedCategory("Manhua");
+                      }}
+                      className="block px-4 py-2 hover:bg-blue-50"
+                    >
+                      Manhua
+                    </NavLink>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <NavLink
-              to="/"
-              className={({ isActive }) =>
-                isActive ? "text-blue-400" : "hover:text-blue-300"
-              }
+              to="/how-rankings-work"
+              className="hover:text-blue-500 font-medium"
             >
-              All
+              How Rankings Work
             </NavLink>
-            <NavLink
-              to="/type/MANHWA"
-              className={({ isActive }) =>
-                isActive ? "text-blue-400" : "hover:text-blue-300"
-              }
-            >
-              Manhwa
-            </NavLink>
-            <NavLink
-              to="/type/MANGA"
-              className={({ isActive }) =>
-                isActive ? "text-blue-400" : "hover:text-blue-300"
-              }
-            >
-              Manga
-            </NavLink>
-            <NavLink
-              to="/type/MANHUA"
-              className={({ isActive }) =>
-                isActive ? "text-blue-400" : "hover:text-blue-300"
-              }
-            >
-              Manhua
-            </NavLink>
-            <SocialLinks variant="header" />
-            <a
-              href="https://ex-hibt.com/collection-homepage/59"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-sm font-medium text-gray-700 hover:text-blue-500"
-              title="Visit img collections"
-            >
-              <img
-                src={myLogo}
-                alt="img collections"
-                className="w-5 h-5 object-contain "
-              />
-              Ex-hibt Collections
-            </a>
+
+            {/* Spacer */}
+            {/* <div className="flex-1" /> */}
+
+            {/* Socials and Ex-hibt Link */}
+            <div className="flex items-center gap-4">
+              <SocialLinks variant="header" />
+              <a
+                href="https://ex-hibt.com/collection-homepage/59"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-sm hover:text-blue-500"
+                title="Visit img collections"
+              >
+                <img
+                  src={myLogo}
+                  alt="img collections"
+                  className="w-5 h-5 object-contain"
+                />
+                Ex-hibt
+              </a>
+            </div>
           </div>
         </div>
 
@@ -198,6 +258,16 @@ const Header = () => {
           >
             Manhua
           </NavLink>
+
+          <NavLink
+            to="/how-rankings-work"
+            className={({ isActive }) =>
+              isActive ? "text-blue-400" : "hover:text-blue-300"
+            }
+          >
+            How Rankings Work
+          </NavLink>
+
           <SocialLinks variant="header" />
 
           <a

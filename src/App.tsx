@@ -12,6 +12,7 @@ import ContactPage from "./pages/ContactPage";
 import AboutPage from "./pages/AboutPage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
 import CheckYourEmailPage from "./pages/CheckYourEmailPage";
+import RankingsInfoPage from "./pages/RankingsInfoPage";
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
                 element={<FilteredSeriesPage />}
               />
               <Route path="/about" element={<AboutPage />} />
+              <Route path="/how-rankings-work" element={<RankingsInfoPage />} />
             </Routes>
           </main>
           <Footer />
