@@ -12,7 +12,13 @@ const LoginPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   const handleLogin = async () => {
-    setError(null); // reset error
+    setError(null);
+
+    if (!username.trim() || !password.trim()) {
+      setError("Username and password are required.");
+      return;
+    }
+
     try {
       const data = await login({ username, password });
       setUser(data.user);
@@ -23,14 +29,11 @@ const LoginPage = () => {
       const msg = (err as Error).message || "";
       console.error("Login error:", msg);
 
-      // Extract status code and message cleanly
       const [statusCode, ...rest] = msg.split(":");
       const detail = rest.join(":").trim();
 
       if (statusCode === "403" && detail === "Email not verified") {
-        setError(
-          "Email not verified. Please check your inbox for the confirmation link."
-        );
+        setError("Email not verified. Please check your inbox.");
       } else if (statusCode === "401" && detail === "Invalid credentials") {
         setError("Invalid username or password.");
       } else {
