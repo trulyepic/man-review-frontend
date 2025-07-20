@@ -33,7 +33,7 @@ const LoginPage = () => {
       const detail = rest.join(":").trim();
 
       if (statusCode === "403" && detail === "Email not verified") {
-        setError("Email not verified. Please check your inbox or span folder.");
+        setError("Email not verified. Please check your inbox or spam folder.");
       } else if (statusCode === "401" && detail === "Invalid credentials") {
         setError("Invalid username or password.");
       } else {
