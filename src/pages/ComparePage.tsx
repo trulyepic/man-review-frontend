@@ -9,18 +9,19 @@ const ComparePage = () => {
   const { items = [] } = location.state || {};
   const [details, setDetails] = useState<any[]>([]);
 
-  useEffect(() => {
-    const fetchDetails = async () => {
-      const results = await Promise.all(
-        items.map((item) => getSeriesDetailById(item.id))
-      );
-      setDetails(results);
-    };
+ useEffect(() => {
+  const fetchDetails = async () => {
+    const results = await Promise.all(
+      items.map((item: { id: number }) => getSeriesDetailById(item.id))
+    );
+    setDetails(results);
+  };
 
-    if (items.length) {
-      fetchDetails();
-    }
-  }, [items]);
+  if (items.length) {
+    fetchDetails();
+  }
+}, [items]);
+
 
 const calculateRatings = (detail: any) => {
  const labelKeyMap: Record<string, string> = {
