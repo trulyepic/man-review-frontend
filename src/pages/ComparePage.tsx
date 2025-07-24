@@ -129,7 +129,7 @@ const ComparePage = () => {
         ) : (
           details.map((detail, i) => {
             const item = items[i];
-            const ratings = calculateRatings(detail);
+            // const ratings = calculateRatings(detail);
 
             return (
               <div
