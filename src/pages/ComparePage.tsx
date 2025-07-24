@@ -60,7 +60,7 @@ console.log("details test ", details)
           details.map((detail, i) => {
             const item = items[i];
             const ratings = calculateRatings(detail);
-            const voteCounts = detail.vote_counts || {};
+            // const voteCounts = detail.vote_counts || {};
 
             return (
               <div
