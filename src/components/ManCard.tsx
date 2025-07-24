@@ -20,6 +20,8 @@ type Props = {
   author?: string;
   artist?: string;
   avgScore?: number;
+  onCompareToggle?: () => void;
+  isCompared?: boolean| void;
 };
 
 const ManCard = ({
@@ -36,6 +38,8 @@ const ManCard = ({
   author,
   artist,
   avgScore,
+  onCompareToggle,
+  isCompared
 }: Props) => {
   const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -158,10 +162,28 @@ const ManCard = ({
               </span>
             </p>
           )}
-          <div className="flex items-center space-x-1 text-sm text-gray-700 mt-1">
-            <UserIcon className="w-5 h-5 text-blue-400" />
-            <span>{votes.toLocaleString()}</span>
-          </div>
+          <div className="flex items-center justify-between mt-1 text-sm text-gray-700">
+  <div className="flex items-center space-x-1">
+    <UserIcon className="w-5 h-5 text-blue-400" />
+    <span>{votes.toLocaleString()}</span>
+  </div>
+
+  {onCompareToggle && (
+    <button
+      onClick={(e) => {
+        e.preventDefault();
+        onCompareToggle();
+      }}
+      title="Select to Compare"
+      className={`ml-2 px-2 py-0.5 text-xs rounded-full font-semibold ${
+        isCompared ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"
+      }`}
+    >
+      {isCompared ? "✓" : "+"} Compare
+    </button>
+  )}
+</div>
+
         </div>
       </Link>
     </article>
