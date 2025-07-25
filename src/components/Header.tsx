@@ -64,7 +64,7 @@ const Header = () => {
       <div className="flex flex-wrap justify-between items-center px-6 md:px-10 max-w-7xl mx-auto py-4">
         {/* Mobile menu button - inline, visible only on mobile */}
         <button
-          className="lg:hidden mr-2"
+          className="sm:hidden mr-2"
           onClick={() => setMobileMenuOpen((prev) => !prev)}
         >
           {mobileMenuOpen ? (
@@ -89,7 +89,7 @@ const Header = () => {
           </NavLink>
 
           {/* Desktop nav only */}
-          <div className="hidden lg:flex items-center gap-6 text-gray-700">
+          <div className="hidden sm:flex items-center gap-6 text-gray-700">
             {/* Dropdown for Categories */}
             <div className="relative" ref={dropdownRef}>
               <button
@@ -179,7 +179,7 @@ const Header = () => {
         </div>
 
         {/* Right side (desktop only) */}
-        <div className="hidden lg:flex items-center space-x-4">
+        <div className="hidden sm:flex items-center space-x-4">
           <form onSubmit={handleSearchSubmit} className="relative w-40 md:w-48">
             <input
               type="text"
@@ -229,7 +229,7 @@ const Header = () => {
 
       {/* Mobile dropdown menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden flex flex-col space-y-3 px-6 pb-4 text-sm font-medium">
+        <div className="sm:hidden flex flex-col space-y-3 px-6 pb-4 text-sm font-medium">
           <NavLink
             to="/"
             onClick={() => setMobileMenuOpen(false)}
