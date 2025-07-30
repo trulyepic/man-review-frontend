@@ -22,6 +22,15 @@ const GoogleOAuthButton = () => {
       localStorage.setItem("token", data.access_token);
       localStorage.setItem("user", JSON.stringify(data.user));
       setUser(data.user);
+
+      // ⏱️ Auto logout after 10 hours (same as normal login)
+      setTimeout(() => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setUser(null);
+        alert("Session expired. Please login again.");
+        window.location.href = "/";
+      }, 10 * 60 * 60 * 1000);
       navigate("/");
     } catch (err) {
       alert("Google login failed");
