@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { login } from "../api/manApi";
 import { useUser } from "../login/UserContext";
 import GoogleOAuthButton from "../components/GoogleOAuthButton";
+import ReCAPTCHA from "react-google-recaptcha";
 
 const LoginPage = () => {
   const [username, setUsername] = useState("");
@@ -10,6 +11,7 @@ const LoginPage = () => {
   const { setUser } = useUser();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState("");
 
   const handleLogin = async () => {
     setError(null);
@@ -19,8 +21,17 @@ const LoginPage = () => {
       return;
     }
 
+    if (!captchaToken) {
+      setError("Please complete the CAPTCHA.");
+      return;
+    }
+
     try {
-      const data = await login({ username, password });
+      const data = await login({
+        username,
+        password,
+        captcha_token: captchaToken,
+      });
       setUser(data.user);
       localStorage.setItem("token", data.access_token);
       localStorage.setItem("user", JSON.stringify(data.user));
@@ -71,6 +82,12 @@ const LoginPage = () => {
           onChange={(e) => setPassword(e.target.value)}
           className="w-full p-2 mb-6 border rounded bg-blue-50"
         />
+        <ReCAPTCHA
+          sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+          onChange={(token) => setCaptchaToken(token || "")}
+          className="mb-4"
+        />
+
         <button
           onClick={handleLogin}
           className="w-full bg-blue-600/70 text-white py-2 rounded hover:bg-blue-600"

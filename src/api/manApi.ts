@@ -40,7 +40,6 @@ export interface RankedSeries {
 }
 
 // const BASE_URL = "http://localhost:8000";
-
 const BASE_URL = import.meta.env.VITE_APP_BASE_URL;
 
 export const createSeries = async (data: SeriesPayload): Promise<Series> => {
@@ -85,6 +84,7 @@ export const deleteSeries = async (id: number): Promise<void> => {
 export const login = async (credentials: {
   username: string;
   password: string;
+  captcha_token: string;
 }) => {
   const response = await fetch(`${BASE_URL}/auth/login`, {
     method: "POST",
@@ -121,6 +121,7 @@ export const signup = async (credentials: {
   username: string;
   password: string;
   email: string;
+  captcha_token: string;
 }): Promise<{ message: string; token: string }> => {
   const response = await fetch(`${BASE_URL}/auth/signup`, {
     method: "POST",

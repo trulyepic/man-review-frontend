@@ -3,6 +3,7 @@ import { signup } from "../api/manApi";
 import { useNavigate } from "react-router-dom";
 // import { useUser } from "../login/UserContext";
 import GoogleOAuthButton from "../components/GoogleOAuthButton";
+import ReCAPTCHA from "react-google-recaptcha";
 
 const SignupPage = () => {
   const [username, setUsername] = useState("");
@@ -10,6 +11,7 @@ const SignupPage = () => {
   const [email, setEmail] = useState("");
   // const { setUser } = useUser();
   const navigate = useNavigate();
+  const [captchaToken, setCaptchaToken] = useState("");
 
   const handleSignup = async () => {
     if (!username.trim() || !password.trim() || !email.trim()) {
@@ -17,8 +19,13 @@ const SignupPage = () => {
       return;
     }
 
+    if (!captchaToken) {
+      alert("Please complete the CAPTCHA.");
+      return;
+    }
+
     try {
-      await signup({ username, password, email });
+      await signup({ username, password, email, captcha_token: captchaToken });
 
       alert("Signup successful! Please verify your email.");
       navigate("/check-your-email");
@@ -61,6 +68,13 @@ const SignupPage = () => {
           onChange={(e) => setPassword(e.target.value)}
           className="w-full p-2 mb-6 border rounded"
         />
+
+        <ReCAPTCHA
+          sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+          onChange={(token) => setCaptchaToken(token || "")}
+          className="mb-6"
+        />
+
         <button
           onClick={handleSignup}
           className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
