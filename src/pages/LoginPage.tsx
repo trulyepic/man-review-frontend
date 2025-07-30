@@ -24,6 +24,16 @@ const LoginPage = () => {
       setUser(data.user);
       localStorage.setItem("token", data.access_token);
       localStorage.setItem("user", JSON.stringify(data.user));
+
+      // 🔐 Auto logout after 10 hours (in milliseconds)
+      setTimeout(() => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setUser(null);
+        alert("Session expired. Please Login again.");
+        window.location.href = "/";
+      }, 10 * 60 * 60 * 1000); // 10 hours
+
       navigate("/");
     } catch (err) {
       const msg = (err as Error).message || "";
