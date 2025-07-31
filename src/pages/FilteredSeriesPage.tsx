@@ -13,6 +13,7 @@ import EditSeriesModal from "../components/EditSeriesModal";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useSearch } from "../components/SearchContext";
 import ShimmerLoader from "../components/ShimmerLoader";
+import CompareManager from "../components/CompareManager";
 
 const PAGE_SIZE = 25;
 
@@ -198,48 +199,54 @@ const FilteredSeriesPage = () => {
   return (
     <div className="flex justify-center px-4">
       <div className="w-full max-w-7xl py-6">
-        <InfiniteScroll
-          dataLength={items.length}
-          next={() => setPage((prev) => prev + 1)}
-          hasMore={!searchTerm && hasMore}
-          loader={
-            items.length > 0 ? (
-              <p className="text-center py-6 text-gray-500">Loading...</p>
-            ) : null
-          }
-          endMessage={
-            !loading && items.length > 0 ? (
-              <p className="text-center py-6 text-gray-400">
-                🎉 You’ve seen everything.
-              </p>
-            ) : null
-          }
-        >
-          {items.length === 0 && loading ? (
-            <ShimmerLoader />
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              {items.map((item) => (
-                <ManCard
-                  key={item.id}
-                  id={item.id}
-                  rank={item.rank ?? "-"}
-                  title={item.title}
-                  genre={item.genre}
-                  votes={item.vote_count}
-                  coverUrl={item.cover_url}
-                  type={item.type}
-                  author={item.author}
-                  artist={item.artist}
-                  avgScore={item.final_score}
-                  onDelete={handleDelete}
-                  isAdmin={isAdmin}
-                  onEdit={() => setEditItem(item)}
-                />
-              ))}
-            </div>
+        <CompareManager>
+          {({ toggleCompare, isSelectedForCompare }) => (
+            <InfiniteScroll
+              dataLength={items.length}
+              next={() => setPage((prev) => prev + 1)}
+              hasMore={!searchTerm && hasMore}
+              loader={
+                items.length > 0 ? (
+                  <p className="text-center py-6 text-gray-500">Loading...</p>
+                ) : null
+              }
+              endMessage={
+                !loading && items.length > 0 ? (
+                  <p className="text-center py-6 text-gray-400">
+                    🎉 You’ve seen everything.
+                  </p>
+                ) : null
+              }
+            >
+              {items.length === 0 && loading ? (
+                <ShimmerLoader />
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                  {items.map((item) => (
+                    <ManCard
+                      key={item.id}
+                      id={item.id}
+                      rank={item.rank ?? "-"}
+                      title={item.title}
+                      genre={item.genre}
+                      votes={item.vote_count}
+                      coverUrl={item.cover_url}
+                      type={item.type}
+                      author={item.author}
+                      artist={item.artist}
+                      avgScore={item.final_score}
+                      onDelete={handleDelete}
+                      isAdmin={isAdmin}
+                      onEdit={() => setEditItem(item)}
+                      onCompareToggle={() => toggleCompare(item)}
+                      isCompared={isSelectedForCompare(item.id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </InfiniteScroll>
           )}
-        </InfiniteScroll>
+        </CompareManager>
 
         {editItem && (
           <EditSeriesModal
