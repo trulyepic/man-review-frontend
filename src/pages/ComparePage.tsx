@@ -3,11 +3,12 @@ import { useLocation, Link } from "react-router-dom";
 import { getSeriesDetailById } from "../api/manApi";
 import { UsersIcon } from "@heroicons/react/24/outline";
 import { UserIcon } from "lucide-react";
+import type { SeriesDetailData } from "../types/types";
 
 const ComparePage = () => {
   const location = useLocation();
   const { items = [] } = location.state || {};
-  const [details, setDetails] = useState<any[]>([]);
+  const [details, setDetails] = useState<SeriesDetailData[]>([]);
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -22,8 +23,17 @@ const ComparePage = () => {
     }
   }, [items]);
 
-  const calculateRatings = (detail: any) => {
-    const labelKeyMap: Record<string, string> = {
+  type RatingLabel =
+    | "Story"
+    | "Characters"
+    | "World Building"
+    | "Art"
+    | "Drama / Fighting";
+
+  const calculateRatings = (
+    detail: SeriesDetailData
+  ): Record<RatingLabel, number> => {
+    const labelKeyMap: Record<RatingLabel, string> = {
       Story: "story",
       Characters: "characters",
       "World Building": "worldbuilding",
@@ -31,11 +41,18 @@ const ComparePage = () => {
       "Drama / Fighting": "drama_or_fight",
     };
 
-    const ratings: Record<string, number> = {};
+    const ratings: Record<RatingLabel, number> = {
+      Story: -1,
+      Characters: -1,
+      "World Building": -1,
+      Art: -1,
+      "Drama / Fighting": -1,
+    };
 
-    Object.entries(labelKeyMap).forEach(([label, key]) => {
-      const total = detail[`${key}_total`];
-      const count = detail[`${key}_count`];
+    (Object.keys(labelKeyMap) as RatingLabel[]).forEach((label) => {
+      const key = labelKeyMap[label];
+      const total = detail[`${key}_total` as keyof SeriesDetailData] as number;
+      const count = detail[`${key}_count` as keyof SeriesDetailData] as number;
       ratings[label] = count ? total / count : -1;
     });
 
@@ -71,9 +88,7 @@ const ComparePage = () => {
                   />
                 </div>
 
-                <h2 className="font-semibold text-base mb-0.5">
-                  {item.title}
-                </h2>
+                <h2 className="font-semibold text-base mb-0.5">{item.title}</h2>
                 <p className="text-xs text-gray-500">{item.genre}</p>
                 <p className="text-xs text-gray-500">{item.type}</p>
 
@@ -165,30 +180,32 @@ const ComparePage = () => {
                 </p>
 
                 <div className="grid grid-cols-1 gap-2 mt-auto">
-                  {Object.entries(calculateRatings(detail)).map(([label, score]) => {
-                    const voteCount = detail.vote_counts?.[label];
-                    return (
-                      <div
-                        key={label}
-                        className="bg-gray-100 p-2 rounded text-left text-sm relative"
-                      >
-                        <h4 className="text-gray-700 font-medium">{label}</h4>
-                        <p className="text-blue-500 font-bold text-lg">
-                          {score === -1 ? "-/10" : `${score.toFixed(1)}/10`}
-                        </p>
-                        {voteCount !== undefined && (
-                          <div className="absolute bottom-1 right-2 text-xs text-gray-500 flex items-center gap-1">
-                            {voteCount > 1 ? (
-                              <UsersIcon className="w-4 h-4 text-blue-400" />
-                            ) : (
-                              <UserIcon className="w-4 h-4 text-blue-400" />
-                            )}
-                            {voteCount}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                  {Object.entries(calculateRatings(detail)).map(
+                    ([label, score]) => {
+                      const voteCount = detail.vote_counts?.[label];
+                      return (
+                        <div
+                          key={label}
+                          className="bg-gray-100 p-2 rounded text-left text-sm relative"
+                        >
+                          <h4 className="text-gray-700 font-medium">{label}</h4>
+                          <p className="text-blue-500 font-bold text-lg">
+                            {score === -1 ? "-/10" : `${score.toFixed(1)}/10`}
+                          </p>
+                          {voteCount !== undefined && (
+                            <div className="absolute bottom-1 right-2 text-xs text-gray-500 flex items-center gap-1">
+                              {voteCount > 1 ? (
+                                <UsersIcon className="w-4 h-4 text-blue-400" />
+                              ) : (
+                                <UserIcon className="w-4 h-4 text-blue-400" />
+                              )}
+                              {voteCount}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+                  )}
                 </div>
               </div>
             );
