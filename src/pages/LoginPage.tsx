@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../api/manApi";
-import { useUser } from "../login/UserContext";
+
 import GoogleOAuthButton from "../components/GoogleOAuthButton";
 import ReCAPTCHA from "react-google-recaptcha";
+import { handleAutoLogout } from "../util/authUtils";
+import { useUser } from "../login/useUser";
 
 const LoginPage = () => {
   const [username, setUsername] = useState("");
@@ -37,14 +39,15 @@ const LoginPage = () => {
       localStorage.setItem("user", JSON.stringify(data.user));
 
       // 🔐 Auto logout after 10 hours (in milliseconds)
-      setTimeout(() => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        setUser(null);
-        alert("Session expired. Please Login again.");
-        window.location.href = "/";
-      }, 10 * 60 * 60 * 1000); // 10 hours
+      // setTimeout(() => {
+      //   localStorage.removeItem("token");
+      //   localStorage.removeItem("user");
+      //   setUser(null);
+      //   alert("Session expired. Please Login again.");
+      //   window.location.href = "/";
+      // }, 10 * 60 * 60 * 1000); // 10 hours
 
+      handleAutoLogout(setUser);
       navigate("/");
     } catch (err) {
       const msg = (err as Error).message || "";

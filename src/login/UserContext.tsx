@@ -1,24 +1,11 @@
-import React, { createContext, useState, useContext, useEffect } from "react";
+import { useState, useEffect } from "react";
 import type { ReactNode } from "react";
-
-interface User {
-  username: string;
-  role?: string;
-}
-
-interface UserContextType {
-  user: User | null;
-  setUser: React.Dispatch<React.SetStateAction<User | null>>;
-}
-
-export const UserContext = createContext<UserContextType | undefined>(
-  undefined
-);
+import { UserContext } from "./UserContext";
+import type { User } from "../types/types";
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
 
-  // ✅ Restore user from localStorage on initial load
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
@@ -35,10 +22,4 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       {children}
     </UserContext.Provider>
   );
-};
-
-export const useUser = (): UserContextType => {
-  const context = useContext(UserContext);
-  if (!context) throw new Error("useUser must be used within a UserProvider");
-  return context;
 };

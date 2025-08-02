@@ -4,13 +4,13 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { NavLink, useNavigate } from "react-router-dom";
-import { useUser } from "../login/UserContext";
 import { useState } from "react";
 import { useSearch } from "./SearchContext";
 import myLogo from "../images/logo/myLogo.png";
 import myHomeLogo from "../images/logo/myHomeLogo.png";
 import SocialLinks from "./SocialLinks";
 import { useEffect, useRef } from "react";
+import { useUser } from "../login/useUser";
 
 const Header = () => {
   const { user, setUser } = useUser();
