@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { voteOnSeries } from "../api/manApi";
-import { useUser } from "../login/UserContext";
 import { Check } from "lucide-react";
 import type { SeriesDetailData } from "../types/types";
+import { useUser } from "../login/useUser";
 
 type Category =
   | "Story"

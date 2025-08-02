@@ -8,12 +8,12 @@ import {
   type Series,
 } from "../api/manApi";
 import ManCard from "../components/ManCard";
-import { useUser } from "../login/UserContext";
 import EditSeriesModal from "../components/EditSeriesModal";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useSearch } from "../components/SearchContext";
 import ShimmerLoader from "../components/ShimmerLoader";
 import CompareManager from "../components/CompareManager";
+import { useUser } from "../login/useUser";
 
 const PAGE_SIZE = 25;
 

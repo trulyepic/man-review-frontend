@@ -9,12 +9,12 @@ import {
   type RankedSeries,
   type Series,
 } from "../api/manApi";
-import { useUser } from "../login/UserContext";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useSearch } from "../components/SearchContext";
 import ShimmerLoader from "../components/ShimmerLoader";
 import { Helmet } from "react-helmet";
 import CompareManager from "../components/CompareManager";
+import { useUser } from "../login/useUser";
 // import { Link } from "react-router-dom";
 
 const PAGE_SIZE = 25;

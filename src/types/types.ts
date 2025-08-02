@@ -18,3 +18,13 @@ export type SeriesDetailData = {
   vote_scores?: Record<string, number>;
   vote_counts?: Record<string, number>;
 };
+
+export interface User {
+  username: string;
+  role?: string;
+}
+
+export interface UserContextType {
+  user: User | null;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
+}
