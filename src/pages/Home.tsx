@@ -210,7 +210,7 @@ const Home = () => {
                 }
                 endMessage={
                   <p className="text-center py-6 text-gray-400">
-                    🎉 You’ve seen everything.
+                    🎉 You’ve seen everything, new series added priodically.
                   </p>
                 }
               >
