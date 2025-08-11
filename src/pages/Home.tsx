@@ -65,6 +65,10 @@ const Home = () => {
 
   const canCreateMoreLists = !!user && (myLists?.length ?? 0) < 2;
 
+  const inAnyListIds = new Set(
+    (myLists ?? []).flatMap((l) => l.items?.map((it) => it.series_id) ?? [])
+  );
+
   const openCreateListOnly = () => {
     setModalSeriesId(undefined); // create-only mode
     setShowListModal(true);
@@ -325,6 +329,7 @@ const Home = () => {
                         onAddToReadingList={
                           user ? () => openAddSeriesToList(item.id) : undefined
                         }
+                        isInReadingList={inAnyListIds.has(item.id)}
                       />
                     ))}
                   </div>

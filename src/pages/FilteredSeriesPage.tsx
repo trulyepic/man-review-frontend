@@ -64,6 +64,10 @@ const FilteredSeriesPage = () => {
 
   const canCreateMoreLists = !!user && (myLists?.length ?? 0) < 2;
 
+  const inAnyListIds = new Set(
+    (myLists ?? []).flatMap((l) => l.items?.map((it) => it.series_id) ?? [])
+  );
+
   const openCreateListOnly = () => {
     setModalSeriesId(undefined); // create-only mode
     setShowListModal(true);
@@ -282,7 +286,8 @@ const FilteredSeriesPage = () => {
                       isCompared={isSelectedForCompare(item.id)}
                       onAddToReadingList={
                         user ? () => openAddSeriesToList(item.id) : undefined
-                      } // ✅ same behavior as Home
+                      }
+                      isInReadingList={inAnyListIds.has(item.id)}
                     />
                   ))}
                 </div>
