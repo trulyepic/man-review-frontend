@@ -11,6 +11,7 @@ import myHomeLogo from "../images/logo/myHomeLogo.png";
 import SocialLinks from "./SocialLinks";
 import { useEffect, useRef } from "react";
 import { useUser } from "../login/useUser";
+import { BookmarkIcon } from "lucide-react";
 
 const Header = () => {
   const { user, setUser } = useUser();
@@ -58,6 +59,16 @@ const Header = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  const pillLink =
+    "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold " +
+    "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 ring-1 ring-blue-200 " +
+    "hover:from-blue-100 hover:to-blue-200 hover:ring-blue-300 " +
+    "transition-colors shadow-sm";
+
+  const pillLinkActive =
+    "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold " +
+    "bg-blue-600 text-white ring-1 ring-blue-600 shadow";
 
   return (
     <header className="border-b shadow-md">
@@ -200,8 +211,11 @@ const Header = () => {
             <>
               <NavLink
                 to="/my-lists"
-                className="text-sm font-medium text-gray-600 hover:underline"
+                className={({ isActive }) =>
+                  isActive ? pillLinkActive : pillLink
+                }
               >
+                <BookmarkIcon className="w-4 h-4" />
                 My Lists
               </NavLink>
               <span className="bg-gray-200 px-3 py-1 rounded-full font-bold text-black text-sm">
@@ -307,6 +321,15 @@ const Header = () => {
 
           {user ? (
             <>
+              <NavLink
+                to="/my-lists"
+                className={({ isActive }) =>
+                  isActive ? pillLinkActive : pillLink
+                }
+              >
+                <BookmarkIcon className="w-4 h-4" />
+                My Lists
+              </NavLink>
               <span className="bg-gray-200 px-3 py-1 rounded-full font-bold text-black text-sm">
                 {user.username}
               </span>
