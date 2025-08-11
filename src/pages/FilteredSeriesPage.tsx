@@ -4,8 +4,10 @@ import {
   fetchRankedSeriesPaginated,
   deleteSeries,
   searchSeries,
+  getMyReadingLists, // ✅ NEW
   type RankedSeries,
   type Series,
+  type ReadingList, // ✅ NEW
 } from "../api/manApi";
 import ManCard from "../components/ManCard";
 import EditSeriesModal from "../components/EditSeriesModal";
@@ -14,12 +16,14 @@ import { useSearch } from "../components/SearchContext";
 import ShimmerLoader from "../components/ShimmerLoader";
 import CompareManager from "../components/CompareManager";
 import { useUser } from "../login/useUser";
+import ReadingListModal from "../components/ReadingListModal"; // ✅ NEW
 
 const PAGE_SIZE = 25;
 
 const FilteredSeriesPage = () => {
   const { seriesType } = useParams();
   const { searchTerm } = useSearch();
+
   const [items, setItems] = useState<RankedSeries[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -30,11 +34,61 @@ const FilteredSeriesPage = () => {
   const { user } = useUser();
   const isAdmin = user?.role === "ADMIN";
 
+  // 🔽 Reading list state (same as Home)
+  const [showListModal, setShowListModal] = useState(false);
+  const [modalSeriesId, setModalSeriesId] = useState<number | undefined>(
+    undefined
+  );
+  const [myLists, setMyLists] = useState<ReadingList[] | null>(null);
+
+  // Fetch lists when user present (same as Home)
+  useEffect(() => {
+    let ignore = false;
+    const run = async () => {
+      if (!user) {
+        setMyLists(null);
+        return;
+      }
+      try {
+        const res = await getMyReadingLists();
+        if (!ignore) setMyLists(res);
+      } catch {
+        if (!ignore) setMyLists([]);
+      }
+    };
+    run();
+    return () => {
+      ignore = true;
+    };
+  }, [user]);
+
+  const canCreateMoreLists = !!user && (myLists?.length ?? 0) < 2;
+
+  const openCreateListOnly = () => {
+    setModalSeriesId(undefined); // create-only mode
+    setShowListModal(true);
+  };
+
+  const openAddSeriesToList = (seriesId: number) => {
+    setModalSeriesId(seriesId); // add-this-series mode
+    setShowListModal(true);
+  };
+
+  const handleModalDone = async () => {
+    if (user) {
+      try {
+        const res = await getMyReadingLists();
+        setMyLists(res);
+      } catch (err) {
+        console.error("Failed to refresh reading lists:", err);
+        alert("Couldn't update your reading lists. Please try again.");
+      }
+    }
+  };
+  // 🔼 Reading list state
+
   const loadSeries = async (pageToLoad: number) => {
     if (!seriesType || loading || !hasMore) return;
-
-    console.log(`[loadSeries] Fetching page ${pageToLoad}...`);
-
     setLoading(true);
 
     controllerRef.current?.abort();
@@ -48,19 +102,11 @@ const FilteredSeriesPage = () => {
         controllerRef.current.signal
       );
 
-      console.log(`[loadSeries] Received ${all.length} items from API`);
-
       const ids = new Set(items.map((i) => i.id));
       const unique = all.filter((s) => !ids.has(s.id));
-
-      console.log(`[loadSeries] ${unique.length} new unique items`);
-
       setItems((prev) => [...prev, ...unique]);
 
-      if (all.length < PAGE_SIZE) {
-        console.log("[loadSeries] End of data reached.");
-        setHasMore(false);
-      }
+      if (all.length < PAGE_SIZE) setHasMore(false);
     } catch (err: unknown) {
       if (err instanceof Error && err.name !== "AbortError") {
         console.error("Failed to fetch series:", err);
@@ -71,13 +117,11 @@ const FilteredSeriesPage = () => {
     }
   };
 
-  // 🔁 Reset and load default items when type changes
+  // Reset when type changes
   useEffect(() => {
     if (!seriesType) return;
 
-    // Cancel any in-flight request
     controllerRef.current?.abort();
-
     setItems([]);
     setPage(1);
     setHasMore(true);
@@ -94,12 +138,9 @@ const FilteredSeriesPage = () => {
           seriesType.toUpperCase(),
           controller.signal
         );
-
         setItems(all);
         setPage(1);
-        if (all.length < PAGE_SIZE) {
-          setHasMore(false);
-        }
+        if (all.length < PAGE_SIZE) setHasMore(false);
       } catch (err: unknown) {
         if (err instanceof Error && err.name !== "AbortError") {
           console.error("Failed to fetch series:", err);
@@ -110,17 +151,12 @@ const FilteredSeriesPage = () => {
       }
     };
 
-    if (!searchTerm.trim()) {
-      loadInitial();
-    }
+    if (!searchTerm.trim()) loadInitial();
 
-    // Cleanup on unmount or seriesType change
-    return () => {
-      controller.abort();
-    };
+    return () => controller.abort();
   }, [seriesType]);
 
-  // 🔍 Watch for search term changes
+  // Search handling
   useEffect(() => {
     if (!seriesType) return;
 
@@ -136,7 +172,7 @@ const FilteredSeriesPage = () => {
           (s) => s.type.toUpperCase() === seriesType.toUpperCase()
         );
         setItems(filtered);
-        setHasMore(false); // disable infinite scroll for search
+        setHasMore(false);
       } catch (err) {
         console.error("Search failed:", err);
       } finally {
@@ -167,22 +203,14 @@ const FilteredSeriesPage = () => {
       }
     };
 
-    if (searchTerm.trim()) {
-      fetchSearch();
-    } else {
-      resetToDefault();
-    }
+    if (searchTerm.trim()) fetchSearch();
+    else resetToDefault();
 
-    return () => {
-      controller.abort();
-    };
+    return () => controller.abort();
   }, [searchTerm, seriesType]);
 
   useEffect(() => {
-    if (!searchTerm.trim() && page > 1) {
-      console.log(`[useEffect:page] Triggering loadSeries(${page})`);
-      loadSeries(page);
-    }
+    if (!searchTerm.trim() && page > 1) loadSeries(page);
   }, [page]);
 
   const handleDelete = async (id: number) => {
@@ -199,6 +227,18 @@ const FilteredSeriesPage = () => {
   return (
     <div className="flex justify-center px-4">
       <div className="w-full max-w-7xl py-6">
+        {/* Toolbar – same as Home */}
+        {canCreateMoreLists && (
+          <div className="flex justify-start mb-4">
+            <button
+              onClick={openCreateListOnly}
+              className="px-5 py-2.5 rounded-md font-medium text-blue-800 bg-blue-100 border border-blue-300 shadow hover:bg-blue-200 transition-all duration-200"
+            >
+              + Create Reading List
+            </button>
+          </div>
+        )}
+
         <CompareManager>
           {({ toggleCompare, isSelectedForCompare }) => (
             <InfiniteScroll
@@ -240,6 +280,9 @@ const FilteredSeriesPage = () => {
                       onEdit={() => setEditItem(item)}
                       onCompareToggle={() => toggleCompare(item)}
                       isCompared={isSelectedForCompare(item.id)}
+                      onAddToReadingList={
+                        user ? () => openAddSeriesToList(item.id) : undefined
+                      } // ✅ same behavior as Home
                     />
                   ))}
                 </div>
@@ -261,6 +304,14 @@ const FilteredSeriesPage = () => {
             }}
           />
         )}
+
+        {/* Reading list modal (same as Home) */}
+        <ReadingListModal
+          open={showListModal}
+          onClose={() => setShowListModal(false)}
+          seriesId={modalSeriesId}
+          onDone={handleModalDone}
+        />
       </div>
     </div>
   );

@@ -198,6 +198,12 @@ const Header = () => {
 
           {user ? (
             <>
+              <NavLink
+                to="/my-lists"
+                className="text-sm font-medium text-gray-600 hover:underline"
+              >
+                My Lists
+              </NavLink>
               <span className="bg-gray-200 px-3 py-1 rounded-full font-bold text-black text-sm">
                 {user.username}
               </span>
