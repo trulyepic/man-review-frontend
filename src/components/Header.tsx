@@ -323,14 +323,15 @@ const Header = () => {
             <>
               <NavLink
                 to="/my-lists"
+                onClick={() => setMobileMenuOpen(false)}
                 className={({ isActive }) =>
-                  isActive ? pillLinkActive : pillLink
+                  (isActive ? pillLinkActive : pillLink) + " w-max"
                 }
               >
                 <BookmarkIcon className="w-4 h-4" />
                 My Lists
               </NavLink>
-              <span className="bg-gray-200 px-3 py-1 rounded-full font-bold text-black text-sm">
+              <span className="bg-gray-200 px-3 py-1 w-max rounded-full font-bold text-black text-sm">
                 {user.username}
               </span>
               <button
