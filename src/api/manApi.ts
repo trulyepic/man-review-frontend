@@ -39,6 +39,26 @@ export interface RankedSeries {
   artist?: string;
 }
 
+// ---------- Reading List Types ----------
+export interface ReadingListItem {
+  series_id: number;
+}
+
+export interface ReadingList {
+  id: number;
+  name: string;
+  items: ReadingListItem[];
+}
+
+// Small helper for auth headers
+// Small helper for auth headers (no union types)
+const authHeaders = (): HeadersInit => {
+  const token = localStorage.getItem("token");
+  const headers: Record<string, string> = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return headers;
+};
+
 // const BASE_URL = "http://localhost:8000";
 const BASE_URL = import.meta.env.VITE_APP_BASE_URL;
 
@@ -297,4 +317,94 @@ export const googleOAuthLogin = async (token: string) => {
   if (!response.ok) throw new Error("Google OAuth login failed");
 
   return await response.json();
+};
+
+// ---------- Reading List API ----------
+
+// GET /reading-lists/me
+export const getMyReadingLists = async (): Promise<ReadingList[]> => {
+  const res = await fetch(`${BASE_URL}/reading-lists/me`, {
+    headers: { ...authHeaders() },
+  });
+  if (!res.ok) throw new Error("Failed to fetch reading lists");
+  return res.json();
+};
+
+// POST /reading-lists  { name }
+export const createReadingList = async (name: string): Promise<ReadingList> => {
+  const res = await fetch(`${BASE_URL}/reading-lists`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(),
+    },
+    body: JSON.stringify({ name }),
+  });
+
+  // surfaces the “max 2 lists” rule from backend
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.detail || "Failed to create reading list");
+  }
+
+  return res.json();
+};
+
+// POST /reading-lists/:list_id/items  { series_id }
+export const addSeriesToReadingList = async (
+  listId: number,
+  seriesId: number
+): Promise<ReadingList> => {
+  const res = await fetch(`${BASE_URL}/reading-lists/${listId}/items`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(),
+    },
+    body: JSON.stringify({ series_id: seriesId }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.detail || "Failed to add series to list");
+  }
+  return res.json();
+};
+
+// DELETE /reading-lists/:list_id/items/:series_id
+export const removeSeriesFromReadingList = async (
+  listId: number,
+  seriesId: number
+): Promise<ReadingList> => {
+  const res = await fetch(
+    `${BASE_URL}/reading-lists/${listId}/items/${seriesId}`,
+    {
+      method: "DELETE",
+      headers: { ...authHeaders() },
+    }
+  );
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.detail || "Failed to remove series from list");
+  }
+  return res.json();
+};
+
+// DELETE /reading-lists/:list_id
+export const deleteReadingList = async (listId: number): Promise<void> => {
+  const res = await fetch(`${BASE_URL}/reading-lists/${listId}`, {
+    method: "DELETE",
+    headers: { ...authHeaders() },
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.detail || "Failed to delete reading list");
+  }
+};
+
+export const getSeriesSummary = async (
+  seriesId: number
+): Promise<RankedSeries> => {
+  const res = await fetch(`${BASE_URL}/series/summary/${seriesId}`);
+  if (!res.ok) throw new Error("Failed to fetch series summary");
+  return res.json();
 };

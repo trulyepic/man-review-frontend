@@ -5,8 +5,10 @@ import EditSeriesModal from "../components/EditSeriesModal";
 import {
   deleteSeries,
   fetchRankedSeriesPaginated,
+  getMyReadingLists,
   searchSeries,
   type RankedSeries,
+  type ReadingList,
   type Series,
 } from "../api/manApi";
 import InfiniteScroll from "react-infinite-scroll-component";
@@ -15,6 +17,7 @@ import ShimmerLoader from "../components/ShimmerLoader";
 import { Helmet } from "react-helmet";
 import CompareManager from "../components/CompareManager";
 import { useUser } from "../login/useUser";
+import ReadingListModal from "../components/ReadingListModal";
 // import { Link } from "react-router-dom";
 
 const PAGE_SIZE = 25;
@@ -29,9 +32,61 @@ const Home = () => {
   // const [compareList, setCompareList] = useState<RankedSeries[]>([]);
   const [compareError, setCompareError] = useState<string | null>(null);
 
+  const [showListModal, setShowListModal] = useState(false);
+  const [modalSeriesId, setModalSeriesId] = useState<number | undefined>(
+    undefined
+  );
+  const [myLists, setMyLists] = useState<ReadingList[] | null>(null); // null=unknown, []=none
+
   const { searchTerm } = useSearch();
   const { user } = useUser();
   const isAdmin = user?.role === "ADMIN";
+
+  // fetch lists once when user present
+  useEffect(() => {
+    let ignore = false;
+    const run = async () => {
+      if (!user) {
+        setMyLists(null);
+        return;
+      }
+      try {
+        const res = await getMyReadingLists();
+        if (!ignore) setMyLists(res);
+      } catch {
+        if (!ignore) setMyLists([]);
+      }
+    };
+    run();
+    return () => {
+      ignore = true;
+    };
+  }, [user]);
+
+  const canCreateMoreLists = !!user && (myLists?.length ?? 0) < 2;
+
+  const openCreateListOnly = () => {
+    setModalSeriesId(undefined); // create-only mode
+    setShowListModal(true);
+  };
+
+  const openAddSeriesToList = (seriesId: number) => {
+    setModalSeriesId(seriesId);
+    setShowListModal(true);
+  };
+
+  const handleModalDone = async () => {
+    // refresh lists (to reflect a newly created list or new item count)
+    if (user) {
+      try {
+        const res = await getMyReadingLists();
+        setMyLists(res);
+      } catch (err) {
+        console.error("Failed to refresh reading lists:", err);
+        alert("Couldn't update your reading lists. Please try again.");
+      }
+    }
+  };
 
   const loadSeries = async () => {
     if (!hasMore) return;
@@ -184,7 +239,29 @@ const Home = () => {
       </Helmet>
       <div className="flex justify-center px-4">
         <div className="w-full max-w-7xl py-6">
-          {isAdmin && (
+          {/* Toolbar: right-aligned */}
+          {(isAdmin || canCreateMoreLists) && (
+            <div className="flex justify-start mb-4 gap-2">
+              {canCreateMoreLists && (
+                <button
+                  onClick={openCreateListOnly}
+                  className="px-5 py-2.5 rounded-md font-medium text-blue-800 bg-blue-100 border border-blue-300 shadow hover:bg-blue-200 transition-all duration-200"
+                >
+                  + Create Reading List
+                </button>
+              )}
+              {isAdmin && (
+                <button
+                  onClick={() => setShowModal(true)}
+                  className="px-5 py-2.5 rounded-md font-medium text-gray-800 bg-white/80 border border-gray-300 shadow hover:bg-white hover:shadow-lg transition-all"
+                >
+                  + Add Series
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* {isAdmin && (
             <div className="flex justify-end mb-4">
               <button
                 onClick={() => setShowModal(true)}
@@ -194,6 +271,15 @@ const Home = () => {
               </button>
             </div>
           )}
+
+          {canCreateMoreLists && (
+            <button
+              onClick={openCreateListOnly}
+              className="px-5 py-2.5 rounded-md font-medium text-blue-800 bg-blue-100 border border-blue-300 shadow hover:bg-blue-200 transition-all duration-200"
+            >
+              + Create Reading List
+            </button>
+          )} */}
 
           <CompareManager>
             {({ toggleCompare, isSelectedForCompare }) => (
@@ -236,6 +322,9 @@ const Home = () => {
                         onEdit={() => setEditItem(item)}
                         onCompareToggle={() => toggleCompare(item)}
                         isCompared={isSelectedForCompare(item.id)}
+                        onAddToReadingList={
+                          user ? () => openAddSeriesToList(item.id) : undefined
+                        }
                       />
                     ))}
                   </div>
@@ -263,6 +352,13 @@ const Home = () => {
               }}
             />
           )}
+
+          <ReadingListModal
+            open={showListModal}
+            onClose={() => setShowListModal(false)}
+            seriesId={modalSeriesId}
+            onDone={handleModalDone}
+          />
         </div>
         {/* {compareList.length >= 2 && (
           <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">

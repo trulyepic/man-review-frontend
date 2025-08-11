@@ -22,6 +22,7 @@ type Props = {
   avgScore?: number;
   onCompareToggle?: () => void;
   isCompared?: boolean | void;
+  onAddToReadingList?: () => void;
 };
 
 const ManCard = ({
@@ -39,10 +40,13 @@ const ManCard = ({
   artist,
   avgScore,
   onCompareToggle,
+  onAddToReadingList,
   isCompared,
 }: Props) => {
   const [imageLoaded, setImageLoaded] = useState(false);
-
+  const showVotes = votes >= 10;
+  const showListBtn = !!onAddToReadingList;
+  const showCompareBtn = !!onCompareToggle;
   return (
     <article className="relative w-40">
       {/* Rank badge */}
@@ -162,22 +166,32 @@ const ManCard = ({
               </span>
             </p>
           )}
-          <div className="flex items-center justify-between mt-1 text-sm text-gray-700">
-            {votes === 10 && (
+          <div className="flex items-center mt-1 text-sm text-gray-700">
+            {/* LEFT */}
+            {showVotes ? (
               <div className="flex items-center space-x-1">
-                <UserIcon className="w-5 h-5 text-blue-400" />
-                <span>{votes.toLocaleString()}</span>
+                <UserIcon className="w-3.5 h-3.5 text-blue-400 " />
+                <span className="text-xs">{votes.toLocaleString()}</span>
               </div>
-            )}
-
-            {onCompareToggle && (
+            ) : showListBtn ? (
               <button
                 onClick={(e) => {
                   e.preventDefault();
-                  onCompareToggle();
+                  onAddToReadingList!();
+                }}
+                title="Add to Reading List"
+                className="px-2 py-0.5 text-xs rounded-full font-semibold bg-green-200 text-green-800 hover:bg-green-300"
+              >
+                + List
+              </button>
+            ) : showCompareBtn ? (
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  onCompareToggle!();
                 }}
                 title="Select to Compare"
-                className={`ml-2 px-2 py-0.5 text-xs rounded-full font-semibold ${
+                className={`px-2 py-0.5 text-xs rounded-full font-semibold ${
                   isCompared
                     ? "bg-blue-600 text-white"
                     : "bg-gray-200 text-gray-700"
@@ -185,8 +199,94 @@ const ManCard = ({
               >
                 {isCompared ? "✓" : "+"} Compare
               </button>
-            )}
+            ) : null}
+
+            {/* RIGHT: whatever didn’t occupy the left slot */}
+            <div className="ml-auto flex items-center gap-2">
+              {!showVotes && showListBtn && (
+                // (only render on right if it wasn't used on the left)
+                <></>
+              )}
+              {showVotes && showListBtn && (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onAddToReadingList!();
+                  }}
+                  title="Add to Reading List"
+                  className="px-2 py-0.5 text-xs rounded-full font-semibold bg-green-200 text-green-800 hover:bg-green-300"
+                >
+                  + List
+                </button>
+              )}
+
+              {/* Compare goes right only if it wasn't used on the left */}
+              {(showVotes || (showListBtn && !showVotes)) && showCompareBtn && (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onCompareToggle!();
+                  }}
+                  title="Select to Compare"
+                  className={`px-2 py-0.5 text-xs rounded-full font-semibold ${
+                    isCompared
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-200 text-gray-700"
+                  }`}
+                >
+                  {isCompared ? "✓" : "+"} Compare
+                </button>
+              )}
+            </div>
           </div>
+          {/* <div
+            className={`flex items-center mt-1 text-sm text-gray-700 ${
+              showVotes ? "" : "justify-end"
+            }`}
+          >
+            {showVotes && (
+              <div className="flex items-center space-x-1">
+                <UserIcon className="w-5 h-5 text-blue-400" />
+                <span>{votes.toLocaleString()}</span>
+              </div>
+            )}
+
+            <div
+              className={`flex items-center gap-2 ${
+                showVotes ? "ml-auto" : ""
+              }`}
+            >
+              {onAddToReadingList && (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault(); // avoid navigating the wrapping <Link>
+                    onAddToReadingList();
+                  }}
+                  title="Add to Reading List"
+                  className="px-2 py-0.5 text-xs rounded-full font-semibold bg-green-200 text-green-800 hover:bg-green-300"
+                >
+                  + List
+                </button>
+              )}
+
+              {onCompareToggle && (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onCompareToggle();
+                  }}
+                  title="Select to Compare"
+                  className={`px-2 py-0.5 text-xs rounded-full font-semibold ${
+                    isCompared
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-200 text-gray-700"
+                  }`}
+                >
+                  {isCompared ? "✓" : "+"} Compare
+                </button>
+              )}
+            </div>
+          </div> */}
         </div>
       </Link>
     </article>
