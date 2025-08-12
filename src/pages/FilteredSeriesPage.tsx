@@ -288,6 +288,7 @@ const FilteredSeriesPage = () => {
                         user ? () => openAddSeriesToList(item.id) : undefined
                       }
                       isInReadingList={inAnyListIds.has(item.id)}
+                      status={item.status}
                     />
                   ))}
                 </div>

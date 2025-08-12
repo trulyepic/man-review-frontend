@@ -9,6 +9,7 @@ type Props = {
     type: SeriesType;
     author?: string;
     artist?: string;
+    status?: "ONGOING" | "COMPLETE" | "HIATUS" | "UNKNOWN" | null;
   };
   onClose: () => void;
   onSuccess: () => void;
@@ -74,6 +75,22 @@ const EditSeriesModal = ({ id, initialData, onClose, onSuccess }: Props) => {
             <option value="MANGA">Manga</option>
             <option value="MANHWA">Manhwa</option>
             <option value="MANHUA">Manhua</option>
+          </select>
+
+          <select
+            name="status"
+            value={form.status || ""} // blank => null on submit if you want
+            onChange={(e) => {
+              const v = e.target.value as Props["initialData"]["status"];
+              setForm((prev) => ({ ...prev, status: v || null }));
+            }}
+            className="w-full p-2 border rounded bg-white/30 text-gray-800 backdrop-blur-sm mb-1 focus:outline-none focus:ring-2 focus:ring-white/40"
+          >
+            <option value="">Status (optional)</option>
+            <option value="ONGOING">Ongoing</option>
+            <option value="COMPLETE">Complete</option>
+            <option value="HIATUS">Hiatus</option>
+            <option value="UNKNOWN">Unknown</option>
           </select>
         </div>
         <div className="flex justify-end gap-3 mt-4">

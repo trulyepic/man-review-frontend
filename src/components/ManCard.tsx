@@ -24,6 +24,7 @@ type Props = {
   isCompared?: boolean | void;
   onAddToReadingList?: () => void;
   isInReadingList?: boolean;
+  status?: "ONGOING" | "COMPLETE" | "HIATUS" | "UNKNOWN" | null;
 };
 
 const ManCard = ({
@@ -44,12 +45,28 @@ const ManCard = ({
   onAddToReadingList,
   isInReadingList,
   isCompared,
+  status,
 }: Props) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const showVotes = votes >= 10;
   const showListBtn = !!onAddToReadingList;
   const showCompareBtn = !!onCompareToggle;
 
+  const statusClass = (s?: Props["status"]) => {
+    switch (s) {
+      case "ONGOING":
+        return "bg-green-500 text-white";
+      case "COMPLETE":
+        return "bg-blue-600 text-white";
+      case "HIATUS":
+        return "bg-amber-500 text-white";
+      case "UNKNOWN":
+        return "bg-gray-400 text-white";
+      default:
+        return ""; // render nothing when null/undefined
+    }
+  };
+  console.log("status: ", status);
   const ListButton = () => (
     <button
       onClick={(e) => {
@@ -126,6 +143,26 @@ const ManCard = ({
                 : "opacity-0 absolute top-0 left-0"
             }`}
           />
+
+          {status ? (
+            <div className="absolute bottom-2 right-2 z-10 pointer-events-none select-none">
+              <div
+                className={
+                  // keep your colors from statusClass
+                  "px-3 py-1 text-[11px] font-bold uppercase tracking-wide whitespace-nowrap shadow ring-1 ring-white/70 " +
+                  statusClass(status)
+                }
+                // corner ribbon shape that won't get clipped by overflow-hidden
+                style={{
+                  clipPath: "polygon(0 0, 100% 0, 86% 100%, 0% 100%)",
+                }}
+                title={status}
+                aria-label={`Status: ${status}`}
+              >
+                {status}
+              </div>
+            </div>
+          ) : null}
         </div>
 
         {/* Content */}

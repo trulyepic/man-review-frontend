@@ -94,6 +94,25 @@ const AddSeriesModal = ({ onClose }: Props) => {
           <option value="MANHUA">Manhua</option>
         </select>
 
+        <select
+          className="w-full p-2 border rounded bg-white/30 text-gray-800 backdrop-blur-sm mb-4 focus:outline-none focus:ring-2 focus:ring-white/40"
+          onChange={(e) =>
+            setForm({
+              ...form,
+              status:
+                e.target.value === ""
+                  ? undefined
+                  : (e.target.value as SeriesPayload["status"]),
+            })
+          }
+        >
+          <option value="">Status (optional)</option>
+          <option value="ONGOING">Ongoing</option>
+          <option value="COMPLETE">Complete</option>
+          <option value="HIATUS">Hiatus</option>
+          <option value="UNKNOWN">Unknown</option>
+        </select>
+
         <label
           htmlFor="cover-upload"
           className="block w-full bg-white/30 text-gray-800 border rounded p-2 text-center cursor-pointer mb-6 hover:bg-white/40 transition"
