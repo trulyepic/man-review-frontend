@@ -1,4 +1,5 @@
 export type SeriesType = "MANGA" | "MANHWA" | "MANHUA";
+export type SeriesStatus = "ONGOING" | "COMPLETE" | "HIATUS" | "UNKNOWN" | null;
 
 export interface Series {
   id: number;
@@ -9,6 +10,7 @@ export interface Series {
   vote_count: number;
   author?: string;
   artist?: string;
+  status?: SeriesStatus;
 }
 
 export interface SeriesPayload {
@@ -18,6 +20,7 @@ export interface SeriesPayload {
   cover: File;
   author?: string;
   artist?: string;
+  status?: Exclude<SeriesStatus, null>;
 }
 
 export interface SeriesDetailPayload {
@@ -37,6 +40,7 @@ export interface RankedSeries {
   rank: number | null;
   author?: string;
   artist?: string;
+  status?: SeriesStatus;
 }
 
 // ---------- Reading List Types ----------
@@ -70,6 +74,8 @@ export const createSeries = async (data: SeriesPayload): Promise<Series> => {
   formData.append("cover", data.cover);
   formData.append("author", data.author || "");
   formData.append("artist", data.artist || "");
+
+  if (data.status) formData.append("status", data.status);
 
   const response = await fetch(`${BASE_URL}/series/`, {
     method: "POST",

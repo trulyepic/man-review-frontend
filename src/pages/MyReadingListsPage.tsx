@@ -87,6 +87,22 @@ export default function MyReadingListsPage() {
     }
   };
 
+  // keep the original card colors; statuses come UPPERCASE from backend
+  const statusClass = (status?: string) => {
+    switch (status) {
+      case "ONGOING":
+        return "bg-green-500 text-white";
+      case "COMPLETE":
+        return "bg-blue-600 text-white";
+      case "HIATUS":
+        return "bg-amber-500 text-white";
+      case "UNKNOWN":
+        return "bg-gray-400 text-white";
+      default:
+        return "bg-gray-400 text-white";
+    }
+  };
+
   if (loading) return <div className="max-w-5xl mx-auto p-6">Loading…</div>;
   if (error)
     return <div className="max-w-5xl mx-auto p-6 text-red-600">{error}</div>;
@@ -121,18 +137,18 @@ export default function MyReadingListsPage() {
                   No items yet.
                 </div>
               ) : summariesLoading ? (
-                // ✅ Option 3: hold off rendering items until summaries load
                 <div className="px-4 py-6 text-sm text-gray-500">Loading…</div>
               ) : (
                 <ul className="divide-y">
                   {l.items.map((it) => {
                     const s = summaries[it.series_id];
+                    const st = s?.status?.toUpperCase(); // normalize just in case
                     return (
                       <li
                         key={it.series_id}
                         className="flex items-center gap-3 px-4 py-3"
                       >
-                        {/* thumb + rank badge */}
+                        {/* thumb + rank badge + MOBILE status */}
                         <div className="relative">
                           <img
                             src={s?.cover_url || ""}
@@ -144,23 +160,63 @@ export default function MyReadingListsPage() {
                               #{s.rank}
                             </span>
                           ) : null}
+
+                          {/* MOBILE: bottom-right tag on thumb */}
+                          {st ? (
+                            <div className="absolute bottom-0 right-0 z-10 pointer-events-none select-none md:hidden">
+                              <div
+                                className={
+                                  "px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide whitespace-nowrap shadow ring-1 ring-white/70 " +
+                                  statusClass(st)
+                                }
+                                style={{
+                                  clipPath:
+                                    "polygon(0 0, 100% 0, 86% 100%, 0% 100%)",
+                                }}
+                                title={st}
+                                aria-label={`Status: ${st}`}
+                              >
+                                {st}
+                              </div>
+                            </div>
+                          ) : null}
                         </div>
 
                         {/* title + meta */}
                         <div className="min-w-0 flex-1">
-                          <Link
-                            to={`/series/${it.series_id}`}
-                            className="block font-medium hover:underline truncate"
-                            title={s?.title || `Series #${it.series_id}`}
-                          >
-                            {s?.title || `Series #${it.series_id}`}
-                          </Link>
+                          {/* Title row with DESKTOP status tag to the right */}
+                          <div className="flex items-center gap-2">
+                            <Link
+                              to={`/series/${it.series_id}`}
+                              className="block font-medium hover:underline truncate"
+                              title={s?.title || `Series #${it.series_id}`}
+                            >
+                              {s?.title || `Series #${it.series_id}`}
+                            </Link>
+
+                            {/* DESKTOP: inline tag next to title */}
+                            {st ? (
+                              <span
+                                className={
+                                  "hidden md:inline-block leading-none px-2 py-[2px] text-[10px] font-bold uppercase tracking-wide whitespace-nowrap rounded-sm shadow ring-1 ring-white/70 " +
+                                  statusClass(st)
+                                }
+                                style={{
+                                  clipPath:
+                                    "polygon(0 0, 100% 0, 90% 100%, 0% 100%)",
+                                }}
+                                title={st}
+                                aria-label={`Status: ${st}`}
+                              >
+                                {st}
+                              </span>
+                            ) : null}
+                          </div>
 
                           <div className="mt-0.5 text-sm text-gray-600 flex items-center gap-3">
                             <span className="uppercase text-xs tracking-wide">
                               {s?.type || "—"}
                             </span>
-
                             <span
                               className={`text-xs font-semibold ${
                                 (s?.final_score ?? 0) >= 9
@@ -176,7 +232,6 @@ export default function MyReadingListsPage() {
                                 ? `★ ${Number(s.final_score).toFixed(3)}`
                                 : "★ —"}
                             </span>
-
                             <span className="text-xs text-gray-400">
                               {s?.vote_count
                                 ? `${s.vote_count} votes`
