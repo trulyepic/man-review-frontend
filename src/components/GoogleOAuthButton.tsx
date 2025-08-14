@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 import { googleOAuthLogin } from "../api/manApi";
 import type { CredentialResponse } from "@react-oauth/google";
-import { handleAutoLogout } from "../util/authUtils";
+import { handleAutoLogout, scheduleLogoutAtJwtExp } from "../util/authUtils";
 import { useUser } from "../login/useUser";
 
 const GoogleOAuthButton = () => {
@@ -33,7 +33,8 @@ const GoogleOAuthButton = () => {
       //   alert("Session expired. Please login again.");
       //   window.location.href = "/";
       // }, 10 * 60 * 60 * 1000);
-      handleAutoLogout(setUser);
+      // handleAutoLogout(setUser);
+      scheduleLogoutAtJwtExp(setUser, data.access_token);
       navigate("/");
     } catch (err) {
       alert("Google login failed");
