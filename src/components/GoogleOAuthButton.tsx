@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 import { googleOAuthLogin } from "../api/manApi";
 import type { CredentialResponse } from "@react-oauth/google";
-import { handleAutoLogout, scheduleLogoutAtJwtExp } from "../util/authUtils";
+import { scheduleLogoutAtJwtExp } from "../util/authUtils";
 import { useUser } from "../login/useUser";
 
 const GoogleOAuthButton = () => {

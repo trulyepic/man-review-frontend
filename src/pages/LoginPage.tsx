@@ -4,7 +4,7 @@ import { login } from "../api/manApi";
 
 import GoogleOAuthButton from "../components/GoogleOAuthButton";
 import ReCAPTCHA from "react-google-recaptcha";
-import { handleAutoLogout, scheduleLogoutAtJwtExp } from "../util/authUtils";
+import { scheduleLogoutAtJwtExp } from "../util/authUtils";
 import { useUser } from "../login/useUser";
 
 const LoginPage = () => {
