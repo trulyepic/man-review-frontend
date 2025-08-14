@@ -4,7 +4,7 @@ import { login } from "../api/manApi";
 
 import GoogleOAuthButton from "../components/GoogleOAuthButton";
 import ReCAPTCHA from "react-google-recaptcha";
-import { handleAutoLogout } from "../util/authUtils";
+import { scheduleLogoutAtJwtExp } from "../util/authUtils";
 import { useUser } from "../login/useUser";
 
 const LoginPage = () => {
@@ -47,7 +47,8 @@ const LoginPage = () => {
       //   window.location.href = "/";
       // }, 10 * 60 * 60 * 1000); // 10 hours
 
-      handleAutoLogout(setUser);
+      // handleAutoLogout(setUser);
+      scheduleLogoutAtJwtExp(setUser, data.access_token);
       navigate("/");
     } catch (err) {
       const msg = (err as Error).message || "";
