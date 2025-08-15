@@ -512,7 +512,7 @@ export const editSeries = async (
     artist: string;
   }>
 ) => {
-  const res = await api.put(`/series/${id}`, data);
+  const res = await api.put(`/${id}`, data);
   return res.data;
 };
 
