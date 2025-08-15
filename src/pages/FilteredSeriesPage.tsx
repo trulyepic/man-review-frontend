@@ -16,7 +16,8 @@ import { useSearch } from "../components/SearchContext";
 import ShimmerLoader from "../components/ShimmerLoader";
 import CompareManager from "../components/CompareManager";
 import { useUser } from "../login/useUser";
-import ReadingListModal from "../components/ReadingListModal"; // ✅ NEW
+import ReadingListModal from "../components/ReadingListModal"; 
+import { isRequestCanceled } from "../api/client";
 
 const PAGE_SIZE = 25;
 
@@ -112,7 +113,7 @@ const FilteredSeriesPage = () => {
 
       if (all.length < PAGE_SIZE) setHasMore(false);
     } catch (err: unknown) {
-      if (err instanceof Error && err.name !== "AbortError") {
+      if (!isRequestCanceled(err)) {
         console.error("Failed to fetch series:", err);
         alert("Failed to load series");
       }
@@ -146,7 +147,7 @@ const FilteredSeriesPage = () => {
         setPage(1);
         if (all.length < PAGE_SIZE) setHasMore(false);
       } catch (err: unknown) {
-        if (err instanceof Error && err.name !== "AbortError") {
+        if (!isRequestCanceled(err)) {
           console.error("Failed to fetch series:", err);
           alert("Failed to load series");
         }
@@ -178,7 +179,10 @@ const FilteredSeriesPage = () => {
         setItems(filtered);
         setHasMore(false);
       } catch (err) {
-        console.error("Search failed:", err);
+        if (!isRequestCanceled(err)) {
+          console.error("Search failed:", err);
+          alert("Failed to load series");
+        }
       } finally {
         setLoading(false);
       }
@@ -198,10 +202,10 @@ const FilteredSeriesPage = () => {
         setItems(all);
         if (all.length < PAGE_SIZE) setHasMore(false);
       } catch (err: unknown) {
-        if (err instanceof Error && err.name !== "AbortError") {
+         if (!isRequestCanceled(err)) {
           console.error("Failed to fetch series:", err);
           alert("Failed to load series");
-        }
+      }
       } finally {
         setLoading(false);
       }

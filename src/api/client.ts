@@ -37,10 +37,24 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    const status = err?.response?.status;
-    if (status === 401) {
-      hardLogout();
+    // Ignore cancels here so they don't trigger logout logic
+    if (axios.isCancel?.(err) || err?.code === "ERR_CANCELED" || err?.name === "CanceledError") {
+      return Promise.reject(err);
     }
+    const status = err?.response?.status;
+    if (status === 401) hardLogout();
     return Promise.reject(err);
   }
 );
+
+//a tiny helper to use in UI
+export const isRequestCanceled = (err: unknown) => {
+  const e = err as any;
+  return (
+    axios.isCancel?.(e) ||
+    e?.name === "CanceledError" ||
+    e?.code === "ERR_CANCELED" ||
+    e?.name === "AbortError" ||
+    e?.message === "canceled"
+  );
+};
