@@ -512,7 +512,7 @@ export const editSeries = async (
     artist: string;
   }>
 ) => {
-  const res = await api.put(`/${id}`, data);
+  const res = await api.put(`/series/${id}`, data);
   return res.data;
 };
 
@@ -631,9 +631,13 @@ export const fetchRankedSeriesPaginated = async (
   return res.data;
 };
 
-export const searchSeries = async (query: string): Promise<RankedSeries[]> => {
+export const searchSeries = async (
+  query: string,
+  signal?: AbortSignal
+): Promise<RankedSeries[]> => {
   const res = await api.get<RankedSeries[]>("/series/search", {
     params: { query },
+    signal, // <-- now cancellable
   });
   return res.data;
 };
