@@ -424,6 +424,23 @@ import { api } from "./client"; // <-- your shared Axios instance
 // ---------- Types ----------
 export type SeriesType = "MANGA" | "MANHWA" | "MANHUA";
 export type SeriesStatus = "ONGOING" | "COMPLETE" | "HIATUS" | "UNKNOWN" | null;
+export type IssueType = "BUG" | "FEATURE" | "CONTENT" | "OTHER";
+export type IssueStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED";
+
+
+export interface Issue {
+  id: number;
+  type: IssueType;
+  title: string;
+  description: string;
+  page_url?: string | null;
+  email?: string | null;
+  screenshot_url?: string | null;
+  user_id?: number | null;
+  user_agent?: string | null;
+  status: IssueStatus;      // <-- make sure your backend includes this
+  created_at: string;       // ISO string
+}
 
 export interface Series {
   id: number;
@@ -720,4 +737,54 @@ export const getCurrentUser = () => {
 export const logout = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
+};
+
+
+export const reportIssue = async (payload: {
+  type: IssueType;
+  title: string;
+  description: string;
+  page_url?: string;
+  email?: string;
+  screenshot?: File;
+}) => {
+  const form = new FormData();
+  form.append("type", payload.type);
+  form.append("title", payload.title);
+  form.append("description", payload.description);
+  if (payload.page_url) form.append("page_url", payload.page_url);
+  if (payload.email) form.append("email", payload.email);
+  if (payload.screenshot) form.append("screenshot", payload.screenshot);
+
+  const res = await api.post("/issues/report", form);
+  return res.data;
+};
+
+
+// List issues (public)
+export const listIssues = async (params?: {
+  q?: string;
+  type?: IssueType;
+  status?: IssueStatus;
+  page?: number;
+  page_size?: number;
+}): Promise<Issue[]> => {
+  const res = await api.get<Issue[]>("/issues", { params });
+  return res.data;
+};
+
+
+
+// Admin: update status
+export const adminUpdateIssueStatus = async (
+  id: number,
+  status: IssueStatus
+): Promise<Issue> => {
+  const res = await api.patch<Issue>(`/issues/${id}/status`, { status });
+  return res.data;
+};
+
+// Admin: delete issue (also deletes screenshot if any server-side)
+export const adminDeleteIssue = async (id: number): Promise<void> => {
+  await api.delete(`/issues/${id}`);
 };
