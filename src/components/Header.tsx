@@ -165,6 +165,13 @@ const Header = () => {
               How Rankings Work
             </NavLink>
 
+             <NavLink
+              to="/issues"
+              className="hover:text-blue-500 font-medium"
+            >
+             Report
+            </NavLink>
+
             {/* Spacer */}
             {/* <div className="flex-1" /> */}
 
@@ -280,7 +287,7 @@ const Header = () => {
           </NavLink>
 
           <NavLink
-            to="/report-issue"
+            to="/issues"
             onClick={() => setMobileMenuOpen(false)}
             className="text-gray-800 hover:text-blue-400"
           >
