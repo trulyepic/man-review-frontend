@@ -280,6 +280,14 @@ const Header = () => {
           </NavLink>
 
           <NavLink
+            to="/report-issue"
+            onClick={() => setMobileMenuOpen(false)}
+            className="text-gray-800 hover:text-blue-400"
+          >
+            Report an Issue
+          </NavLink>
+
+          <NavLink
             to="/how-rankings-work"
             className={({ isActive }) =>
               isActive ? "text-blue-400" : "hover:text-blue-300"

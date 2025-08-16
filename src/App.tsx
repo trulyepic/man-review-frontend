@@ -15,6 +15,8 @@ import CheckYourEmailPage from "./pages/CheckYourEmailPage";
 import RankingsInfoPage from "./pages/RankingsInfoPage";
 import ComparePage from "./pages/ComparePage";
 import MyReadingListsPage from "./pages/MyReadingListsPage";
+import ReportIssuePage from "./pages/ReportIssuePage";
+import IssuesPage from "./pages/IssuesPage";
 
 function App() {
   return (
@@ -42,6 +44,8 @@ function App() {
               <Route path="/how-rankings-work" element={<RankingsInfoPage />} />
               <Route path="/compare" element={<ComparePage />} />
               <Route path="/my-lists" element={<MyReadingListsPage />} />
+              <Route path="/issues" element={<IssuesPage />} />
+              <Route path="/report-issue" element={<ReportIssuePage />} />
             </Routes>
           </main>
           <Footer />
