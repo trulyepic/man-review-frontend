@@ -425,7 +425,8 @@ import { api } from "./client"; // <-- your shared Axios instance
 export type SeriesType = "MANGA" | "MANHWA" | "MANHUA";
 export type SeriesStatus = "ONGOING" | "COMPLETE" | "HIATUS" | "UNKNOWN" | null;
 export type IssueType = "BUG" | "FEATURE" | "CONTENT" | "OTHER";
-export type IssueStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED";
+// export type IssueStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED";
+export type IssueStatus = "OPEN" | "IN_PROGRESS" | "FIXED" | "WONT_FIX";
 
 
 export interface Issue {

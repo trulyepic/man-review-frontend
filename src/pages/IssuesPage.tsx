@@ -12,20 +12,49 @@ import { useUser } from "../login/useUser";
 import { Link } from "react-router-dom";
 
 const typeOptions: IssueType[] = ["BUG", "FEATURE", "CONTENT", "OTHER"];
-const statusOptions: IssueStatus[] = ["OPEN", "IN_PROGRESS", "RESOLVED"];
+// const statusOptions: IssueStatus[] = ["OPEN", "IN_PROGRESS", "RESOLVED"];
+const statusOptions: IssueStatus[] = [
+  "OPEN",
+  "IN_PROGRESS",
+  "FIXED",
+  "WONT_FIX",
+];
 
+const statusLabels: Record<IssueStatus, string> = {
+  OPEN: "Open",
+  IN_PROGRESS: "In Progress",
+  FIXED: "Resolved",
+  WONT_FIX: "Won’t Fix",
+};
+
+// const badgeClasses: Record<IssueStatus, string> = {
+//   OPEN: "bg-yellow-100 text-yellow-800 border-yellow-300",
+//   IN_PROGRESS: "bg-blue-100 text-blue-800 border-blue-300",
+//   RESOLVED: "bg-green-100 text-green-800 border-green-300",
+// };
 const badgeClasses: Record<IssueStatus, string> = {
   OPEN: "bg-yellow-100 text-yellow-800 border-yellow-300",
   IN_PROGRESS: "bg-blue-100 text-blue-800 border-blue-300",
-  RESOLVED: "bg-green-100 text-green-800 border-green-300",
+  FIXED: "bg-green-100 text-green-800 border-green-300",
+  WONT_FIX: "bg-gray-100 text-gray-700 border-gray-300",
 };
+
+// function StatusBadge({ status }: { status: IssueStatus }) {
+//   return (
+//     <span
+//       className={`inline-block rounded-full border px-2 py-0.5 text-xs font-semibold ${badgeClasses[status]}`}
+//     >
+//       {status.replace("_", " ")}
+//     </span>
+//   );
+// }
 
 function StatusBadge({ status }: { status: IssueStatus }) {
   return (
     <span
       className={`inline-block rounded-full border px-2 py-0.5 text-xs font-semibold ${badgeClasses[status]}`}
     >
-      {status.replace("_", " ")}
+      {statusLabels[status]}
     </span>
   );
 }
@@ -61,7 +90,9 @@ export default function IssuesPage() {
       const data = await listIssues(params);
       setItems(data);
     } catch (e: any) {
-      setErrorMsg(e?.response?.data?.detail || e?.message || "Failed to load issues");
+      setErrorMsg(
+        e?.response?.data?.detail || e?.message || "Failed to load issues"
+      );
     } finally {
       setLoading(false);
     }
@@ -75,11 +106,15 @@ export default function IssuesPage() {
   const onChangeStatus = async (id: number, next: IssueStatus) => {
     if (!isAdmin) return;
     // optimistic update
-    setItems((prev) => prev.map((it) => (it.id === id ? { ...it, status: next } : it)));
+    setItems((prev) =>
+      prev.map((it) => (it.id === id ? { ...it, status: next } : it))
+    );
     try {
       await adminUpdateIssueStatus(id, next);
     } catch (e: any) {
-      setErrorMsg(e?.response?.data?.detail || e?.message || "Failed to update status");
+      setErrorMsg(
+        e?.response?.data?.detail || e?.message || "Failed to update status"
+      );
       // revert on error
       await fetchData();
     }
@@ -87,7 +122,9 @@ export default function IssuesPage() {
 
   const onDelete = async (id: number) => {
     if (!isAdmin) return;
-    const yes = confirm("Delete this issue? This will also delete its screenshot if any.");
+    const yes = confirm(
+      "Delete this issue? This will also delete its screenshot if any."
+    );
     if (!yes) return;
     // optimistic remove
     const snapshot = items;
@@ -95,7 +132,9 @@ export default function IssuesPage() {
     try {
       await adminDeleteIssue(id);
     } catch (e: any) {
-      setErrorMsg(e?.response?.data?.detail || e?.message || "Failed to delete issue");
+      setErrorMsg(
+        e?.response?.data?.detail || e?.message || "Failed to delete issue"
+      );
       setItems(snapshot);
     }
   };
@@ -113,7 +152,8 @@ export default function IssuesPage() {
       </div>
 
       <p className="text-gray-600 mb-6">
-        View known issues and their status. {isAdmin ? "You can update status or delete items below." : ""}
+        View known issues and their status.{" "}
+        {isAdmin ? "You can update status or delete items below." : ""}
       </p>
 
       {/* Filters */}
@@ -139,12 +179,14 @@ export default function IssuesPage() {
         <select
           className="rounded border border-gray-300 px-3 py-2"
           value={status}
-          onChange={(e) => setStatus((e.target.value || "") as IssueStatus | "")}
+          onChange={(e) =>
+            setStatus((e.target.value || "") as IssueStatus | "")
+          }
         >
           <option value="">All statuses</option>
           {statusOptions.map((s) => (
             <option key={s} value={s}>
-              {s.replace("_", " ")}
+              {statusLabels[s]}
             </option>
           ))}
         </select>
@@ -185,7 +227,9 @@ export default function IssuesPage() {
                 <tr key={it.id} className="hover:bg-gray-50">
                   <td className="px-3 py-2">
                     <div className="font-semibold">{it.title}</div>
-                    <div className="text-gray-600 line-clamp-2">{it.description}</div>
+                    <div className="text-gray-600 line-clamp-2">
+                      {it.description}
+                    </div>
                   </td>
                   <td className="px-3 py-2">{it.type}</td>
                   <td className="px-3 py-2">
@@ -235,7 +279,7 @@ export default function IssuesPage() {
                         >
                           {statusOptions.map((s) => (
                             <option key={s} value={s}>
-                              {s.replace("_", " ")}
+                              {statusLabels[s]}
                             </option>
                           ))}
                         </select>
