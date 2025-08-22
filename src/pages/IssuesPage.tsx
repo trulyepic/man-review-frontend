@@ -12,7 +12,6 @@ import { useUser } from "../login/useUser";
 import { Link } from "react-router-dom";
 
 const typeOptions: IssueType[] = ["BUG", "FEATURE", "CONTENT", "OTHER"];
-// const statusOptions: IssueStatus[] = ["OPEN", "IN_PROGRESS", "RESOLVED"];
 const statusOptions: IssueStatus[] = [
   "OPEN",
   "IN_PROGRESS",
@@ -27,27 +26,12 @@ const statusLabels: Record<IssueStatus, string> = {
   WONT_FIX: "Won’t Fix",
 };
 
-// const badgeClasses: Record<IssueStatus, string> = {
-//   OPEN: "bg-yellow-100 text-yellow-800 border-yellow-300",
-//   IN_PROGRESS: "bg-blue-100 text-blue-800 border-blue-300",
-//   RESOLVED: "bg-green-100 text-green-800 border-green-300",
-// };
 const badgeClasses: Record<IssueStatus, string> = {
   OPEN: "bg-yellow-100 text-yellow-800 border-yellow-300",
   IN_PROGRESS: "bg-blue-100 text-blue-800 border-blue-300",
   FIXED: "bg-green-100 text-green-800 border-green-300",
   WONT_FIX: "bg-gray-100 text-gray-700 border-gray-300",
 };
-
-// function StatusBadge({ status }: { status: IssueStatus }) {
-//   return (
-//     <span
-//       className={`inline-block rounded-full border px-2 py-0.5 text-xs font-semibold ${badgeClasses[status]}`}
-//     >
-//       {status.replace("_", " ")}
-//     </span>
-//   );
-// }
 
 function StatusBadge({ status }: { status: IssueStatus }) {
   return (
@@ -72,6 +56,9 @@ export default function IssuesPage() {
   const [type, setType] = useState<IssueType | "">("");
   const [status, setStatus] = useState<IssueStatus | "">("");
 
+  // UI tab (quick filter by status)
+  const [activeTab, setActiveTab] = useState<IssueStatus | "ALL">("ALL");
+
   const params = useMemo(
     () => ({
       ...(q.trim() ? { q: q.trim() } : {}),
@@ -91,7 +78,7 @@ export default function IssuesPage() {
       setItems(data);
     } catch (e: any) {
       setErrorMsg(
-        e?.response?.data?.detail || e?.message || "Failed to load issues"
+        e?.response?.data?.detail || e?.message || "Failed to load reports"
       );
     } finally {
       setLoading(false);
@@ -102,6 +89,23 @@ export default function IssuesPage() {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.q, params.type, params.status]);
+
+  // derived counts
+  const counts = useMemo(() => {
+    const c: Record<IssueStatus, number> = {
+      OPEN: 0,
+      IN_PROGRESS: 0,
+      FIXED: 0,
+      WONT_FIX: 0,
+    };
+    for (const it of items) c[it.status]++;
+    return c;
+  }, [items]);
+
+  const filteredByTab = useMemo(() => {
+    if (activeTab === "ALL") return items;
+    return items.filter((it) => it.status === activeTab);
+  }, [items, activeTab]);
 
   const onChangeStatus = async (id: number, next: IssueStatus) => {
     if (!isAdmin) return;
@@ -123,7 +127,7 @@ export default function IssuesPage() {
   const onDelete = async (id: number) => {
     if (!isAdmin) return;
     const yes = confirm(
-      "Delete this issue? This will also delete its screenshot if any."
+      "Delete this report? This will also delete its screenshot (if any)."
     );
     if (!yes) return;
     // optimistic remove
@@ -133,16 +137,41 @@ export default function IssuesPage() {
       await adminDeleteIssue(id);
     } catch (e: any) {
       setErrorMsg(
-        e?.response?.data?.detail || e?.message || "Failed to delete issue"
+        e?.response?.data?.detail || e?.message || "Failed to delete report"
       );
       setItems(snapshot);
     }
   };
 
+  // function isUsefulPageUrl(raw?: string | null): boolean {
+  //   if (!raw) return false;
+  //   try {
+  //     const u = new URL(raw);
+  //     // hide links that point to the report page itself
+  //     return !u.pathname.startsWith("/report-issue");
+  //   } catch {
+  //     // not a valid absolute URL; treat as not useful
+  //     return false;
+  //   }
+  // }
+
+  // function prettyPageUrl(raw: string): string {
+  //   try {
+  //     const u = new URL(raw);
+  //     // show a concise label: path + query (omit domain)
+  //     return u.pathname + (u.search ? u.search : "");
+  //   } catch {
+  //     return raw;
+  //   }
+  // }
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl md:text-3xl font-bold">Issues</h1>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-1">
+        <h1 className="text-2xl md:text-3xl font-bold">
+          Site Updates & Known Issues
+        </h1>
         <Link
           to="/report-issue"
           className="rounded-md bg-blue-600 px-4 py-2 text-white font-semibold shadow hover:bg-blue-700"
@@ -150,11 +179,35 @@ export default function IssuesPage() {
           Report an Issue
         </Link>
       </div>
-
       <p className="text-gray-600 mb-6">
-        View known issues and their status.{" "}
-        {isAdmin ? "You can update status or delete items below." : ""}
+        Track what we’re working on and what’s been fixed.{" "}
+        {isAdmin ? "Admins can update status or delete items below." : ""}
       </p>
+
+      {/* Summary cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <SummaryCard label="Open" value={counts.OPEN} />
+        <SummaryCard label="In Progress" value={counts.IN_PROGRESS} />
+        <SummaryCard label="Resolved" value={counts.FIXED} />
+        <SummaryCard label="Won’t Fix" value={counts.WONT_FIX} />
+      </div>
+
+      {/* Tabs */}
+      <div className="mb-4 flex flex-wrap gap-2">
+        <Tab
+          label="All"
+          active={activeTab === "ALL"}
+          onClick={() => setActiveTab("ALL")}
+        />
+        {statusOptions.map((s) => (
+          <Tab
+            key={s}
+            label={statusLabels[s]}
+            active={activeTab === s}
+            onClick={() => setActiveTab(s)}
+          />
+        ))}
+      </div>
 
       {/* Filters */}
       <div className="mb-5 grid grid-cols-1 sm:grid-cols-4 gap-3">
@@ -206,8 +259,8 @@ export default function IssuesPage() {
 
       {loading ? (
         <div className="py-16 text-center text-gray-600">Loading…</div>
-      ) : items.length === 0 ? (
-        <div className="py-16 text-center text-gray-600">No issues found.</div>
+      ) : filteredByTab.length === 0 ? (
+        <EmptyState />
       ) : (
         <div className="overflow-x-auto rounded-lg border">
           <table className="min-w-full text-sm">
@@ -217,13 +270,13 @@ export default function IssuesPage() {
                 <th className="px-3 py-2 text-left">Type</th>
                 <th className="px-3 py-2 text-left">Status</th>
                 <th className="px-3 py-2 text-left">Reported</th>
-                <th className="px-3 py-2 text-left">Page</th>
+                {/* <th className="px-3 py-2 text-left">Page</th> */}
                 <th className="px-3 py-2 text-left">Screenshot</th>
                 {isAdmin && <th className="px-3 py-2 text-right">Actions</th>}
               </tr>
             </thead>
             <tbody className="divide-y">
-              {items.map((it) => (
+              {filteredByTab.map((it) => (
                 <tr key={it.id} className="hover:bg-gray-50">
                   <td className="px-3 py-2">
                     <div className="font-semibold">{it.title}</div>
@@ -238,20 +291,22 @@ export default function IssuesPage() {
                   <td className="px-3 py-2">
                     {new Date(it.created_at).toLocaleString()}
                   </td>
-                  <td className="px-3 py-2 max-w-[220px]">
-                    {it.page_url ? (
+                  {/* <td className="px-3 py-2 max-w-[260px]">
+                    {isUsefulPageUrl(it.page_url) ? (
                       <a
                         className="text-blue-600 hover:underline break-all"
-                        href={it.page_url}
+                        href={it.page_url as string}
                         target="_blank"
                         rel="noreferrer"
+                        title={it.page_url as string}
                       >
-                        {it.page_url}
+                        {prettyPageUrl(it.page_url as string)}
                       </a>
                     ) : (
                       <span className="text-gray-400">—</span>
                     )}
-                  </td>
+                  </td> */}
+
                   <td className="px-3 py-2">
                     {it.screenshot_url ? (
                       <a
@@ -298,6 +353,56 @@ export default function IssuesPage() {
           </table>
         </div>
       )}
+    </div>
+  );
+}
+
+function SummaryCard({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-lg border bg-white p-4 shadow-sm">
+      <div className="text-sm text-gray-500">{label}</div>
+      <div className="mt-1 text-2xl font-bold">{value}</div>
+    </div>
+  );
+}
+
+function Tab({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      className={`rounded-full px-3 py-1.5 text-sm font-semibold border transition ${
+        active
+          ? "bg-blue-600 text-white border-blue-600 shadow"
+          : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+      }`}
+      onClick={onClick}
+    >
+      {label}
+    </button>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div className="py-16 text-center">
+      <div className="text-lg font-semibold mb-1">No matching reports</div>
+      <div className="text-gray-600 mb-4">
+        Try adjusting the filters or{" "}
+        <Link to="/report-issue" className="text-blue-600 hover:underline">
+          report a new issue
+        </Link>
+        .
+      </div>
+      <div className="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm text-gray-700">
+        Tip: You can filter by type, status, or search the description/title.
+      </div>
     </div>
   );
 }
