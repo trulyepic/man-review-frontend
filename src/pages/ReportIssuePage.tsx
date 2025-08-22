@@ -18,11 +18,19 @@ const ReportIssuePage = () => {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  const isValidEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+
   const pageUrlDefault =
     typeof window !== "undefined" ? window.location.href : "";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (email.trim() && !isValidEmail(email.trim())) {
+      setErrorMsg(
+        "Please enter a valid email address or leave the field blank."
+      );
+      return; 
+    }
     setSubmitting(true);
     setSuccessMsg(null);
     setErrorMsg(null);
@@ -101,7 +109,9 @@ const ReportIssuePage = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold mb-1">Description</label>
+          <label className="block text-sm font-semibold mb-1">
+            Description
+          </label>
           <textarea
             className="w-full rounded border border-gray-300 px-3 py-2 min-h-[120px]"
             placeholder="What happened? Steps to reproduce? What did you expect to happen?"
