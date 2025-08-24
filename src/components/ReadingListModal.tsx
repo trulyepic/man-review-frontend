@@ -163,8 +163,8 @@ export default function ReadingListModal({
 
             {!canCreateMore && (
               <div className="mb-3 text-xs text-gray-500">
-                You’ve reached the limit of 2 lists. Rename or delete a list
-                from “My Lists”.
+                You’ve reached the limit of 2 lists. Delete a list from “My
+                Lists”.
               </div>
             )}
 
