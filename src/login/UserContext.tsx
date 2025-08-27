@@ -11,14 +11,14 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     const storedUser = localStorage.getItem("user");
     const token = localStorage.getItem("token");
 
-
-       if (storedUser && token) {
+    if (storedUser && token) {
       try {
         const parsed = JSON.parse(storedUser) as User;
         setUser(parsed);
         scheduleLogoutAtJwtExp(setUser, token);
       } catch (e) {
         // bad JSON -> clear corrupted state
+        console.warn("Failed to parse stored user:", e);
         localStorage.removeItem("user");
         localStorage.removeItem("token");
         setUser(null);
@@ -42,7 +42,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       {children}
     </UserContext.Provider>
   );
-}
+};
 
 export function useUser(): UserContextType {
   const ctx = useContext(UserContext);
