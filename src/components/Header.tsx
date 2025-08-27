@@ -86,7 +86,7 @@ const Header = () => {
         </button>
 
         {/* Left side */}
-        <div className="flex items-center space-x-6 text-lg font-semibold min-w-0">
+        <div className="flex items-center space-x-6  font-semibold min-w-0">
           {/* <NavLink to="/" className="text-blue-400 text-xl font-bold md:-ml-12">
             Toon Ranks
           </NavLink> */}
@@ -159,18 +159,22 @@ const Header = () => {
             </div>
 
             <NavLink
+              to="/forum"
+              className="hover:text-blue-500 font-medium px-1"
+            >
+              Forum
+            </NavLink>
+
+            {/* <NavLink
               to="/how-rankings-work"
               className="hover:text-blue-500 font-medium"
             >
               How Rankings Work
-            </NavLink>
+            </NavLink> */}
 
-             <NavLink
-              to="/issues"
-              className="hover:text-blue-500 font-medium"
-            >
-             Report
-            </NavLink>
+            {/* <NavLink to="/issues" className="hover:text-blue-500 font-medium">
+              Report
+            </NavLink> */}
 
             {/* Spacer */}
             {/* <div className="flex-1" /> */}
@@ -285,23 +289,26 @@ const Header = () => {
           >
             Manhua
           </NavLink>
+          <NavLink to="/forum" className="text-gray-800 hover:text-blue-400">
+            Forum
+          </NavLink>
 
-          <NavLink
+          {/* <NavLink
             to="/issues"
             onClick={() => setMobileMenuOpen(false)}
             className="text-gray-800 hover:text-blue-400"
           >
             Report an Issue
-          </NavLink>
+          </NavLink> */}
 
-          <NavLink
+          {/* <NavLink
             to="/how-rankings-work"
             className={({ isActive }) =>
               isActive ? "text-blue-400" : "hover:text-blue-300"
             }
           >
             How Rankings Work
-          </NavLink>
+          </NavLink> */}
 
           <SocialLinks variant="header" />
 

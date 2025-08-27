@@ -57,4 +57,12 @@
     <priority>0.2</priority>
   </url>
 
+  <!-- Add this to sitemap.xml -->
+<url>
+  <loc>https://toonranks.com/forum</loc>
+  <changefreq>daily</changefreq>
+  <priority>0.8</priority>
+</url>
+
+
 </urlset>

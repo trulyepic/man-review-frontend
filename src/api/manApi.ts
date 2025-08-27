@@ -415,11 +415,9 @@
 //   return res.json();
 // };
 
-
-
-
 // src/api/manApi.ts
 import { api } from "./client"; // <-- your shared Axios instance
+import { isAxiosError } from "axios";
 
 // ---------- Types ----------
 export type SeriesType = "MANGA" | "MANHWA" | "MANHUA";
@@ -428,6 +426,32 @@ export type IssueType = "BUG" | "FEATURE" | "CONTENT" | "OTHER";
 // export type IssueStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED";
 export type IssueStatus = "OPEN" | "IN_PROGRESS" | "FIXED" | "WONT_FIX";
 
+export type ForumSeriesRef = {
+  series_id: number;
+  title?: string;
+  cover_url?: string;
+  type?: string;
+  status?: string;
+};
+export type ForumThread = {
+  id: number;
+  title: string;
+  author_username?: string | null;
+  created_at: string;
+  updated_at: string;
+  post_count: number;
+  last_post_at: string;
+  series_refs: ForumSeriesRef[];
+};
+export type ForumPost = {
+  id: number;
+  author_username?: string | null;
+  content_markdown: string;
+  created_at: string;
+  updated_at: string;
+  series_refs: ForumSeriesRef[];
+  parent_id?: number | null;
+};
 
 export interface Issue {
   id: number;
@@ -439,8 +463,8 @@ export interface Issue {
   screenshot_url?: string | null;
   user_id?: number | null;
   user_agent?: string | null;
-  status: IssueStatus;      // <-- make sure your backend includes this
-  created_at: string;       // ISO string
+  status: IssueStatus; // <-- make sure your backend includes this
+  created_at: string; // ISO string
 }
 
 export interface Series {
@@ -496,6 +520,41 @@ export interface ReadingList {
   items: ReadingListItem[];
 }
 
+// ---------- Auth Types ----------
+export type UserRole = "ADMIN" | "USER" | (string & {});
+export interface AuthUser {
+  id: number;
+  username: string;
+  email?: string | null;
+  role?: UserRole | null;
+}
+export interface AuthResponse {
+  access_token: string;
+  user: AuthUser;
+}
+
+// ---------- Small helpers ----------
+function extractApiDetail(err: unknown, fallback: string): string {
+  if (isAxiosError(err)) {
+    const data = err.response?.data as unknown;
+    if (data && typeof data === "object") {
+      const obj = data as Record<string, unknown>;
+      const detail = obj["detail"];
+      if (typeof detail === "string") return detail;
+      const message = obj["message"];
+      if (typeof message === "string") return message;
+    }
+    return err.message ?? fallback;
+  }
+  return fallback;
+}
+
+function isAuthUser(x: unknown): x is AuthUser {
+  if (!x || typeof x !== "object") return false;
+  const obj = x as Record<string, unknown>;
+  return typeof obj["id"] === "number" && typeof obj["username"] === "string";
+}
+
 // ---------- Series CRUD ----------
 export const createSeries = async (data: SeriesPayload): Promise<Series> => {
   const form = new FormData();
@@ -529,8 +588,8 @@ export const editSeries = async (
     author: string;
     artist: string;
   }>
-) => {
-  const res = await api.put(`/series/${id}`, data);
+): Promise<Series> => {
+  const res = await api.put<Series>(`/series/${id}`, data);
   return res.data;
 };
 
@@ -539,11 +598,8 @@ export const login = async (credentials: {
   username: string;
   password: string;
   captcha_token: string;
-}) => {
-  const res = await api.post<{
-    access_token: string;
-    user: any;
-  }>("/auth/login", credentials);
+}): Promise<AuthResponse> => {
+  const res = await api.post<AuthResponse>("/auth/login", credentials);
 
   // Keep existing behavior: persist token + user here
   localStorage.setItem("token", res.data.access_token);
@@ -564,11 +620,10 @@ export const signup = async (credentials: {
   return res.data;
 };
 
-export const googleOAuthLogin = async (token: string) => {
-  const res = await api.post<{
-    access_token: string;
-    user: any;
-  }>("/auth/google-oauth", { token });
+export const googleOAuthLogin = async (
+  token: string
+): Promise<AuthResponse> => {
+  const res = await api.post<AuthResponse>("/auth/google-oauth", { token });
 
   // Keep existing behavior: persist token + user here
   localStorage.setItem("token", res.data.access_token);
@@ -587,14 +642,14 @@ export const verifyEmail = async (token: string): Promise<string> => {
 export const addSeriesDetail = async (
   seriesId: number,
   payload: { synopsis: string; cover: File }
-) => {
+): Promise<unknown> => {
   const form = new FormData();
   form.append("series_id", String(seriesId));
   form.append("synopsis", payload.synopsis);
   form.append("cover", payload.cover);
 
   const res = await api.post(`/series/${seriesId}/details`, form);
-  return res.data;
+  return res.data; // unknown until backend shape is finalized
 };
 
 export const createSeriesDetail = async (
@@ -609,9 +664,11 @@ export const createSeriesDetail = async (
   await api.post("/series-details/", form);
 };
 
-export const getSeriesDetailById = async (seriesId: number) => {
+export const getSeriesDetailById = async (
+  seriesId: number
+): Promise<unknown> => {
   const res = await api.get(`/series-details/${seriesId}`);
-  return res.data;
+  return res.data; // unknown until you define a SeriesDetail shape
 };
 
 export const voteOnSeries = async (
@@ -673,15 +730,12 @@ export const getMyReadingLists = async (): Promise<ReadingList[]> => {
   return res.data;
 };
 
-export const createReadingList = async (
-  name: string
-): Promise<ReadingList> => {
+export const createReadingList = async (name: string): Promise<ReadingList> => {
   try {
     const res = await api.post<ReadingList>("/reading-lists", { name });
     return res.data;
-  } catch (err: any) {
-    const detail =
-      err?.response?.data?.detail || "Failed to create reading list";
+  } catch (err: unknown) {
+    const detail = extractApiDetail(err, "Failed to create reading list");
     throw new Error(detail);
   }
 };
@@ -691,14 +745,12 @@ export const addSeriesToReadingList = async (
   seriesId: number
 ): Promise<ReadingList> => {
   try {
-    const res = await api.post<ReadingList>(
-      `/reading-lists/${listId}/items`,
-      { series_id: seriesId }
-    );
+    const res = await api.post<ReadingList>(`/reading-lists/${listId}/items`, {
+      series_id: seriesId,
+    });
     return res.data;
-  } catch (err: any) {
-    const detail =
-      err?.response?.data?.detail || "Failed to add series to list";
+  } catch (err: unknown) {
+    const detail = extractApiDetail(err, "Failed to add series to list");
     throw new Error(detail);
   }
 };
@@ -712,9 +764,8 @@ export const removeSeriesFromReadingList = async (
       `/reading-lists/${listId}/items/${seriesId}`
     );
     return res.data;
-  } catch (err: any) {
-    const detail =
-      err?.response?.data?.detail || "Failed to remove series from list";
+  } catch (err: unknown) {
+    const detail = extractApiDetail(err, "Failed to remove series from list");
     throw new Error(detail);
   }
 };
@@ -722,24 +773,28 @@ export const removeSeriesFromReadingList = async (
 export const deleteReadingList = async (listId: number): Promise<void> => {
   try {
     await api.delete(`/reading-lists/${listId}`);
-  } catch (err: any) {
-    const detail =
-      err?.response?.data?.detail || "Failed to delete reading list";
+  } catch (err: unknown) {
+    const detail = extractApiDetail(err, "Failed to delete reading list");
     throw new Error(detail);
   }
 };
 
 // ---------- Session helpers ----------
-export const getCurrentUser = () => {
+export const getCurrentUser = (): AuthUser | null => {
   const user = localStorage.getItem("user");
-  return user ? JSON.parse(user) : null;
+  if (!user) return null;
+  try {
+    const parsed: unknown = JSON.parse(user);
+    return isAuthUser(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
 };
 
-export const logout = () => {
+export const logout = (): void => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
 };
-
 
 export const reportIssue = async (payload: {
   type: IssueType;
@@ -748,7 +803,7 @@ export const reportIssue = async (payload: {
   page_url?: string;
   email?: string;
   screenshot?: File;
-}) => {
+}): Promise<unknown> => {
   const form = new FormData();
   form.append("type", payload.type);
   form.append("title", payload.title);
@@ -758,9 +813,8 @@ export const reportIssue = async (payload: {
   if (payload.screenshot) form.append("screenshot", payload.screenshot);
 
   const res = await api.post("/issues/report", form);
-  return res.data;
+  return res.data; // backend may return created Issue or a message
 };
-
 
 // List issues (public)
 export const listIssues = async (params?: {
@@ -773,8 +827,6 @@ export const listIssues = async (params?: {
   const res = await api.get<Issue[]>("/issues", { params });
   return res.data;
 };
-
-
 
 // Admin: update status
 export const adminUpdateIssueStatus = async (
@@ -789,3 +841,87 @@ export const adminUpdateIssueStatus = async (
 export const adminDeleteIssue = async (id: number): Promise<void> => {
   await api.delete(`/issues/${id}`);
 };
+
+// ---------- Forum ----------
+export async function listForumThreads(
+  q = "",
+  page = 1,
+  page_size = 20
+): Promise<ForumThread[]> {
+  const res = await api.get<ForumThread[]>("/forum/threads", {
+    params: { q: q || undefined, page, page_size },
+  });
+  return res.data;
+}
+
+export async function createForumThread(input: {
+  title: string;
+  first_post_markdown: string;
+  series_ids?: number[];
+}): Promise<ForumThread> {
+  const res = await api.post<ForumThread>("/forum/threads", input);
+  return res.data;
+}
+
+export async function getForumThread(
+  thread_id: number
+): Promise<{ thread: ForumThread; posts: ForumPost[] }> {
+  const res = await api.get<{ thread: ForumThread; posts: ForumPost[] }>(
+    `/forum/threads/${thread_id}`
+  );
+  return res.data;
+}
+
+export async function createForumPost(
+  thread_id: number,
+  input: { content_markdown: string; series_ids?: number[]; parent_id?: number }
+): Promise<ForumPost> {
+  const body: {
+    content_markdown: string;
+    series_ids?: number[];
+    parent_id: number | null; // <-- always present
+  } = {
+    content_markdown: String(input.content_markdown).trim(),
+    parent_id:
+      typeof input.parent_id === "number" && input.parent_id > 0
+        ? input.parent_id
+        : null,
+  };
+
+  if (Array.isArray(input.series_ids) && input.series_ids.length > 0) {
+    body.series_ids = input.series_ids.map(Number);
+  }
+
+  const res = await api.post<ForumPost>(
+    `/forum/threads/${thread_id}/posts`,
+    body
+  );
+  return res.data;
+}
+
+export async function forumSeriesSearch(q: string): Promise<ForumSeriesRef[]> {
+  const res = await api.get<ForumSeriesRef[]>("/forum/series-search", {
+    params: { q },
+  });
+  return res.data;
+}
+
+export async function deleteForumPost(
+  thread_id: number,
+  post_id: number
+): Promise<void> {
+  await api.delete(`/forum/threads/${thread_id}/posts/${post_id}`);
+}
+
+export async function deleteForumThread(thread_id: number): Promise<void> {
+  await api.delete(`/forum/threads/${thread_id}`);
+}
+// Owner-only delete (server checks the author)
+export async function deleteMyForumPost(
+  thread_id: number,
+  post_id: number
+): Promise<void> {
+  await api.delete(`/forum/threads/${thread_id}/posts/${post_id}/mine`);
+}
+
+// ---------- End Forum ----------
