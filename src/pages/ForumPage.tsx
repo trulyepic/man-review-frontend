@@ -11,6 +11,7 @@ import {
 import { Link } from "react-router-dom";
 import { useUser } from "../login/useUser";
 import { Helmet } from "react-helmet";
+import { stripMdHeading } from "../util/strings";
 
 const MAX_THREADS_PER_USER = 10;
 
@@ -182,7 +183,7 @@ export default function ForumPage() {
                 to={`/forum/${t.id}`}
                 className="text-lg font-semibold hover:underline"
               >
-                {t.title}
+                {stripMdHeading(t.title)}
               </Link>
 
               <div className="text-xs text-gray-500 mt-0.5">
@@ -311,8 +312,9 @@ function NewThreadModal({
       return;
     }
 
+    const cleanTitle = stripMdHeading(title);
     const t = await createForumThread({
-      title,
+      title: cleanTitle,
       first_post_markdown: md,
       series_ids: picked,
     });

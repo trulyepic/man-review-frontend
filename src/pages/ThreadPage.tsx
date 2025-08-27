@@ -17,6 +17,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
 import { Helmet } from "react-helmet";
+import { stripMdHeading } from "../util/strings";
 
 // ---------- Small Markdown wrapper (fixes TS error) ----------
 function MarkdownProse({
@@ -114,7 +115,7 @@ export default function ThreadPage() {
       </Helmet>
       {thread && (
         <header className="mb-4">
-          <h1 className="text-2xl font-bold">{thread.title}</h1>
+          <h1 className="text-2xl font-bold">{stripMdHeading(thread.title)}</h1>
           {thread.series_refs?.length ? (
             <div className="mt-2 flex flex-wrap gap-3">
               {thread.series_refs.map((s) => (
