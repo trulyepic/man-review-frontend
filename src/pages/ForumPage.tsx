@@ -14,6 +14,7 @@ import { Helmet } from "react-helmet";
 import { stripMdHeading } from "../util/strings";
 
 const MAX_THREADS_PER_USER = 10;
+const MAX_SERIES_REFS = 10;
 
 function SeriesRefPill({ s }: { s: ForumThread["series_refs"][number] }) {
   return (
@@ -186,10 +187,17 @@ export default function ForumPage() {
                 {stripMdHeading(t.title)}
               </Link>
 
-              <div className="text-xs text-gray-500 mt-0.5">
-                {t.post_count} posts · updated{" "}
-                {new Date(t.updated_at).toLocaleString()}
-                {t.author_username ? ` · by ${t.author_username}` : null}
+              <div className="flex items-center gap-2 mt-1">
+                <div className="text-xs text-gray-500">
+                  {t.post_count} posts · updated{" "}
+                  {new Date(t.updated_at).toLocaleString()}
+                  {t.author_username ? ` · by ${t.author_username}` : null}
+                </div>
+                {t.locked && (
+                  <span className="inline-flex items-center text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
+                    🔒 Locked
+                  </span>
+                )}
               </div>
 
               {t.series_refs?.length ? (
@@ -293,8 +301,19 @@ function NewThreadModal({
     };
   }, [query]);
 
-  const togglePick = (id: number) =>
-    setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
+  const togglePick = (id: number) => {
+    setPicked((p) => {
+      if (p.includes(id)) {
+        // allow unselecting
+        return p.filter((x) => x !== id);
+      }
+      if (p.length >= MAX_SERIES_REFS) {
+        alert(`You can reference up to ${MAX_SERIES_REFS} series only.`);
+        return p;
+      }
+      return [...p, id];
+    });
+  };
 
   const create = async () => {
     if (!user) {
@@ -313,12 +332,36 @@ function NewThreadModal({
     }
 
     const cleanTitle = stripMdHeading(title);
-    const t = await createForumThread({
-      title: cleanTitle,
-      first_post_markdown: md,
-      series_ids: picked,
-    });
-    onCreated(t);
+    try {
+      const t = await createForumThread({
+        title: cleanTitle,
+        first_post_markdown: md,
+        series_ids: picked,
+      });
+      onCreated(t);
+    } catch (e: unknown) {
+      let msg = "Failed to create thread.";
+
+      if (typeof e === "string") {
+        msg = e;
+      } else if (e instanceof Error) {
+        msg = e.message;
+      } else if (typeof e === "object" && e !== null) {
+        const maybe = e as {
+          message?: string;
+          response?: { data?: { detail?: string | { message?: string } } };
+        };
+        msg =
+          maybe.response?.data?.detail &&
+          typeof maybe.response.data.detail === "string"
+            ? maybe.response.data.detail
+            : typeof maybe.response?.data?.detail === "object"
+            ? maybe.response.data.detail?.message || msg
+            : maybe.message || msg;
+      }
+
+      alert(msg);
+    }
   };
 
   return (
@@ -355,6 +398,9 @@ function NewThreadModal({
 
         <div className="mt-3">
           <label className="text-sm font-medium">Reference series</label>
+          <div className="text-xs text-gray-500 mb-1">
+            You can add up to {MAX_SERIES_REFS} series.
+          </div>
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}

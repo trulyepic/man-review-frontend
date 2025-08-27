@@ -1,14 +1,14 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { useParams, Link, useLocation } from "react-router-dom";
 import {
   getForumThread,
   createForumPost,
-  forumSeriesSearch,
   deleteForumPost, // ⬅️ import
   type ForumPost,
   deleteMyForumPost,
   type ForumSeriesRef,
   type ForumThread,
+  lockForumThread,
 } from "../api/manApi";
 import { useUser } from "../login/useUser";
 
@@ -18,8 +18,64 @@ import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
 import { Helmet } from "react-helmet";
 import { stripMdHeading } from "../util/strings";
+import RichReplyEditor from "../components/RichReplyEditor";
 
 // ---------- Small Markdown wrapper (fixes TS error) ----------
+// function MarkdownProse({
+//   children,
+//   className,
+//   size = "base",
+// }: {
+//   children: string;
+//   className?: string;
+//   size?: "base" | "sm";
+// }) {
+//   return (
+//     <div
+//       className={`${size === "sm" ? "prose prose-sm" : "prose"} max-w-none ${
+//         className || ""
+//       }`}
+//     >
+//       <ReactMarkdown
+//         // pass only supported props; style via the surrounding <div>
+//         remarkPlugins={[remarkGfm, remarkBreaks]}
+//         components={{
+//           a: ({ children, ...props }) => (
+//             <a {...props} target="_blank" rel="noreferrer">
+//               {children}
+//             </a>
+//           ),
+//         }}
+//       >
+//         {children}
+//       </ReactMarkdown>
+//     </div>
+//   );
+// }
+
+type AxiosLike = {
+  message?: string;
+  response?: { data?: { detail?: unknown } };
+};
+
+function getErrorMessage(err: unknown): string {
+  if (typeof err === "string") return err;
+  if (err instanceof Error) return err.message;
+
+  if (err && typeof err === "object") {
+    const e = err as AxiosLike;
+    const detail = e.response?.data?.detail;
+
+    if (typeof detail === "string") return detail;
+    if (detail && typeof detail === "object" && "message" in detail) {
+      const msg = (detail as { message?: string }).message;
+      if (typeof msg === "string") return msg;
+    }
+    if (e.message) return e.message;
+  }
+  return "An error occurred.";
+}
+
 function MarkdownProse({
   children,
   className,
@@ -36,14 +92,30 @@ function MarkdownProse({
       }`}
     >
       <ReactMarkdown
-        // pass only supported props; style via the surrounding <div>
         remarkPlugins={[remarkGfm, remarkBreaks]}
         components={{
-          a: ({ children, ...props }) => (
-            <a {...props} target="_blank" rel="noreferrer">
-              {children}
-            </a>
-          ),
+          a: ({ children, href, ...props }) => {
+            // chip-style internal series links like: [Title](series:123)
+            if (href && href.startsWith("series:")) {
+              const id = href.slice("series:".length);
+              return (
+                <Link
+                  to={`/series/${id}`}
+                  className="inline-flex items-center max-w-full gap-1 rounded-full px-2 py-0.5 text-xs bg-blue-50 text-blue-700 no-underline align-middle"
+                  title={`Series #${id}`}
+                >
+                  <span className="truncate">{children}</span>
+                  <span className="opacity-60">#{id}</span>
+                </Link>
+              );
+            }
+            // normal external links
+            return (
+              <a {...props} href={href} target="_blank" rel="noreferrer">
+                {children}
+              </a>
+            );
+          },
         }}
       >
         {children}
@@ -115,7 +187,46 @@ export default function ThreadPage() {
       </Helmet>
       {thread && (
         <header className="mb-4">
-          <h1 className="text-2xl font-bold">{stripMdHeading(thread.title)}</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold">
+              {stripMdHeading(thread.title)}
+            </h1>
+
+            {/* Visible to everyone */}
+            {thread.locked && (
+              <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                🔒 Locked
+              </span>
+            )}
+
+            {/* Admin-only lock/unlock button */}
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    const next = !thread.locked;
+                    await lockForumThread(thread.id, next);
+                    setThread((t) => (t ? { ...t, locked: next } : t));
+                  } catch (err) {
+                    const msg =
+                      (err as { message?: string })?.message ||
+                      "Failed to toggle lock.";
+                    alert(msg);
+                  }
+                }}
+                className={`text-xs rounded px-2 py-1 border ${
+                  thread.locked
+                    ? "bg-amber-50 hover:bg-amber-100 border-amber-300 text-amber-800"
+                    : "bg-gray-50 hover:bg-gray-100 border-gray-300 text-gray-700"
+                }`}
+                title={thread.locked ? "Unlock thread" : "Lock thread"}
+              >
+                {thread.locked ? "Unlock" : "Lock"}
+              </button>
+            )}
+          </div>
+
           {thread.series_refs?.length ? (
             <div className="mt-2 flex flex-wrap gap-3">
               {thread.series_refs.map((s) => (
@@ -224,6 +335,7 @@ export default function ThreadPage() {
                   reload={reload}
                   isAdmin={isAdmin}
                   currentUsername={user?.username || null}
+                  locked={!!thread?.locked}
                 />
               ))}
             </>
@@ -234,28 +346,36 @@ export default function ThreadPage() {
       {/* Top-level reply uses the Rich editor */}
       <div className="mt-6 border rounded-lg p-4">
         <h3 className="font-semibold mb-2">Reply</h3>
-        <RichReplyEditor
-          compact={false}
-          onSubmit={async (content, seriesIds) => {
-            // inside ThreadPage.tsx
-            if (!user) {
-              alert("You need to be logged in to post a reply.");
-              return;
-            }
-            const trimmed = content.trim();
-            if (!trimmed) {
-              alert("Reply cannot be empty.");
-              return;
-            }
-            const p = await createForumPost(threadId, {
-              content_markdown: trimmed,
-              series_ids: seriesIds, // series_ids only sent if non-empty by manApi helper
-              // NOTE: no parent_id here (top-level)
-            });
-            // append new post
-            setPosts((prev) => [...prev, p]);
-          }}
-        />
+
+        {!thread?.locked || isAdmin ? (
+          <RichReplyEditor
+            compact={false}
+            onSubmit={async (content, seriesIds) => {
+              if (!user) {
+                alert("You need to be logged in to post a reply.");
+                return;
+              }
+              const trimmed = content.trim();
+              if (!trimmed) {
+                alert("Reply cannot be empty.");
+                return;
+              }
+              try {
+                const p = await createForumPost(threadId, {
+                  content_markdown: trimmed,
+                  series_ids: seriesIds,
+                });
+                setPosts((prev) => [...prev, p]);
+              } catch (err: unknown) {
+                alert(getErrorMessage(err) || "Failed to post reply.");
+              }
+            }}
+          />
+        ) : (
+          <div className="text-sm text-amber-700 bg-amber-50 px-3 py-2 rounded">
+            🔒 This thread is locked. Only admins can add new replies.
+          </div>
+        )}
       </div>
     </div>
   );
@@ -270,6 +390,7 @@ function ReplyBranch({
   reload,
   isAdmin,
   currentUsername,
+  locked,
 }: {
   post: ForumPost;
   depth: number;
@@ -279,6 +400,7 @@ function ReplyBranch({
   reload: () => Promise<void>;
   isAdmin: boolean;
   currentUsername: string | null;
+  locked: boolean;
 }) {
   const railColors = [
     "#3b82f6", // blue-500
@@ -396,29 +518,38 @@ function ReplyBranch({
 
         {/* Actions */}
         <div className="mt-3 flex items-center gap-3">
-          <details>
-            <summary className="cursor-pointer text-xs text-blue-600 hover:underline">
-              Reply to this reply
-            </summary>
-            <div className="mt-2">
-              {/* ⬇️ Use the same editor for inline replies */}
-              <RichReplyEditor
-                compact
-                onSubmit={async (content, seriesIds) => {
-                  if (!content.trim()) {
-                    alert("Reply cannot be empty.");
-                    return;
-                  }
-                  await createForumPost(threadId, {
-                    content_markdown: content.trim(),
-                    series_ids: seriesIds, // will be omitted if empty
-                    parent_id: post.id, // safe
-                  });
-                  await reload();
-                }}
-              />
-            </div>
-          </details>
+          {!locked || isAdmin ? (
+            <details>
+              <summary className="cursor-pointer text-xs text-blue-600 hover:underline">
+                Reply to this reply
+              </summary>
+              <div className="mt-2">
+                <RichReplyEditor
+                  compact
+                  onSubmit={async (content, seriesIds) => {
+                    if (!content.trim()) {
+                      alert("Reply cannot be empty.");
+                      return;
+                    }
+                    try {
+                      await createForumPost(threadId, {
+                        content_markdown: content.trim(),
+                        series_ids: seriesIds,
+                        parent_id: post.id,
+                      });
+                      await reload();
+                    } catch (err: unknown) {
+                      alert(getErrorMessage(err) || "Failed to post reply.");
+                    }
+                  }}
+                />
+              </div>
+            </details>
+          ) : (
+            <span className="text-xs text-amber-700 bg-amber-50 px-2 py-1 rounded">
+              🔒 Thread is locked — replies are disabled.
+            </span>
+          )}
 
           {canDelete && (
             <button
@@ -443,173 +574,174 @@ function ReplyBranch({
           reload={reload}
           isAdmin={isAdmin} // keep passing down
           currentUsername={currentUsername}
+          locked={locked}
         />
       ))}
     </div>
   );
 }
 
-/** -----------------------------------------------------------------------
- * RichReplyEditor
- * - Simple textarea with Bold/Italic buttons that wrap the current selection
- * - Inline series autocomplete (search + toggle pick + chips)
- * - Calls onSubmit(content, seriesIds)
- * ---------------------------------------------------------------------- */
-function RichReplyEditor({
-  onSubmit,
-  compact = false,
-  initial = "",
-}: {
-  onSubmit: (content: string, seriesIds: number[]) => Promise<void> | void;
-  compact?: boolean;
-  initial?: string;
-}) {
-  const { user } = useUser();
-  const [value, setValue] = useState(initial);
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<ForumSeriesRef[]>([]);
-  const [picked, setPicked] = useState<number[]>([]);
-  const taRef = useRef<HTMLTextAreaElement | null>(null);
+// /** -----------------------------------------------------------------------
+//  * RichReplyEditor
+//  * - Simple textarea with Bold/Italic buttons that wrap the current selection
+//  * - Inline series autocomplete (search + toggle pick + chips)
+//  * - Calls onSubmit(content, seriesIds)
+//  * ---------------------------------------------------------------------- */
+// function RichReplyEditor({
+//   onSubmit,
+//   compact = false,
+//   initial = "",
+// }: {
+//   onSubmit: (content: string, seriesIds: number[]) => Promise<void> | void;
+//   compact?: boolean;
+//   initial?: string;
+// }) {
+//   const { user } = useUser();
+//   const [value, setValue] = useState(initial);
+//   const [query, setQuery] = useState("");
+//   const [results, setResults] = useState<ForumSeriesRef[]>([]);
+//   const [picked, setPicked] = useState<number[]>([]);
+//   const taRef = useRef<HTMLTextAreaElement | null>(null);
 
-  // tiny helper: wrap current selection with tokens (e.g., **bold**)
-  const wrapSelection = (left: string, right = left) => {
-    const el = taRef.current;
-    if (!el) return;
-    const start = el.selectionStart ?? 0;
-    const end = el.selectionEnd ?? 0;
-    const before = value.slice(0, start);
-    const sel = value.slice(start, end);
-    const after = value.slice(end);
-    const next = `${before}${left}${sel}${right}${after}`;
-    setValue(next);
-    queueMicrotask(() => {
-      el.focus();
-      const cursorStart = start + left.length;
-      el.setSelectionRange(cursorStart, cursorStart + sel.length);
-    });
-  };
+//   // tiny helper: wrap current selection with tokens (e.g., **bold**)
+//   const wrapSelection = (left: string, right = left) => {
+//     const el = taRef.current;
+//     if (!el) return;
+//     const start = el.selectionStart ?? 0;
+//     const end = el.selectionEnd ?? 0;
+//     const before = value.slice(0, start);
+//     const sel = value.slice(start, end);
+//     const after = value.slice(end);
+//     const next = `${before}${left}${sel}${right}${after}`;
+//     setValue(next);
+//     queueMicrotask(() => {
+//       el.focus();
+//       const cursorStart = start + left.length;
+//       el.setSelectionRange(cursorStart, cursorStart + sel.length);
+//     });
+//   };
 
-  // inline series search
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      if (!query.trim()) {
-        setResults([]);
-        return;
-      }
-      try {
-        const r = await forumSeriesSearch(query.trim());
-        if (alive) setResults(r);
-      } catch {
-        /* ignore */
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [query]);
+//   // inline series search
+//   useEffect(() => {
+//     let alive = true;
+//     (async () => {
+//       if (!query.trim()) {
+//         setResults([]);
+//         return;
+//       }
+//       try {
+//         const r = await forumSeriesSearch(query.trim());
+//         if (alive) setResults(r);
+//       } catch {
+//         /* ignore */
+//       }
+//     })();
+//     return () => {
+//       alive = false;
+//     };
+//   }, [query]);
 
-  const togglePick = (id: number) =>
-    setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
+//   const togglePick = (id: number) =>
+//     setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
 
-  const handlePost = async () => {
-    if (!user) {
-      alert("You need to be logged in to post a reply.");
-      return;
-    }
-    await onSubmit(value, picked);
-    // clear after successful submit
-    setValue("");
-    setQuery("");
-    setResults([]);
-    setPicked([]);
-  };
+//   const handlePost = async () => {
+//     if (!user) {
+//       alert("You need to be logged in to post a reply.");
+//       return;
+//     }
+//     await onSubmit(value, picked);
+//     // clear after successful submit
+//     setValue("");
+//     setQuery("");
+//     setResults([]);
+//     setPicked([]);
+//   };
 
-  return (
-    <div className={`rounded ${compact ? "bg-gray-50" : "bg-white"}`}>
-      {/* toolbar */}
-      <div className="flex items-center gap-2 mb-2 text-sm">
-        <button
-          type="button"
-          className="px-2 py-1 rounded border hover:bg-gray-50"
-          onClick={() => wrapSelection("**")}
-          title="Bold (**text**)"
-        >
-          B
-        </button>
-        <button
-          type="button"
-          className="px-2 py-1 rounded border hover:bg-gray-50 italic"
-          onClick={() => wrapSelection("*")}
-          title="Italic (*text*)"
-        >
-          I
-        </button>
-        <span className="ml-2 text-xs text-gray-500">
-          Markdown supported (bold, italic, links…)
-        </span>
-      </div>
+//   return (
+//     <div className={`rounded ${compact ? "bg-gray-50" : "bg-white"}`}>
+//       {/* toolbar */}
+//       <div className="flex items-center gap-2 mb-2 text-sm">
+//         <button
+//           type="button"
+//           className="px-2 py-1 rounded border hover:bg-gray-50"
+//           onClick={() => wrapSelection("**")}
+//           title="Bold (**text**)"
+//         >
+//           B
+//         </button>
+//         <button
+//           type="button"
+//           className="px-2 py-1 rounded border hover:bg-gray-50 italic"
+//           onClick={() => wrapSelection("*")}
+//           title="Italic (*text*)"
+//         >
+//           I
+//         </button>
+//         <span className="ml-2 text-xs text-gray-500">
+//           Markdown supported (bold, italic, links…)
+//         </span>
+//       </div>
 
-      <textarea
-        ref={taRef}
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        placeholder="Write a reply…"
-        className="w-full border rounded px-3 py-2 h-28"
-      />
+//       <textarea
+//         ref={taRef}
+//         value={value}
+//         onChange={(e) => setValue(e.target.value)}
+//         placeholder="Write a reply…"
+//         className="w-full border rounded px-3 py-2 h-28"
+//       />
 
-      {/* inline series autocomplete */}
-      <div className="mt-2">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search series to reference…"
-          className="w-full border rounded px-3 py-2"
-        />
-        {results.length > 0 && (
-          <div className="mt-2 max-h-36 overflow-auto border rounded p-2 space-y-1 bg-white">
-            {results.map((r) => (
-              <button
-                key={r.series_id}
-                onClick={() => togglePick(r.series_id)}
-                className={`w-full text-left px-2 py-1 rounded ${
-                  picked.includes(r.series_id)
-                    ? "bg-blue-100"
-                    : "hover:bg-gray-100"
-                }`}
-                title={r.title || `#${r.series_id}`}
-              >
-                {r.title}{" "}
-                <span className="text-xs text-gray-500">#{r.series_id}</span>
-              </button>
-            ))}
-          </div>
-        )}
-        {picked.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            {picked.map((id) => (
-              <span
-                key={id}
-                className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full"
-              >
-                #{id}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
+//       {/* inline series autocomplete */}
+//       <div className="mt-2">
+//         <input
+//           value={query}
+//           onChange={(e) => setQuery(e.target.value)}
+//           placeholder="Search series to reference…"
+//           className="w-full border rounded px-3 py-2"
+//         />
+//         {results.length > 0 && (
+//           <div className="mt-2 max-h-36 overflow-auto border rounded p-2 space-y-1 bg-white">
+//             {results.map((r) => (
+//               <button
+//                 key={r.series_id}
+//                 onClick={() => togglePick(r.series_id)}
+//                 className={`w-full text-left px-2 py-1 rounded ${
+//                   picked.includes(r.series_id)
+//                     ? "bg-blue-100"
+//                     : "hover:bg-gray-100"
+//                 }`}
+//                 title={r.title || `#${r.series_id}`}
+//               >
+//                 {r.title}{" "}
+//                 <span className="text-xs text-gray-500">#{r.series_id}</span>
+//               </button>
+//             ))}
+//           </div>
+//         )}
+//         {picked.length > 0 && (
+//           <div className="mt-2 flex flex-wrap gap-2">
+//             {picked.map((id) => (
+//               <span
+//                 key={id}
+//                 className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full"
+//               >
+//                 #{id}
+//               </span>
+//             ))}
+//           </div>
+//         )}
+//       </div>
 
-      <div className="mt-3 flex justify-end">
-        <button
-          onClick={handlePost}
-          className="px-3 py-1.5 rounded bg-blue-600 text-white"
-        >
-          Post Reply
-        </button>
-      </div>
-    </div>
-  );
-}
+//       <div className="mt-3 flex justify-end">
+//         <button
+//           onClick={handlePost}
+//           className="px-3 py-1.5 rounded bg-blue-600 text-white"
+//         >
+//           Post Reply
+//         </button>
+//       </div>
+//     </div>
+//   );
+// }
 
 function SeriesMiniCard({ s }: { s: ForumSeriesRef }) {
   // Optional: color coding for status
