@@ -15,8 +15,12 @@ const Footer = () => {
           <a href="/contact" className="hover:underline">
             Contact
           </a>
-          <a href="/report-issue" className="hover:underline">Report an Issue</a>
-          <a href="/issues" className="hover:underline">Issues</a>
+          <a href="/report-issue" className="hover:underline">
+            Report an Issue
+          </a>
+          <a href="/issues" className="hover:underline">
+            Issues
+          </a>
 
           {/* <a href="/terms" className="hover:underline">
             Terms
@@ -33,6 +37,7 @@ const Footer = () => {
           >
             GitHub
           </a>
+          <a href="/how-rankings-work"> Ranks</a>
         </div>
         <p className="text-sm my-3">
           &copy; {new Date().getFullYear()} ManReview. All rights reserved.
