@@ -84,13 +84,25 @@ const SeriesDetailPage = () => {
         const detail = await getSeriesDetailById(Number(id));
         setSeriesDetail(detail);
 
+        // const newRatings = { ...ratings };
+        // for (const cat in newRatings) {
+        //   if (detail[cat.toLowerCase().replace(" / ", "_") + "_count"]) {
+        //     newRatings[cat] =
+        //       detail[cat.toLowerCase().replace(" / ", "_") + "_total"] /
+        //       detail[cat.toLowerCase().replace(" / ", "_") + "_count"];
+        //   }
+        // }
+        const num = (k: string) =>
+          (detail as unknown as Record<string, number | undefined>)[k];
         const newRatings = { ...ratings };
         for (const cat in newRatings) {
-          if (detail[cat.toLowerCase().replace(" / ", "_") + "_count"]) {
-            newRatings[cat] =
-              detail[cat.toLowerCase().replace(" / ", "_") + "_total"] /
-              detail[cat.toLowerCase().replace(" / ", "_") + "_count"];
-          }
+          const base = cat.toLowerCase().replace(" / ", "_");
+          const count = num(`${base}_count`);
+          const total = num(`${base}_total`);
+          newRatings[cat] =
+            typeof count === "number" && count > 0 && typeof total === "number"
+              ? total / count
+              : -1;
         }
 
         setRatings(newRatings);

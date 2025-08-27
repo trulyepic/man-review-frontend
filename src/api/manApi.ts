@@ -416,6 +416,7 @@
 // };
 
 // src/api/manApi.ts
+import type { SeriesDetailData } from "../types/types";
 import { api } from "./client"; // <-- your shared Axios instance
 import { isAxiosError } from "axios";
 
@@ -666,8 +667,8 @@ export const createSeriesDetail = async (
 
 export const getSeriesDetailById = async (
   seriesId: number
-): Promise<unknown> => {
-  const res = await api.get(`/series-details/${seriesId}`);
+): Promise<SeriesDetailData> => {
+  const res = await api.get<SeriesDetailData>(`/series-details/${seriesId}`);
   return res.data; // unknown until you define a SeriesDetail shape
 };
 
