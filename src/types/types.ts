@@ -1,4 +1,6 @@
 // types.ts
+export type UserRole = "ADMIN" | "USER" | (string & {});
+
 export type SeriesDetailData = {
   synopsis: string;
   series_cover_url: string;
@@ -19,9 +21,16 @@ export type SeriesDetailData = {
   vote_counts?: Record<string, number>;
 };
 
+// export interface User {
+//   username: string;
+//   role?: string;
+// }
+
 export interface User {
+  id: number;
   username: string;
-  role?: string;
+  email?: string | null;
+  role?: UserRole | null; // allow null
 }
 
 export interface UserContextType {
