@@ -72,7 +72,7 @@ const Footer = () => {
           </nav>
 
           <p className="mt-3 text-sm">
-            &copy; {new Date().getFullYear()} ManReview. All rights reserved.
+            &copy; {new Date().getFullYear()} ToonRank. All rights reserved.
           </p>
         </div>
       </div>

@@ -29,7 +29,7 @@ const ReportIssuePage = () => {
       setErrorMsg(
         "Please enter a valid email address or leave the field blank."
       );
-      return; 
+      return;
     }
     setSubmitting(true);
     setSuccessMsg(null);
@@ -51,11 +51,21 @@ const ReportIssuePage = () => {
       setScreenshot(undefined);
       // Optionally scroll to top to show the success message
       window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch (err: any) {
-      const detail =
-        err?.response?.data?.detail ||
-        err?.message ||
-        "Failed to submit the report.";
+    } catch (err: unknown) {
+      let detail = "Failed to submit the report.";
+
+      if (typeof err === "string") {
+        detail = err;
+      } else if (err instanceof Error) {
+        detail = err.message;
+      } else if (typeof err === "object" && err !== null) {
+        const maybe = err as {
+          message?: string;
+          response?: { data?: { detail?: string } };
+        };
+        detail = maybe.response?.data?.detail || maybe.message || detail;
+      }
+
       setErrorMsg(detail);
     } finally {
       setSubmitting(false);

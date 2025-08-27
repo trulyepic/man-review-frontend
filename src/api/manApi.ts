@@ -427,6 +427,15 @@ export type IssueType = "BUG" | "FEATURE" | "CONTENT" | "OTHER";
 // export type IssueStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED";
 export type IssueStatus = "OPEN" | "IN_PROGRESS" | "FIXED" | "WONT_FIX";
 
+type ApiErrorDetail = string | { code?: string; message?: string };
+type ApiErrorData =
+  | {
+      detail?: ApiErrorDetail;
+      code?: string;
+      message?: string;
+    }
+  | undefined;
+
 export type ForumSeriesRef = {
   series_id: number;
   title?: string;
@@ -443,6 +452,7 @@ export type ForumThread = {
   post_count: number;
   last_post_at: string;
   series_refs: ForumSeriesRef[];
+  locked?: boolean;
 };
 export type ForumPost = {
   id: number;
@@ -548,6 +558,16 @@ function extractApiDetail(err: unknown, fallback: string): string {
     return err.message ?? fallback;
   }
   return fallback;
+}
+
+function retryAfterSeconds(err: unknown): number | null {
+  if (isAxiosError(err)) {
+    const ra = err.response?.headers?.["retry-after"];
+    if (!ra) return null;
+    const n = Number(ra);
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
 }
 
 function isAuthUser(x: unknown): x is AuthUser {
@@ -860,8 +880,43 @@ export async function createForumThread(input: {
   first_post_markdown: string;
   series_ids?: number[];
 }): Promise<ForumThread> {
-  const res = await api.post<ForumThread>("/forum/threads", input);
-  return res.data;
+  try {
+    const res = await api.post<ForumThread>("/forum/threads", input);
+    return res.data;
+  } catch (err: unknown) {
+    const status = isAxiosError(err) ? err.response?.status : undefined;
+    const data: ApiErrorData = isAxiosError(err)
+      ? (err.response?.data as unknown as ApiErrorData)
+      : undefined;
+
+    if (status === 429) {
+      const ra = retryAfterSeconds(err);
+      throw new Error(
+        `You're creating threads too fast${ra ? `; try again in ${ra}s` : ""}.`
+      );
+    }
+
+    // explicit profanity branch
+    const detailObj =
+      typeof data?.detail === "object" && data?.detail !== null
+        ? data.detail
+        : undefined;
+    const code = detailObj?.code ?? data?.code ?? null;
+
+    if (status === 400 && code === "PROFANITY") {
+      throw new Error("Thread contains inappropriate language.");
+    }
+
+    // Fallbacks
+    const serverDetail =
+      (typeof data?.detail === "string" && data.detail) ||
+      detailObj?.message ||
+      data?.message;
+
+    throw new Error(
+      serverDetail || extractApiDetail(err, "Failed to create thread")
+    );
+  }
 }
 
 export async function getForumThread(
@@ -877,27 +932,72 @@ export async function createForumPost(
   thread_id: number,
   input: { content_markdown: string; series_ids?: number[]; parent_id?: number }
 ): Promise<ForumPost> {
-  const body: {
-    content_markdown: string;
-    series_ids?: number[];
-    parent_id: number | null; // <-- always present
-  } = {
+  const body = {
     content_markdown: String(input.content_markdown).trim(),
     parent_id:
       typeof input.parent_id === "number" && input.parent_id > 0
         ? input.parent_id
         : null,
+  } as {
+    content_markdown: string;
+    series_ids?: number[];
+    parent_id: number | null;
   };
 
   if (Array.isArray(input.series_ids) && input.series_ids.length > 0) {
     body.series_ids = input.series_ids.map(Number);
   }
 
-  const res = await api.post<ForumPost>(
-    `/forum/threads/${thread_id}/posts`,
-    body
-  );
-  return res.data;
+  try {
+    const res = await api.post<ForumPost>(
+      `/forum/threads/${thread_id}/posts`,
+      body
+    );
+    return res.data;
+  } catch (err: unknown) {
+    const status = isAxiosError(err) ? err.response?.status : undefined;
+    const data: ApiErrorData = isAxiosError(err)
+      ? (err.response?.data as unknown as ApiErrorData)
+      : undefined;
+
+    const detailStr =
+      typeof data?.detail === "string"
+        ? data.detail
+        : (typeof data?.detail === "object" && data.detail?.message) ||
+          undefined;
+
+    if (status === 429) {
+      const ra = retryAfterSeconds(err);
+      throw new Error(
+        `You're posting too fast${ra ? `; try again in ${ra}s` : ""}.`
+      );
+    }
+
+    if (status === 423) {
+      throw new Error("This thread is locked by an admin.");
+    }
+
+    // Profanity (structured)
+    const detailObj =
+      typeof data?.detail === "object" && data?.detail !== null
+        ? data.detail
+        : undefined;
+    if (status === 400 && detailObj?.code === "PROFANITY") {
+      throw new Error("Reply contains inappropriate language.");
+    }
+
+    // Profanity (string detail)
+    if (
+      status === 400 &&
+      detailStr &&
+      /inappropriate|profan/i.test(detailStr)
+    ) {
+      throw new Error("Reply contains inappropriate language.");
+    }
+
+    const fallback = extractApiDetail(err, "Failed to post reply");
+    throw new Error(detailStr || fallback);
+  }
 }
 
 export async function forumSeriesSearch(q: string): Promise<ForumSeriesRef[]> {
@@ -923,6 +1023,17 @@ export async function deleteMyForumPost(
   post_id: number
 ): Promise<void> {
   await api.delete(`/forum/threads/${thread_id}/posts/${post_id}/mine`);
+}
+
+export async function lockForumThread(
+  thread_id: number,
+  locked: boolean
+): Promise<{ id: number; locked: boolean }> {
+  const res = await api.patch<{ id: number; locked: boolean }>(
+    `/forum/threads/${thread_id}/lock`,
+    { locked }
+  );
+  return res.data;
 }
 
 // ---------- End Forum ----------
