@@ -529,6 +529,8 @@ export interface ReadingListItem {
 export interface ReadingList {
   id: number;
   name: string;
+  is_public: boolean;
+  share_token: string;
   items: ReadingListItem[];
 }
 
@@ -1049,3 +1051,55 @@ export async function updateForumThreadSettings(
 }
 
 // ---------- End Forum ----------
+
+// ---------- Reading Lists (new helpers) ----------
+export interface PublicReadingList {
+  name: string;
+  items: { series_id: number; title?: string; cover_url?: string }[];
+}
+
+/** Owner-only: make list public (ensures share_token server-side) */
+export const shareReadingList = async (
+  listId: number
+): Promise<ReadingList> => {
+  const res = await api.post<ReadingList>(`/reading-lists/${listId}/share`, {});
+  return res.data;
+};
+
+/** Owner-only: make list private again */
+export const unshareReadingList = async (
+  listId: number
+): Promise<ReadingList> => {
+  const res = await api.delete<ReadingList>(`/reading-lists/${listId}/share`);
+  return res.data;
+};
+
+/**
+ * Public page: fetch a shared list by token and enrich items with title/cover.
+ * Backend returns only series_id; we decorate each via getSeriesSummary.
+ */
+export const getPublicReadingList = async (
+  token: string
+): Promise<PublicReadingList> => {
+  const res = await api.get<{ name: string; items: { series_id: number }[] }>(
+    `/reading-lists/public/${token}`
+  );
+
+  // lightweight enrichment so the UI can show covers/titles
+  const items = await Promise.all(
+    res.data.items.map(async (it) => {
+      try {
+        const s = await getSeriesSummary(it.series_id);
+        return {
+          series_id: it.series_id,
+          title: s.title,
+          cover_url: s.cover_url,
+        };
+      } catch {
+        return it;
+      }
+    })
+  );
+
+  return { name: res.data.name, items };
+};

@@ -19,6 +19,7 @@ import ReportIssuePage from "./pages/ReportIssuePage";
 import IssuesPage from "./pages/IssuesPage";
 import ForumPage from "./pages/ForumPage";
 import ThreadPage from "./pages/ThreadPage";
+import PublicReadingListPage from "./pages/PublicReadingListPage";
 
 function App() {
   return (
@@ -51,6 +52,7 @@ function App() {
 
               <Route path="/forum" element={<ForumPage />} />
               <Route path="/forum/:id" element={<ThreadPage />} />
+              <Route path="/lists/:token" element={<PublicReadingListPage />} />
             </Routes>
           </main>
           <Footer />

@@ -4,6 +4,8 @@ import {
   deleteReadingList,
   removeSeriesFromReadingList,
   getSeriesSummary,
+  shareReadingList,
+  unshareReadingList,
   type ReadingList,
   type RankedSeries,
 } from "../api/manApi";
@@ -14,9 +16,11 @@ export default function MyReadingListsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // seriesId -> summary
   const [summaries, setSummaries] = useState<Record<number, RankedSeries>>({});
   const [summariesLoading, setSummariesLoading] = useState(false);
+
+  const [busyId, setBusyId] = useState<number | null>(null);
+  const [copyId, setCopyId] = useState<number | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -35,7 +39,6 @@ export default function MyReadingListsPage() {
     load();
   }, []);
 
-  // fetch summaries for unique series ids whenever lists change
   useEffect(() => {
     const ids = Array.from(
       new Set(lists.flatMap((l) => l.items?.map((i) => i.series_id) ?? []))
@@ -87,9 +90,44 @@ export default function MyReadingListsPage() {
     }
   };
 
-  // keep the original card colors; statuses come UPPERCASE from backend
+  const toggleShare = async (l: ReadingList) => {
+    try {
+      setBusyId(l.id);
+      const next = l.is_public
+        ? await unshareReadingList(l.id)
+        : await shareReadingList(l.id);
+      setLists((prev) => prev.map((x) => (x.id === l.id ? next : x)));
+    } catch (e) {
+      alert((e as Error).message || "Failed to update share state.");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const copyPrivateAnchor = async (l: ReadingList) => {
+    try {
+      setCopyId(l.id);
+      const url = `${window.location.origin}/my-lists#list-${l.id}`;
+      await navigator.clipboard.writeText(url);
+    } finally {
+      setCopyId(null);
+    }
+  };
+
+  const copyPublicUrl = async (l: ReadingList) => {
+    if (!l.is_public || !l.share_token) return;
+    try {
+      setCopyId(l.id);
+      const url = `${window.location.origin}/lists/${l.share_token}`;
+      await navigator.clipboard.writeText(url);
+      alert("Public URL copied!");
+    } finally {
+      setCopyId(null);
+    }
+  };
+
   const statusClass = (status?: string) => {
-    switch (status) {
+    switch ((status || "").toUpperCase()) {
       case "ONGOING":
         return "bg-green-500 text-white";
       case "COMPLETE":
@@ -120,16 +158,65 @@ export default function MyReadingListsPage() {
           {lists.map((l) => (
             <section
               key={l.id}
+              id={`list-${l.id}`}
               className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur-sm shadow-sm"
             >
-              <header className="flex items-center justify-between px-4 py-3 border-b">
-                <h2 className="text-lg font-semibold">{l.name}</h2>
-                <button
-                  onClick={() => handleDeleteList(l.id)}
-                  className="text-sm px-3 py-1 rounded-md bg-red-100 text-red-700 hover:bg-red-200"
-                >
-                  Delete List
-                </button>
+              <header className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b">
+                <div className="flex items-center gap-2 min-w-0">
+                  <h2 className="text-lg font-semibold truncate">{l.name}</h2>
+                  <span
+                    className={`inline-flex items-center text-[11px] px-2 py-0.5 rounded-full ${
+                      l.is_public
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-gray-100 text-gray-700"
+                    }`}
+                    title={
+                      l.is_public
+                        ? "This list is public"
+                        : "This list is private"
+                    }
+                  >
+                    {l.is_public ? "Public" : "Private"}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => toggleShare(l)}
+                    disabled={busyId === l.id}
+                    className="text-sm px-3 py-1 rounded-md border hover:bg-gray-50"
+                    title={l.is_public ? "Make private" : "Share publicly"}
+                  >
+                    {busyId === l.id ? "…" : l.is_public ? "Unshare" : "Share"}
+                  </button>
+
+                  {l.is_public && (
+                    <button
+                      onClick={() => copyPublicUrl(l)}
+                      disabled={copyId === l.id}
+                      className="text-sm px-3 py-1 rounded-md bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+                      title="Copy public URL"
+                    >
+                      {copyId === l.id ? "Copying…" : "Copy Public URL"}
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => copyPrivateAnchor(l)}
+                    disabled={copyId === l.id}
+                    className="text-sm px-3 py-1 rounded-md bg-gray-100 hover:bg-gray-200"
+                    title="Copy private anchor link"
+                  >
+                    {copyId === l.id ? "Copying…" : "Copy Private Link"}
+                  </button>
+
+                  <button
+                    onClick={() => handleDeleteList(l.id)}
+                    className="text-sm px-3 py-1 rounded-md bg-red-100 text-red-700 hover:bg-red-200"
+                  >
+                    Delete List
+                  </button>
+                </div>
               </header>
 
               {!l.items?.length ? (
@@ -142,26 +229,42 @@ export default function MyReadingListsPage() {
                 <ul className="divide-y">
                   {l.items.map((it) => {
                     const s = summaries[it.series_id];
-                    const st = s?.status?.toUpperCase(); // normalize just in case
+                    const st = s?.status?.toUpperCase();
                     return (
                       <li
                         key={it.series_id}
                         className="flex items-center gap-3 px-4 py-3"
                       >
-                        {/* thumb + rank badge + MOBILE status */}
                         <div className="relative">
-                          <img
-                            src={s?.cover_url || ""}
-                            alt={s?.title || `Series ${it.series_id}`}
-                            className="h-16 w-12 object-cover rounded-md bg-gray-100"
-                          />
+                          {s?.cover_url ? (
+                            <img
+                              src={s.cover_url}
+                              alt={s?.title || `Series ${it.series_id}`}
+                              className="h-16 w-12 object-cover rounded-md bg-gray-100"
+                              loading="lazy"
+                              decoding="async"
+                              width={80}
+                              height={120}
+                            />
+                          ) : (
+                            <div
+                              className="h-16 w-12 rounded-md bg-gray-100 flex items-center justify-center text-[10px] text-gray-400"
+                              aria-label={
+                                s?.title
+                                  ? `${s.title} (no cover)`
+                                  : `Series ${it.series_id} (no cover)`
+                              }
+                            >
+                              —
+                            </div>
+                          )}
+
                           {s?.rank ? (
                             <span className="absolute -top-2 -left-2 text-[10px] font-bold text-white bg-black/70 px-1.5 py-0.5 rounded-full ring-1 ring-white">
                               #{s.rank}
                             </span>
                           ) : null}
 
-                          {/* MOBILE: bottom-right tag on thumb */}
                           {st ? (
                             <div className="absolute bottom-0 right-0 z-10 pointer-events-none select-none md:hidden">
                               <div
@@ -182,9 +285,7 @@ export default function MyReadingListsPage() {
                           ) : null}
                         </div>
 
-                        {/* title + meta */}
                         <div className="min-w-0 flex-1">
-                          {/* Title row with DESKTOP status tag to the right */}
                           <div className="flex items-center gap-2">
                             <Link
                               to={`/series/${it.series_id}`}
@@ -194,7 +295,6 @@ export default function MyReadingListsPage() {
                               {s?.title || `Series #${it.series_id}`}
                             </Link>
 
-                            {/* DESKTOP: inline tag next to title */}
                             {st ? (
                               <span
                                 className={
@@ -240,7 +340,6 @@ export default function MyReadingListsPage() {
                           </div>
                         </div>
 
-                        {/* actions */}
                         <button
                           onClick={() => handleRemoveItem(l.id, it.series_id)}
                           className="text-xs px-2.5 py-1 rounded-md bg-gray-200 hover:bg-gray-300"
