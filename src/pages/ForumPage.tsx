@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   listForumThreads,
   createForumThread,
@@ -271,11 +271,167 @@ function NewThreadModal({
   const { user } = useUser();
   const [title, setTitle] = useState("");
   const [md, setMd] = useState("");
+
+  // existing series picker state (unchanged)
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<ForumSeriesRef[]>([]);
   const [picked, setPicked] = useState<number[]>([]);
   const remaining = Math.max(0, maxThreads - myThreadCount);
 
+  // --- @mention support (body) ---
+  const mdRef = useRef<HTMLTextAreaElement | null>(null);
+  const mdMenuRef = useRef<HTMLDivElement | null>(null);
+  const [mdMenuOpen, setMdMenuOpen] = useState(false);
+  const [mdResults, setMdResults] = useState<ForumSeriesRef[]>([]);
+  const [mdHighlight, setMdHighlight] = useState(0);
+  const [mdMentionStart, setMdMentionStart] = useState<number | null>(null);
+  const [mdMentionCount, setMdMentionCount] = useState(0);
+  const [mdCapShown, setMdCapShown] = useState(false);
+
+  const MAX_MENTIONS = MAX_SERIES_REFS; // 10
+
+  // util: extract ids from "(series:123)"
+  const extractIds = (text: string) =>
+    Array.from(text.matchAll(/\(series:(\d+)\)/g)).map((m) => Number(m[1]));
+
+  // util: detect @token around caret
+  function detectAtToken(nextValue: string, caret: number) {
+    if (caret < 0 || caret > nextValue.length) return null;
+    const before = nextValue.slice(0, caret);
+    const lastBoundary = Math.max(
+      before.lastIndexOf(" "),
+      before.lastIndexOf("\n"),
+      before.lastIndexOf("\t"),
+      before.lastIndexOf("("),
+      before.lastIndexOf("[")
+    );
+    const tokenStart = lastBoundary + 1;
+    const token = nextValue.slice(tokenStart, caret);
+    if (!token.startsWith("@")) return null;
+    const after = nextValue.slice(caret);
+    const m = after.match(/^[^\s.,!?)]*/);
+    const tokenEnd = caret + (m ? m[0].length : 0);
+    const wholeToken = nextValue.slice(tokenStart, tokenEnd);
+    const query = wholeToken.slice(1);
+    return { tokenStart, tokenEnd, query };
+  }
+
+  async function runMdMentionSearch(q: string) {
+    try {
+      const r = await forumSeriesSearch(q);
+      setMdResults(r);
+      setMdHighlight(0);
+      setMdMenuOpen(r.length > 0);
+    } catch {
+      setMdResults([]);
+      setMdMenuOpen(false);
+    }
+  }
+
+  function insertMdMention(
+    chosen: ForumSeriesRef,
+    tokenStart: number,
+    tokenEnd: number
+  ) {
+    const uniqueIds = Array.from(new Set(extractIds(md)));
+    // only block if this is a *new* id and we’re already at the cap
+    if (
+      !uniqueIds.includes(chosen.series_id) &&
+      uniqueIds.length >= MAX_MENTIONS
+    ) {
+      alert(`You can mention up to ${MAX_MENTIONS} series.`);
+      setMdMenuOpen(false);
+      return;
+    }
+
+    const before = md.slice(0, tokenStart);
+    const after = md.slice(tokenEnd);
+    const inserted = `[${chosen.title || `#${chosen.series_id}`}](series:${
+      chosen.series_id
+    })`;
+    const next = `${before}${inserted}${after}`;
+    setMd(next);
+    setMdMenuOpen(false);
+    setMdResults([]);
+    setMdMentionStart(null);
+    queueMicrotask(() => {
+      mdRef.current?.focus();
+      const newPos = (before + inserted).length;
+      mdRef.current?.setSelectionRange(newPos, newPos);
+    });
+  }
+
+  const onMdChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const next = e.target.value;
+    setMd(next);
+
+    const caret = e.target.selectionStart ?? next.length;
+    const hit = detectAtToken(next, caret);
+
+    // NEW: keep a live unique count
+    const currentCount = new Set(extractIds(next)).size;
+    setMdMentionCount(currentCount);
+
+    // NEW: one-time heads-up when the user reaches the cap
+    if (currentCount >= MAX_MENTIONS && !mdCapShown) {
+      setMdCapShown(true);
+      alert(
+        `You've reached the limit of ${MAX_MENTIONS} series mentions in the post body.`
+      );
+    }
+    if (currentCount < MAX_MENTIONS && mdCapShown) {
+      // allow another alert after the user drops below the cap and hits it again
+      setMdCapShown(false);
+    }
+
+    if (hit && hit.query.length >= 1 && currentCount < MAX_MENTIONS) {
+      setMdMentionStart(hit.tokenStart);
+      runMdMentionSearch(hit.query);
+    } else {
+      setMdMentionStart(null);
+      setMdMenuOpen(false);
+      setMdResults([]);
+    }
+  };
+
+  const onMdKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (!mdMenuOpen || mdResults.length === 0 || mdMentionStart === null)
+      return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setMdHighlight((h) => (h + 1) % mdResults.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setMdHighlight((h) => (h - 1 + mdResults.length) % mdResults.length);
+    } else if (e.key === "Enter" || e.key === "Tab") {
+      e.preventDefault();
+      const caret = mdRef.current?.selectionStart ?? md.length;
+      const hit = detectAtToken(md, caret);
+      const start = hit ? hit.tokenStart : mdMentionStart;
+      const end = hit ? hit.tokenEnd : caret;
+      insertMdMention(mdResults[mdHighlight], start, end);
+    } else if (e.key === "Escape") {
+      setMdMenuOpen(false);
+      setMdResults([]);
+      setMdMentionStart(null);
+    }
+  };
+
+  // close mention menu when clicking outside
+  useEffect(() => {
+    const onDocClick = (ev: MouseEvent) => {
+      const t = ev.target as Node;
+      const clickedTextarea =
+        mdRef.current === t || !!mdRef.current?.contains(t);
+      const clickedMenu = !!mdMenuRef.current?.contains(t);
+      if (!clickedTextarea && !clickedMenu) setMdMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, []);
+  // --- end @mention support ---
+
+  // existing search for the separate "Reference series" picker (unchanged)
   useEffect(() => {
     let active = true;
     (async () => {
@@ -322,12 +478,20 @@ function NewThreadModal({
       return;
     }
 
+    // merge explicit picks + ids found in body mentions
+    const idsFromMentions = extractIds(md);
+    const merged = Array.from(new Set([...picked, ...idsFromMentions]));
+    const series_ids =
+      merged.length > MAX_SERIES_REFS
+        ? merged.slice(0, MAX_SERIES_REFS)
+        : merged;
+
     const cleanTitle = stripMdHeading(title);
     try {
       const t = await createForumThread({
         title: cleanTitle,
         first_post_markdown: md,
-        series_ids: picked,
+        series_ids,
       });
       onCreated(t);
     } catch (e: unknown) {
@@ -375,13 +539,72 @@ function NewThreadModal({
           placeholder="Thread title"
           className="w-full border rounded px-3 py-2 mb-3"
         />
-        <textarea
-          value={md}
-          onChange={(e) => setMd(e.target.value)}
-          placeholder="Say something (Markdown supported)…"
-          className="w-full border rounded px-3 py-2 h-40"
-        />
 
+        {/* body with @-mention support */}
+        <div className="relative">
+          <textarea
+            ref={mdRef}
+            value={md}
+            onChange={onMdChange}
+            onKeyDown={onMdKeyDown}
+            placeholder="Say something (Markdown supported)…  Tip: type @ to mention a series"
+            className="w-full border rounded px-3 py-2 h-40"
+          />
+
+          {mdMenuOpen && mdResults.length > 0 && (
+            <div
+              ref={mdMenuRef}
+              className="absolute left-0 right-0 mt-1 z-40 max-h-60 overflow-auto rounded border bg-white shadow"
+            >
+              {mdResults.map((r, i) => (
+                <button
+                  key={r.series_id}
+                  type="button"
+                  onClick={() => {
+                    const caret = mdRef.current?.selectionStart ?? md.length;
+                    const hit = detectAtToken(md, caret);
+                    const start = hit
+                      ? hit.tokenStart
+                      : mdMentionStart ?? caret;
+                    const end = hit ? hit.tokenEnd : caret;
+                    insertMdMention(r, start, end);
+                  }}
+                  className={`w-full flex items-center gap-2 px-3 py-2 text-left ${
+                    i === mdHighlight ? "bg-gray-100" : "hover:bg-gray-50"
+                  }`}
+                  title={r.title || `#${r.series_id}`}
+                >
+                  {r.cover_url ? (
+                    <img
+                      src={r.cover_url}
+                      alt={r.title || `Series #${r.series_id}`}
+                      className="w-6 h-8 object-cover rounded"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ) : (
+                    <div className="w-6 h-8 rounded bg-gray-200" />
+                  )}
+                  <div className="min-w-0">
+                    <div className="text-sm truncate">{r.title}</div>
+                    <div className="text-[11px] text-gray-500">
+                      #{r.series_id}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-1 text-[11px] text-gray-500">
+          Mentions: {mdMentionCount}/{MAX_MENTIONS}
+          {mdMentionCount >= MAX_MENTIONS && (
+            <span className="ml-1 text-amber-700">Limit reached</span>
+          )}
+        </div>
+
+        {/* existing “Reference series” section (unchanged UI/logic) */}
         <div className="mt-3">
           <label className="text-sm font-medium">Reference series</label>
           <div className="text-xs text-gray-500 mb-1">
