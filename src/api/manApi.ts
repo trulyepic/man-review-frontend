@@ -453,6 +453,7 @@ export type ForumThread = {
   last_post_at: string;
   series_refs: ForumSeriesRef[];
   locked?: boolean;
+  latest_first?: boolean;
 };
 export type ForumPost = {
   id: number;
@@ -1032,6 +1033,17 @@ export async function lockForumThread(
   const res = await api.patch<{ id: number; locked: boolean }>(
     `/forum/threads/${thread_id}/lock`,
     { locked }
+  );
+  return res.data;
+}
+
+export async function updateForumThreadSettings(
+  thread_id: number,
+  input: { latest_first?: boolean }
+): Promise<{ id: number; latest_first: boolean }> {
+  const res = await api.patch<{ id: number; latest_first: boolean }>(
+    `/forum/threads/${thread_id}/settings`,
+    input
   );
   return res.data;
 }
