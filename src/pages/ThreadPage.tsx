@@ -445,33 +445,20 @@ export default function ThreadPage() {
 
             <MarkdownProse>{posts[0].content_markdown}</MarkdownProse>
 
-            {posts[0].series_refs?.length ? (
-              <div className="mt-3 flex flex-wrap gap-3">
-                {posts[0].series_refs.map((s) => (
-                  <Link
-                    to={`/series/${s.series_id}`}
-                    state={{ title: s.title, type: s.type }}
-                    className="group border rounded-lg p-2 flex items-start gap-3 bg-white hover:shadow w-full"
-                    title={s.title || `#${s.series_id}`}
-                  >
-                    {s.cover_url ? (
-                      <img
-                        src={s.cover_url}
-                        alt={s.title || `Series #${s.series_id}`}
-                        className="w-20 h-28 object-cover rounded shadow"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    ) : (
-                      <div className="w-20 h-28 bg-gray-200 rounded" />
-                    )}
-                    <div className="text-[11px] mt-1 truncate">
-                      {s.title || `#${s.series_id}`}
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            ) : null}
+            {(() => {
+              const firstRefs: ForumSeriesRef[] =
+                posts[0].series_refs && posts[0].series_refs.length > 0
+                  ? posts[0].series_refs
+                  : thread?.series_refs ?? [];
+
+              return firstRefs.length ? (
+                <div className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] gap-3">
+                  {firstRefs.map((s) => (
+                    <SeriesMiniCard key={s.series_id} s={s} />
+                  ))}
+                </div>
+              ) : null;
+            })()}
           </article>
         )}
 
