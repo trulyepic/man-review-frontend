@@ -86,6 +86,12 @@ function MarkdownProse({
   className?: string;
   size?: "base" | "sm";
 }) {
+  const headingBase =
+    size === "sm" ? "mt-2 mb-1 font-semibold" : "mt-3 mb-2 font-semibold";
+  const h1 = size === "sm" ? "text-lg" : "text-2xl";
+  const h2 = size === "sm" ? "text-base" : "text-xl";
+  const h3 = size === "sm" ? "text-sm" : "text-lg";
+
   return (
     <div
       className={`${size === "sm" ? "prose prose-sm" : "prose"} max-w-none ${
@@ -95,8 +101,10 @@ function MarkdownProse({
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkBreaks]}
         components={{
+          h1: (props) => <h1 className={`${headingBase} ${h1}`} {...props} />,
+          h2: (props) => <h2 className={`${headingBase} ${h2}`} {...props} />,
+          h3: (props) => <h3 className={`${headingBase} ${h3}`} {...props} />,
           a: ({ children, href, ...props }) => {
-            // chip-style internal series links like: [Title](series:123)
             if (href && href.startsWith("series:")) {
               const id = href.slice("series:".length);
               return (
@@ -110,7 +118,6 @@ function MarkdownProse({
                 </Link>
               );
             }
-            // normal external links
             return (
               <a {...props} href={href} target="_blank" rel="noreferrer">
                 {children}
