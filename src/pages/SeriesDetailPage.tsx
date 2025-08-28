@@ -2,7 +2,11 @@ import { useEffect, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import SeriesDetail from "../components/SeriesDetail";
 import AddSeriesDetailModal from "../components/AddSeriesDetailModal";
-import { getCurrentUser, getSeriesDetailById } from "../api/manApi";
+import {
+  getCurrentUser,
+  getSeriesDetailById,
+  getSeriesSummary,
+} from "../api/manApi";
 import { UserIcon } from "lucide-react";
 import { UsersIcon } from "@heroicons/react/24/outline";
 import SeriesDetailShimmer from "../components/SeriesDetailShimmer";
@@ -66,6 +70,29 @@ const SeriesDetailPage = () => {
       ? (validScores.reduce((a, b) => a + b, 0) / validScores.length).toFixed(1)
       : "-";
 
+  function pickBasicFromDetail(d: SeriesDetailData | null): {
+    title?: string;
+    type?: string;
+    genre?: string;
+  } {
+    if (!d) return {};
+    const rec = d as unknown as Record<string, unknown>;
+    const title =
+      typeof rec["title"] === "string"
+        ? (rec["title"] as string)
+        : typeof rec["series_title"] === "string"
+        ? (rec["series_title"] as string)
+        : undefined;
+    const type =
+      typeof rec["type"] === "string" ? (rec["type"] as string) : undefined;
+    const genre =
+      typeof rec["genre"] === "string" ? (rec["genre"] as string) : undefined;
+    return { title, type, genre };
+  }
+
+  const { title: fetchedTitle } = pickBasicFromDetail(seriesDetail);
+  const displayTitle = fetchedTitle ?? series.title ?? `Series #${id}`;
+
   useEffect(() => {
     setSeries((prev) => ({
       ...prev,
@@ -84,14 +111,6 @@ const SeriesDetailPage = () => {
         const detail = await getSeriesDetailById(Number(id));
         setSeriesDetail(detail);
 
-        // const newRatings = { ...ratings };
-        // for (const cat in newRatings) {
-        //   if (detail[cat.toLowerCase().replace(" / ", "_") + "_count"]) {
-        //     newRatings[cat] =
-        //       detail[cat.toLowerCase().replace(" / ", "_") + "_total"] /
-        //       detail[cat.toLowerCase().replace(" / ", "_") + "_count"];
-        //   }
-        // }
         const num = (k: string) =>
           (detail as unknown as Record<string, number | undefined>)[k];
         const newRatings = { ...ratings };
@@ -115,6 +134,30 @@ const SeriesDetailPage = () => {
     fetchDetails();
   }, [id, showEditModal]);
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const s = await getSeriesSummary(Number(id)); // RankedSeries
+        if (cancelled) return;
+        setSeries((prev) => ({
+          ...prev,
+          id: s.id,
+          title: s.title, // <- authoritative
+          genre: s.genre,
+          type: s.type,
+          author: s.author ?? prev.author,
+          artist: s.artist ?? prev.artist,
+        }));
+      } catch (e) {
+        console.error("Failed to fetch series summary", e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
   const updateRating = (category: string, avg: number) => {
     setRatings((prev) => ({
       ...prev,
@@ -125,7 +168,8 @@ const SeriesDetailPage = () => {
   return (
     <>
       <Helmet>
-        <title>{series.title} | Toon Ranks</title>
+        {/* <title>{series.title} | Toon Ranks</title> */}
+        <title>{displayTitle} | Toon Ranks</title>
         <meta
           name="description"
           content={
@@ -137,7 +181,8 @@ const SeriesDetailPage = () => {
 
         {/* Open Graph Meta Tags */}
         <meta property="og:type" content="article" />
-        <meta property="og:title" content={`${series.title} | Toon Ranks`} />
+        {/* <meta property="og:title" content={`${series.title} | Toon Ranks`} /> */}
+        <meta property="og:title" content={`${displayTitle} | Toon Ranks`} />
         <meta
           property="og:description"
           content={
@@ -159,7 +204,8 @@ const SeriesDetailPage = () => {
 
         {/* Twitter Card Tags */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={`${series.title} | Toon Ranks`} />
+        {/* <meta name="twitter:title" content={`${series.title} | Toon Ranks`} /> */}
+        <meta name="twitter:title" content={`${displayTitle} | Toon Ranks`} />
         <meta
           name="twitter:description"
           content={
@@ -224,7 +270,8 @@ const SeriesDetailPage = () => {
           <>
             <img
               src={seriesDetail.series_cover_url}
-              alt={series.title}
+              // alt={series.title}
+              alt={displayTitle}
               className="w-full rounded-lg shadow mb-6"
             />
 
@@ -232,7 +279,7 @@ const SeriesDetailPage = () => {
             <div className="flex flex-col sm:flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
               <div className="flex-1 min-w-0">
                 <h1 className="text-3xl font-bold mb-1 break-words whitespace-normal">
-                  {series.title}
+                  {/* {series.title} */} {displayTitle}
                 </h1>
                 <div className="flex flex-wrap gap-x-2 gap-y-1 text-sm text-gray-600 capitalize break-words">
                   <span>{series.type}</span>
