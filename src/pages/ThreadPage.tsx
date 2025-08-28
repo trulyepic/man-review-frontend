@@ -3,7 +3,7 @@ import { useParams, Link, useLocation } from "react-router-dom";
 import {
   getForumThread,
   createForumPost,
-  deleteForumPost, // ⬅️ import
+  deleteForumPost,
   type ForumPost,
   deleteMyForumPost,
   type ForumSeriesRef,
@@ -12,8 +12,6 @@ import {
   updateForumThreadSettings,
 } from "../api/manApi";
 import { useUser } from "../login/useUser";
-
-// Markdown renderer (safe wrapper defined below)
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
@@ -21,47 +19,12 @@ import { Helmet } from "react-helmet";
 import { stripMdHeading } from "../util/strings";
 import RichReplyEditor from "../components/RichReplyEditor";
 
-// ---------- Small Markdown wrapper (fixes TS error) ----------
-// function MarkdownProse({
-//   children,
-//   className,
-//   size = "base",
-// }: {
-//   children: string;
-//   className?: string;
-//   size?: "base" | "sm";
-// }) {
-//   return (
-//     <div
-//       className={`${size === "sm" ? "prose prose-sm" : "prose"} max-w-none ${
-//         className || ""
-//       }`}
-//     >
-//       <ReactMarkdown
-//         // pass only supported props; style via the surrounding <div>
-//         remarkPlugins={[remarkGfm, remarkBreaks]}
-//         components={{
-//           a: ({ children, ...props }) => (
-//             <a {...props} target="_blank" rel="noreferrer">
-//               {children}
-//             </a>
-//           ),
-//         }}
-//       >
-//         {children}
-//       </ReactMarkdown>
-//     </div>
-//   );
-// }
-
-// --- pill styles ---
 const pillBase =
   "inline-flex items-center gap-1 h-7 px-3 rounded-full border text-xs font-medium shadow-sm";
 const pillAmber = "border-amber-200 bg-amber-50 text-amber-800";
 const pillIndigo = "border-indigo-200 bg-indigo-50 text-indigo-800";
 const pillRose = "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100";
 
-// --- admin control group styles ---
 const ctrlGroup =
   "flex items-center gap-1 rounded-full border border-gray-200 bg-white p-1 shadow-sm";
 const ctrlBtn =
@@ -77,11 +40,9 @@ type AxiosLike = {
 function getErrorMessage(err: unknown): string {
   if (typeof err === "string") return err;
   if (err instanceof Error) return err.message;
-
   if (err && typeof err === "object") {
     const e = err as AxiosLike;
     const detail = e.response?.data?.detail;
-
     if (typeof detail === "string") return detail;
     if (detail && typeof detail === "object" && "message" in detail) {
       const msg = (detail as { message?: string }).message;
@@ -101,12 +62,6 @@ function MarkdownProse({
   className?: string;
   size?: "base" | "sm";
 }) {
-  const headingBase =
-    size === "sm" ? "mt-2 mb-1 font-semibold" : "mt-3 mb-2 font-semibold";
-  const h1 = size === "sm" ? "text-lg" : "text-2xl";
-  const h2 = size === "sm" ? "text-base" : "text-xl";
-  const h3 = size === "sm" ? "text-sm" : "text-lg";
-
   return (
     <div
       className={`${size === "sm" ? "prose prose-sm" : "prose"} max-w-none ${
@@ -116,16 +71,16 @@ function MarkdownProse({
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkBreaks]}
         components={{
-          h1: (props) => <h1 className={`${headingBase} ${h1}`} {...props} />,
-          h2: (props) => <h2 className={`${headingBase} ${h2}`} {...props} />,
-          h3: (props) => <h3 className={`${headingBase} ${h3}`} {...props} />,
           a: ({ children, href, ...props }) => {
-            if (href && href.startsWith("series:")) {
-              const id = href.slice("series:".length);
+            const url = String(href || "");
+
+            // Series pills -> SPA link
+            if (url.startsWith("series:")) {
+              const id = url.slice("series:".length);
               return (
                 <Link
                   to={`/series/${id}`}
-                  className="inline-flex items-center max-w-full gap-1 rounded-full px-2 py-0.5 text-xs bg-blue-50 text-blue-700 no-underline align-middle"
+                  className="inline-flex items-center max-w-full gap-1 rounded-full px-2 py-0.5 text-xs bg-blue-50 text-blue-700 no-underline align-middle ring-1 ring-blue-200 hover:bg-blue-100"
                   title={`Series #${id}`}
                 >
                   <span className="truncate">{children}</span>
@@ -133,8 +88,32 @@ function MarkdownProse({
                 </Link>
               );
             }
+
+            // List pills -> temporarily NON-clickable chip (we'll revisit)
+            if (url.startsWith("list:")) {
+              const id = url.slice("list:".length);
+              return (
+                <span
+                  className="inline-flex items-center max-w-full gap-1 rounded-full px-2 py-0.5 text-xs bg-emerald-50 text-emerald-700 align-middle ring-1 ring-emerald-200"
+                  title={`Reading List #${id}`}
+                >
+                  <span aria-hidden className="text-[11px]">
+                    📃
+                  </span>
+                  <span className="truncate">{children}</span>
+                  <span className="opacity-60">· List #{id}</span>
+                </span>
+              );
+            }
+
+            const isExternal = /^https?:/i.test(url);
             return (
-              <a {...props} href={href} target="_blank" rel="noreferrer">
+              <a
+                {...props}
+                href={url}
+                target={isExternal ? "_blank" : undefined}
+                rel={isExternal ? "noreferrer" : undefined}
+              >
                 {children}
               </a>
             );
@@ -153,42 +132,38 @@ export default function ThreadPage() {
   const [thread, setThread] = useState<ForumThread | null>(null);
   const [posts, setPosts] = useState<ForumPost[]>([]);
   const { user } = useUser();
-  const isAdmin = (user?.role || "").toUpperCase() === "ADMIN"; // ⬅️ admin flag
+  const isAdmin = (user?.role || "").toUpperCase() === "ADMIN";
 
   const loc = useLocation();
   const siteUrl = "https://toonranks.com";
 
-  // Helpers for SEO
   const threadTitle = thread?.title
     ? `${thread.title} — Forum — Toon Ranks`
     : "Forum thread — Toon Ranks";
 
-  // Canonical should be the clean path /forum/:id
   const canonical = `${siteUrl}${loc.pathname.replace(/\/+$/, "")}`;
 
-  // Make a short description from the original post (strip newlines/markdown-ish chars)
   const raw = posts[0]?.content_markdown || "";
   const desc = raw
-    .replace(/[#*_`>]+/g, "") // basic markdown chars
-    .replace(/\s+/g, " ") // collapse whitespace
+    .replace(/[#*_`>]+/g, "")
+    .replace(/\s+/g, " ")
     .trim()
-    .slice(0, 155); // SEO-friendly length
+    .slice(0, 155);
 
   const load = async () => {
     const data = await getForumThread(threadId);
     setThread(data.thread);
     setPosts(data.posts);
-    console.log(data.posts.map((p) => ({ id: p.id, parent_id: p.parent_id })));
   };
 
   useEffect(() => {
     load();
   }, [threadId]);
+
   const reportHref = `/report-issue?page_url=${encodeURIComponent(canonical)}`;
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      {/* SEO */}
       <Helmet>
         <title>{threadTitle}</title>
         <link rel="canonical" href={canonical} />
@@ -209,6 +184,7 @@ export default function ThreadPage() {
         />
         <meta name="twitter:card" content="summary_large_image" />
       </Helmet>
+
       {thread && (
         <header className="mb-4">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
@@ -216,13 +192,9 @@ export default function ThreadPage() {
               {stripMdHeading(thread!.title)}
             </h1>
 
-            {/* pills + admin controls all in one tight group */}
             <div className="flex flex-wrap items-center gap-2">
               {thread?.locked && (
-                <span
-                  className={`${pillBase} ${pillAmber}`}
-                  title="Thread is locked"
-                >
+                <span className={`${pillBase} ${pillAmber}`} title="Locked">
                   🔒 Locked
                 </span>
               )}
@@ -235,7 +207,6 @@ export default function ThreadPage() {
                 </span>
               )}
 
-              {/* report pill (everyone) */}
               <Link
                 to={reportHref}
                 className={`${pillBase} ${pillRose}`}
@@ -244,7 +215,6 @@ export default function ThreadPage() {
                 🐞 Report issue
               </Link>
 
-              {/* admin controls grouped */}
               {isAdmin && (
                 <div className={ctrlGroup}>
                   <button
@@ -303,7 +273,6 @@ export default function ThreadPage() {
             </div>
           </div>
 
-          {/* series covers row (unchanged) */}
           {thread?.series_refs?.length ? (
             <div className="mt-2 flex flex-wrap gap-3">
               {thread.series_refs.map((s) => (
@@ -335,7 +304,6 @@ export default function ThreadPage() {
       )}
 
       <section className="space-y-4">
-        {/* Original Post */}
         {posts[0] && (
           <article className="border rounded-lg p-4 bg-white shadow-sm">
             <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
@@ -346,7 +314,6 @@ export default function ThreadPage() {
               <span>• {new Date(posts[0].created_at).toLocaleString()}</span>
             </div>
 
-            {/* ⬇️ Markdown viewer */}
             <MarkdownProse>{posts[0].content_markdown}</MarkdownProse>
 
             {posts[0].series_refs?.length ? (
@@ -379,7 +346,6 @@ export default function ThreadPage() {
           </article>
         )}
 
-        {/* Replies */}
         {(() => {
           const byParent: Record<number, ForumPost[]> = {};
           posts.slice(1).forEach((p) => {
@@ -387,15 +353,9 @@ export default function ThreadPage() {
             (byParent[pid] ||= []).push(p);
           });
 
-          // const topLevel = (byParent[0] || []).sort(
-          //   (a, b) =>
-          //     new Date(a.created_at).getTime() -
-          //     new Date(b.created_at).getTime()
-          // );
           const topLevel = (byParent[0] || []).sort((a, b) => {
             const ta = new Date(a.created_at).getTime();
             const tb = new Date(b.created_at).getTime();
-            // If latest_first is true, newest first (desc). Otherwise oldest first (asc).
             return thread?.latest_first ? tb - ta : ta - tb;
           });
 
@@ -427,7 +387,6 @@ export default function ThreadPage() {
         })()}
       </section>
 
-      {/* Top-level reply uses the Rich editor */}
       <div className="mt-6 border rounded-lg p-4">
         <h3 className="font-semibold mb-2">
           {thread?.latest_first ? "Add Update" : "Reply"}
@@ -491,12 +450,12 @@ function ReplyBranch({
   isUpdatesMode: boolean;
 }) {
   const railColors = [
-    "#3b82f6", // blue-500
-    "#93c5fd", // blue-300
-    "#a5b4fc", // indigo-300
-    "#c4b5fd", // violet-300
-    "#d8b4fe", // purple-300
-    "#f0abfc", // fuchsia-300
+    "#3b82f6",
+    "#93c5fd",
+    "#a5b4fc",
+    "#c4b5fd",
+    "#d8b4fe",
+    "#f0abfc",
   ];
 
   function lightenHex(hex: string, amount = 0.35) {
@@ -511,11 +470,11 @@ function ReplyBranch({
   }
 
   const rail = railColors[Math.min(depth, railColors.length - 1)];
-  const labelBg = lightenHex(rail, 0.73); // control reply label bg color lightness
+  const labelBg = lightenHex(rail, 0.73);
 
   const labelStyle: CSSProperties = {
     backgroundColor: labelBg,
-    color: "#0f172a", // slate-900 for readable text on light bg
+    color: "#0f172a",
   };
 
   const isTopLevel = depth === 0;
@@ -534,6 +493,7 @@ function ReplyBranch({
     (a, b) =>
       new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   );
+
   const canDelete =
     isAdmin ||
     (!!currentUsername && currentUsername === (post.author_username || null));
@@ -543,9 +503,9 @@ function ReplyBranch({
     if (!window.confirm("Delete this post (and its replies)?")) return;
     try {
       if (isAdmin) {
-        await deleteForumPost(threadId, post.id); // admin endpoint
+        await deleteForumPost(threadId, post.id);
       } else {
-        await deleteMyForumPost(threadId, post.id); // owner endpoint
+        await deleteMyForumPost(threadId, post.id);
       }
       await reload();
     } catch (err: unknown) {
@@ -595,7 +555,6 @@ function ReplyBranch({
           <span>• {new Date(post.created_at).toLocaleString()}</span>
         </div>
 
-        {/* ⬇️ Markdown viewer for replies */}
         <MarkdownProse size={isTopLevel ? "base" : "sm"}>
           {post.content_markdown}
         </MarkdownProse>
@@ -608,9 +567,7 @@ function ReplyBranch({
           </div>
         ) : null}
 
-        {/* Actions */}
         <div className="mt-3 flex items-center gap-3">
-          {/* In updates mode, no inline reply/comment UI at all */}
           {!isUpdatesMode ? (
             !locked || isAdmin ? (
               <details>
@@ -667,7 +624,7 @@ function ReplyBranch({
           byParent={byParent}
           threadId={threadId}
           reload={reload}
-          isAdmin={isAdmin} // keep passing down
+          isAdmin={isAdmin}
           currentUsername={currentUsername}
           locked={locked}
           isUpdatesMode={isUpdatesMode}
@@ -677,170 +634,7 @@ function ReplyBranch({
   );
 }
 
-// /** -----------------------------------------------------------------------
-//  * RichReplyEditor
-//  * - Simple textarea with Bold/Italic buttons that wrap the current selection
-//  * - Inline series autocomplete (search + toggle pick + chips)
-//  * - Calls onSubmit(content, seriesIds)
-//  * ---------------------------------------------------------------------- */
-// function RichReplyEditor({
-//   onSubmit,
-//   compact = false,
-//   initial = "",
-// }: {
-//   onSubmit: (content: string, seriesIds: number[]) => Promise<void> | void;
-//   compact?: boolean;
-//   initial?: string;
-// }) {
-//   const { user } = useUser();
-//   const [value, setValue] = useState(initial);
-//   const [query, setQuery] = useState("");
-//   const [results, setResults] = useState<ForumSeriesRef[]>([]);
-//   const [picked, setPicked] = useState<number[]>([]);
-//   const taRef = useRef<HTMLTextAreaElement | null>(null);
-
-//   // tiny helper: wrap current selection with tokens (e.g., **bold**)
-//   const wrapSelection = (left: string, right = left) => {
-//     const el = taRef.current;
-//     if (!el) return;
-//     const start = el.selectionStart ?? 0;
-//     const end = el.selectionEnd ?? 0;
-//     const before = value.slice(0, start);
-//     const sel = value.slice(start, end);
-//     const after = value.slice(end);
-//     const next = `${before}${left}${sel}${right}${after}`;
-//     setValue(next);
-//     queueMicrotask(() => {
-//       el.focus();
-//       const cursorStart = start + left.length;
-//       el.setSelectionRange(cursorStart, cursorStart + sel.length);
-//     });
-//   };
-
-//   // inline series search
-//   useEffect(() => {
-//     let alive = true;
-//     (async () => {
-//       if (!query.trim()) {
-//         setResults([]);
-//         return;
-//       }
-//       try {
-//         const r = await forumSeriesSearch(query.trim());
-//         if (alive) setResults(r);
-//       } catch {
-//         /* ignore */
-//       }
-//     })();
-//     return () => {
-//       alive = false;
-//     };
-//   }, [query]);
-
-//   const togglePick = (id: number) =>
-//     setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
-
-//   const handlePost = async () => {
-//     if (!user) {
-//       alert("You need to be logged in to post a reply.");
-//       return;
-//     }
-//     await onSubmit(value, picked);
-//     // clear after successful submit
-//     setValue("");
-//     setQuery("");
-//     setResults([]);
-//     setPicked([]);
-//   };
-
-//   return (
-//     <div className={`rounded ${compact ? "bg-gray-50" : "bg-white"}`}>
-//       {/* toolbar */}
-//       <div className="flex items-center gap-2 mb-2 text-sm">
-//         <button
-//           type="button"
-//           className="px-2 py-1 rounded border hover:bg-gray-50"
-//           onClick={() => wrapSelection("**")}
-//           title="Bold (**text**)"
-//         >
-//           B
-//         </button>
-//         <button
-//           type="button"
-//           className="px-2 py-1 rounded border hover:bg-gray-50 italic"
-//           onClick={() => wrapSelection("*")}
-//           title="Italic (*text*)"
-//         >
-//           I
-//         </button>
-//         <span className="ml-2 text-xs text-gray-500">
-//           Markdown supported (bold, italic, links…)
-//         </span>
-//       </div>
-
-//       <textarea
-//         ref={taRef}
-//         value={value}
-//         onChange={(e) => setValue(e.target.value)}
-//         placeholder="Write a reply…"
-//         className="w-full border rounded px-3 py-2 h-28"
-//       />
-
-//       {/* inline series autocomplete */}
-//       <div className="mt-2">
-//         <input
-//           value={query}
-//           onChange={(e) => setQuery(e.target.value)}
-//           placeholder="Search series to reference…"
-//           className="w-full border rounded px-3 py-2"
-//         />
-//         {results.length > 0 && (
-//           <div className="mt-2 max-h-36 overflow-auto border rounded p-2 space-y-1 bg-white">
-//             {results.map((r) => (
-//               <button
-//                 key={r.series_id}
-//                 onClick={() => togglePick(r.series_id)}
-//                 className={`w-full text-left px-2 py-1 rounded ${
-//                   picked.includes(r.series_id)
-//                     ? "bg-blue-100"
-//                     : "hover:bg-gray-100"
-//                 }`}
-//                 title={r.title || `#${r.series_id}`}
-//               >
-//                 {r.title}{" "}
-//                 <span className="text-xs text-gray-500">#{r.series_id}</span>
-//               </button>
-//             ))}
-//           </div>
-//         )}
-//         {picked.length > 0 && (
-//           <div className="mt-2 flex flex-wrap gap-2">
-//             {picked.map((id) => (
-//               <span
-//                 key={id}
-//                 className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full"
-//               >
-//                 #{id}
-//               </span>
-//             ))}
-//           </div>
-//         )}
-//       </div>
-
-//       <div className="mt-3 flex justify-end">
-//         <button
-//           onClick={handlePost}
-//           className="px-3 py-1.5 rounded bg-blue-600 text-white"
-//         >
-//           Post Reply
-//         </button>
-//       </div>
-//     </div>
-//   );
-// }
-
 function SeriesMiniCard({ s }: { s: ForumSeriesRef }) {
-  // Optional: color coding for status
   const statusClasses: Record<string, string> = {
     ONGOING: "bg-emerald-100 text-emerald-700",
     COMPLETE: "bg-slate-200 text-slate-800",
@@ -873,7 +667,6 @@ function SeriesMiniCard({ s }: { s: ForumSeriesRef }) {
           {s.title || `#${s.series_id}`}
         </div>
 
-        {/* chips that never overflow */}
         <div className="mt-1 flex flex-wrap gap-1">
           {s.type && (
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-700">

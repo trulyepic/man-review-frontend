@@ -1,10 +1,10 @@
-import type React from "react"; // for typing inline event handlers
+import type React from "react";
 import { useEffect, useState } from "react";
 import {
   listForumThreads,
   createForumThread,
   type ForumThread,
-  type ForumSeriesRef, // ⬅️ add proper type for series search results
+  type ForumSeriesRef,
   forumSeriesSearch,
   deleteForumThread,
 } from "../api/manApi";
@@ -15,7 +15,6 @@ import { stripMdHeading } from "../util/strings";
 
 const MAX_THREADS_PER_USER = 10;
 const MAX_SERIES_REFS = 10;
-
 const PATCH_NOTES_TITLE = "Patch Notes & Site Updates";
 const normalize = (s: string) => (s || "").trim().toLowerCase();
 
@@ -34,9 +33,7 @@ function SeriesRefPill({ s }: { s: ForumThread["series_refs"][number] }) {
   return (
     <Link
       to={`/series/${s.series_id}`}
-      className="inline-flex items-center gap-2 text-xs px-2 py-1 rounded-full
-           bg-white/60 backdrop-blur-sm border border-white/70
-           hover:bg-white/80"
+      className="inline-flex items-center gap-2 text-xs px-2 py-1 rounded-full bg-white/60 backdrop-blur-sm border border-white/70 hover:bg-white/80"
       title={s.title || `#${s.series_id}`}
     >
       {s.cover_url ? (
@@ -68,7 +65,6 @@ export default function ForumPage() {
   const myName = user?.username || "";
   const isAdmin = (user?.role || "").toUpperCase() === "ADMIN";
 
-  // SEO bits
   const siteUrl = "https://toonranks.com";
   const isSearching = !!q.trim();
   const canonical = `${siteUrl}/forum`;
@@ -77,13 +73,9 @@ export default function ForumPage() {
     : "Forum — Toon Ranks";
 
   const load = async () => {
-    // load the visible list (respecting search)
     const data = await listForumThreads(q);
-    // setThreads(data);
     setThreads(promotePatchNotes(data.slice()));
 
-    // also load a big page to count this user's total threads
-    // (server should still enforce this limit; this is UI help)
     if (user) {
       const all = await listForumThreads("", 1, 1000);
       setMyThreadCount(all.filter((t) => t.author_username === myName).length);
@@ -97,7 +89,6 @@ export default function ForumPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q, user?.username]);
 
-  // Create-thread button click: require login + enforce limit before opening modal
   const onClickNewThread = () => {
     if (!user) {
       alert("You need to be logged in to create a thread.");
@@ -112,7 +103,6 @@ export default function ForumPage() {
     setShowNew(true);
   };
 
-  // Delete (admin or owner)
   const onDeleteThread = async (t: ForumThread) => {
     const isOwner = t.author_username === myName;
     if (!(isAdmin || isOwner) || deletingId) return;
@@ -126,7 +116,6 @@ export default function ForumPage() {
       setDeletingId(t.id);
       await deleteForumThread(t.id);
       setThreads((prev) => prev.filter((x) => x.id !== t.id));
-      // keep the counter in sync if we deleted our own
       if (isOwner) setMyThreadCount((c) => Math.max(0, c - 1));
     } catch (err: unknown) {
       const e = err as {
@@ -142,11 +131,7 @@ export default function ForumPage() {
   };
 
   return (
-    <div
-      className="max-w-5xl mx-auto p-6 relative
-             bg-[radial-gradient(900px_260px_at_50%_-100px,rgba(99,102,241,0.10),transparent)]"
-    >
-      {/* SEO */}
+    <div className="max-w-5xl mx-auto p-6 relative bg-[radial-gradient(900px_260px_at_50%_-100px,rgba(99,102,241,0.10),transparent)]">
       <Helmet>
         <title>{pageTitle}</title>
         <link rel="canonical" href={canonical} />
@@ -154,15 +139,12 @@ export default function ForumPage() {
           name="description"
           content={
             isSearching
-              ? `Search results for “${q.trim()}” in the Toon Ranks forum. Discuss manga, manhwa, and manhua.`
-              : "Community forum on Toon Ranks: discuss manga, manhwa, and manhua threads and replies."
+              ? `Search results for “${q.trim()}” in the Toon Ranks forum.`
+              : "Community forum on Toon Ranks."
           }
         />
         <meta property="og:title" content={pageTitle} />
-        <meta
-          property="og:description"
-          content="Join community discussions about manga, manhwa, and manhua."
-        />
+        <meta property="og:description" content="Join community discussions." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={canonical} />
         <meta
@@ -171,10 +153,9 @@ export default function ForumPage() {
         />
         <meta name="twitter:card" content="summary_large_image" />
       </Helmet>
+
       <div className="flex items-center justify-between gap-3 mb-4">
         <h1 className="text-2xl font-bold">Forum</h1>
-
-        {/* Always visible button; click is gated */}
         <button
           onClick={onClickNewThread}
           className="px-3 py-1.5 rounded-md bg-blue-600 text-white hover:bg-blue-700"
@@ -200,11 +181,7 @@ export default function ForumPage() {
           return (
             <li
               key={t.id}
-              className="relative rounded-2xl p-4
-             border border-white/70 ring-1 ring-black/5
-             bg-white/40 backdrop-blur-md
-             shadow-sm hover:shadow-md
-             hover:bg-white/60 transition"
+              className="relative rounded-2xl p-4 border border-white/70 ring-1 ring-black/5 bg-white/40 backdrop-blur-md shadow-sm hover:shadow-md hover:bg-white/60 transition"
             >
               <Link
                 to={`/forum/${t.id}`}
@@ -221,11 +198,7 @@ export default function ForumPage() {
                 </div>
 
                 {isPatchNotes && (
-                  <span
-                    className="inline-flex items-center text-[10px] px-1.5 py-0.5 rounded
-                       bg-violet-50 text-violet-700"
-                    title="Pinned"
-                  >
+                  <span className="inline-flex items-center text-[10px] px-1.5 py-0.5 rounded bg-violet-50 text-violet-700">
                     📌 Pinned
                   </span>
                 )}
@@ -255,14 +228,12 @@ export default function ForumPage() {
                     onDeleteThread(t);
                   }}
                   disabled={deletingId === t.id}
-                  className={`absolute top-2 right-2 inline-flex items-center gap-1 rounded px-2 py-1 text-xs border
-            ${
-              deletingId === t.id
-                ? "opacity-60 cursor-not-allowed"
-                : "hover:bg-red-50 hover:text-red-700 hover:border-red-300"
-            }`}
+                  className={`absolute top-2 right-2 inline-flex items-center gap-1 rounded px-2 py-1 text-xs border ${
+                    deletingId === t.id
+                      ? "opacity-60 cursor-not-allowed"
+                      : "hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+                  }`}
                 >
-                  {/* …icon… */}
                   {deletingId === t.id ? "Deleting…" : "Delete"}
                 </button>
               )}
@@ -302,7 +273,7 @@ function NewThreadModal({
   const [title, setTitle] = useState("");
   const [md, setMd] = useState("");
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<ForumSeriesRef[]>([]); // ⬅️ typed instead of any[]
+  const [results, setResults] = useState<ForumSeriesRef[]>([]);
   const [picked, setPicked] = useState<number[]>([]);
   const remaining = Math.max(0, maxThreads - myThreadCount);
 
@@ -317,7 +288,7 @@ function NewThreadModal({
         const r = await forumSeriesSearch(query);
         if (active) setResults(r);
       } catch {
-        // ignore
+        /* ignore */
       }
     })();
     return () => {
@@ -327,10 +298,7 @@ function NewThreadModal({
 
   const togglePick = (id: number) => {
     setPicked((p) => {
-      if (p.includes(id)) {
-        // allow unselecting
-        return p.filter((x) => x !== id);
-      }
+      if (p.includes(id)) return p.filter((x) => x !== id);
       if (p.length >= MAX_SERIES_REFS) {
         alert(`You can reference up to ${MAX_SERIES_REFS} series only.`);
         return p;
@@ -365,12 +333,9 @@ function NewThreadModal({
       onCreated(t);
     } catch (e: unknown) {
       let msg = "Failed to create thread.";
-
-      if (typeof e === "string") {
-        msg = e;
-      } else if (e instanceof Error) {
-        msg = e.message;
-      } else if (typeof e === "object" && e !== null) {
+      if (typeof e === "string") msg = e;
+      else if (e instanceof Error) msg = e.message;
+      else if (typeof e === "object" && e !== null) {
         const maybe = e as {
           message?: string;
           response?: { data?: { detail?: string | { message?: string } } };
@@ -383,7 +348,6 @@ function NewThreadModal({
             ? maybe.response.data.detail?.message || msg
             : maybe.message || msg;
       }
-
       alert(msg);
     }
   };
@@ -398,7 +362,6 @@ function NewThreadModal({
           </button>
         </div>
 
-        {/* Limit / login hint */}
         <div className="text-xs text-gray-500 mb-2">
           {user
             ? `You can create ${remaining} more ${

@@ -66,7 +66,7 @@ const ManCard = ({
         return ""; // render nothing when null/undefined
     }
   };
-  console.log("status: ", status);
+  // console.log("status: ", status);
   const ListButton = () => (
     <button
       onClick={(e) => {
