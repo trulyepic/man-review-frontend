@@ -10,6 +10,7 @@ import {
   type ForumThread,
   lockForumThread,
   updateForumThreadSettings,
+  getPublicReadingList,
 } from "../api/manApi";
 import { useUser } from "../login/useUser";
 import ReactMarkdown from "react-markdown";
@@ -53,6 +54,90 @@ function getErrorMessage(err: unknown): string {
   return "An error occurred.";
 }
 
+const listPublicCache = new Map<string, boolean>();
+
+function ListPillMaybeActive({
+  to,
+  children,
+}: {
+  to: string;
+  children: React.ReactNode;
+}) {
+  // /lists/<token>[?...]
+  const token = to.replace(/^\/lists\//, "").split(/[?#]/)[0];
+  const [isPublic, setIsPublic] = useState<boolean | null>(
+    listPublicCache.has(token) ? listPublicCache.get(token)! : null
+  );
+
+  useEffect(() => {
+    if (isPublic !== null) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        await getPublicReadingList(token);
+        if (!cancelled) {
+          listPublicCache.set(token, true);
+          setIsPublic(true);
+        }
+      } catch {
+        if (!cancelled) {
+          listPublicCache.set(token, false);
+          setIsPublic(false);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [token, isPublic]);
+
+  const base =
+    "inline-flex items-center max-w-full gap-1 rounded-full px-2 py-0.5 text-xs align-middle ring-1";
+
+  // Unknown: show active styling while we check (optional)
+  if (isPublic === null) {
+    return (
+      <span
+        className={`${base} bg-emerald-50 text-emerald-700 ring-emerald-200`}
+      >
+        <span aria-hidden className="text-[11px]">
+          📃
+        </span>
+        <span className="truncate">{children}</span>
+      </span>
+    );
+  }
+
+  if (!isPublic) {
+    // ⛔ Unshared now → gray pill, no link
+    return (
+      <span
+        className={`${base} bg-gray-100 text-gray-500 ring-gray-200`}
+        title="This list is no longer public"
+      >
+        <span aria-hidden className="text-[11px]">
+          📃
+        </span>
+        <span className="truncate">{children}</span>
+      </span>
+    );
+  }
+
+  // ✅ Public → green pill link
+  return (
+    <Link
+      to={to}
+      className={`${base} bg-emerald-50 text-emerald-700 ring-emerald-200 hover:bg-emerald-100 no-underline`}
+      title="Open reading list"
+    >
+      <span aria-hidden className="text-[11px]">
+        📃
+      </span>
+      <span className="truncate">{children}</span>
+    </Link>
+  );
+}
+
 function MarkdownProse({
   children,
   className,
@@ -62,6 +147,13 @@ function MarkdownProse({
   className?: string;
   size?: "base" | "sm";
 }) {
+  // 1) Remove [Title](series:123) and [Title](/series/123) from the markdown itself
+  const safeMd = children
+    // [Title](series:123)
+    .replace(/\[([^\]]+?)\]\(\s*series:\s*\d+\s*\)/gi, "$1")
+    // [Title](/series/123)  (also tolerate query/hash)
+    .replace(/\[([^\]]+?)\]\(\s*\/series\/\d+(?:[?#][^)]+)?\s*\)/gi, "$1");
+
   return (
     <div
       className={`${size === "sm" ? "prose prose-sm" : "prose"} max-w-none ${
@@ -71,41 +163,78 @@ function MarkdownProse({
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkBreaks]}
         components={{
-          a: ({ children, href, ...props }) => {
-            const url = String(href || "");
+          a: ({ children: linkChildren, href, ...props }) => {
+            const url = String(href ?? "");
 
-            // Series pills -> SPA link
-            if (url.startsWith("series:")) {
-              const id = url.slice("series:".length);
-              return (
-                <Link
-                  to={`/series/${id}`}
-                  className="inline-flex items-center max-w-full gap-1 rounded-full px-2 py-0.5 text-xs bg-blue-50 text-blue-700 no-underline align-middle ring-1 ring-blue-200 hover:bg-blue-100"
-                  title={`Series #${id}`}
-                >
-                  <span className="truncate">{children}</span>
-                  <span className="opacity-60">#{id}</span>
-                </Link>
-              );
-            }
+            // 2) Just in case anything survived: render series links as plain text
+            const isSeriesLink =
+              /^series:\s*\d+$/i.test(url) ||
+              /^\/series\/\d+(?:[/?#].*)?$/i.test(url);
 
-            // List pills -> temporarily NON-clickable chip (we'll revisit)
-            if (url.startsWith("list:")) {
-              const id = url.slice("list:".length);
+            if (isSeriesLink) {
               return (
-                <span
-                  className="inline-flex items-center max-w-full gap-1 rounded-full px-2 py-0.5 text-xs bg-emerald-50 text-emerald-700 align-middle ring-1 ring-emerald-200"
-                  title={`Reading List #${id}`}
-                >
-                  <span aria-hidden className="text-[11px]">
-                    📃
-                  </span>
-                  <span className="truncate">{children}</span>
-                  <span className="opacity-60">· List #{id}</span>
+                <span className="font-medium text-gray-900">
+                  {linkChildren}
                 </span>
               );
             }
 
+            // Legacy list pill
+            if (url.startsWith("list:")) {
+              const tokenOrId = url.slice("list:".length);
+              const isToken = /\D/.test(tokenOrId);
+              const to = isToken
+                ? `/lists/${tokenOrId}`
+                : `/my-lists#list-${tokenOrId}`;
+              return (
+                <Link
+                  to={to}
+                  className="inline-flex items-center max-w-full gap-1 rounded-full px-2 py-0.5 text-xs bg-emerald-50 text-emerald-700 no-underline align-middle ring-1 ring-emerald-200 hover:bg-emerald-100"
+                >
+                  <span aria-hidden className="text-[11px]">
+                    📃
+                  </span>
+                  <span className="truncate">{linkChildren}</span>
+                </Link>
+              );
+            }
+
+            // Same-origin SPA links (incl. /lists/:token smart pill)
+            const toURL = (() => {
+              try {
+                const u = new URL(url, window.location.origin);
+                if (
+                  u.origin === window.location.origin &&
+                  u.pathname.startsWith("/")
+                ) {
+                  return u.pathname + u.search + u.hash;
+                }
+              } catch {
+                if (url.startsWith("/")) return url;
+              }
+              return null;
+            })();
+
+            if (toURL && /^\/lists\//.test(toURL)) {
+              return (
+                <ListPillMaybeActive to={toURL}>
+                  {linkChildren}
+                </ListPillMaybeActive>
+              );
+            }
+
+            if (toURL) {
+              return (
+                <Link
+                  to={toURL}
+                  className="underline decoration-emerald-600/40 hover:decoration-emerald-600"
+                >
+                  {linkChildren}
+                </Link>
+              );
+            }
+
+            // External fallback
             const isExternal = /^https?:/i.test(url);
             return (
               <a
@@ -114,13 +243,13 @@ function MarkdownProse({
                 target={isExternal ? "_blank" : undefined}
                 rel={isExternal ? "noreferrer" : undefined}
               >
-                {children}
+                {linkChildren}
               </a>
             );
           },
         }}
       >
-        {children}
+        {safeMd}
       </ReactMarkdown>
     </div>
   );
@@ -320,9 +449,9 @@ export default function ThreadPage() {
               <div className="mt-3 flex flex-wrap gap-3">
                 {posts[0].series_refs.map((s) => (
                   <Link
-                    key={s.series_id}
                     to={`/series/${s.series_id}`}
-                    className="w-20 text-center"
+                    state={{ title: s.title, type: s.type }}
+                    className="group border rounded-lg p-2 flex items-start gap-3 bg-white hover:shadow w-full"
                     title={s.title || `#${s.series_id}`}
                   >
                     {s.cover_url ? (
@@ -644,6 +773,7 @@ function SeriesMiniCard({ s }: { s: ForumSeriesRef }) {
   const statusKey = (s.status || "").toUpperCase();
   const statusClass = statusClasses[statusKey] || "bg-gray-100 text-gray-700";
 
+  console.log("s :", s);
   return (
     <Link
       to={`/series/${s.series_id}`}
