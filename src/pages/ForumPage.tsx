@@ -16,11 +16,27 @@ import { stripMdHeading } from "../util/strings";
 const MAX_THREADS_PER_USER = 10;
 const MAX_SERIES_REFS = 10;
 
+const PATCH_NOTES_TITLE = "Patch Notes & Site Updates";
+const normalize = (s: string) => (s || "").trim().toLowerCase();
+
+function promotePatchNotes(list: ForumThread[]) {
+  const i = list.findIndex(
+    (t) => normalize(t.title) === normalize(PATCH_NOTES_TITLE)
+  );
+  if (i > 0) {
+    const [pinned] = list.splice(i, 1);
+    list.unshift(pinned);
+  }
+  return list;
+}
+
 function SeriesRefPill({ s }: { s: ForumThread["series_refs"][number] }) {
   return (
     <Link
       to={`/series/${s.series_id}`}
-      className="inline-flex items-center gap-2 text-xs px-2 py-1 rounded-full bg-gray-100 hover:bg-gray-200"
+      className="inline-flex items-center gap-2 text-xs px-2 py-1 rounded-full
+           bg-white/60 backdrop-blur-sm border border-white/70
+           hover:bg-white/80"
       title={s.title || `#${s.series_id}`}
     >
       {s.cover_url ? (
@@ -63,7 +79,8 @@ export default function ForumPage() {
   const load = async () => {
     // load the visible list (respecting search)
     const data = await listForumThreads(q);
-    setThreads(data);
+    // setThreads(data);
+    setThreads(promotePatchNotes(data.slice()));
 
     // also load a big page to count this user's total threads
     // (server should still enforce this limit; this is UI help)
@@ -125,7 +142,10 @@ export default function ForumPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
+    <div
+      className="max-w-5xl mx-auto p-6 relative
+             bg-[radial-gradient(900px_260px_at_50%_-100px,rgba(99,102,241,0.10),transparent)]"
+    >
       {/* SEO */}
       <Helmet>
         <title>{pageTitle}</title>
@@ -174,11 +194,17 @@ export default function ForumPage() {
         {threads.map((t) => {
           const isOwner = t.author_username === myName;
           const canDelete = isAdmin || isOwner;
+          const isPatchNotes =
+            normalize(t.title) === normalize(PATCH_NOTES_TITLE);
 
           return (
             <li
               key={t.id}
-              className="relative border rounded-lg p-4 bg-white/80"
+              className="relative rounded-2xl p-4
+             border border-white/70 ring-1 ring-black/5
+             bg-white/40 backdrop-blur-md
+             shadow-sm hover:shadow-md
+             hover:bg-white/60 transition"
             >
               <Link
                 to={`/forum/${t.id}`}
@@ -187,12 +213,23 @@ export default function ForumPage() {
                 {stripMdHeading(t.title)}
               </Link>
 
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex flex-wrap items-center gap-2 mt-1">
                 <div className="text-xs text-gray-500">
                   {t.post_count} posts · updated{" "}
                   {new Date(t.updated_at).toLocaleString()}
                   {t.author_username ? ` · by ${t.author_username}` : null}
                 </div>
+
+                {isPatchNotes && (
+                  <span
+                    className="inline-flex items-center text-[10px] px-1.5 py-0.5 rounded
+                       bg-violet-50 text-violet-700"
+                    title="Pinned"
+                  >
+                    📌 Pinned
+                  </span>
+                )}
+
                 {t.locked && (
                   <span className="inline-flex items-center text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
                     🔒 Locked
@@ -208,37 +245,24 @@ export default function ForumPage() {
                 </div>
               ) : null}
 
-              {/* Delete if admin or owner */}
               {canDelete && (
                 <button
                   type="button"
                   title="Delete thread"
-                  onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                  onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     onDeleteThread(t);
                   }}
                   disabled={deletingId === t.id}
                   className={`absolute top-2 right-2 inline-flex items-center gap-1 rounded px-2 py-1 text-xs border
-                    ${
-                      deletingId === t.id
-                        ? "opacity-60 cursor-not-allowed"
-                        : "hover:bg-red-50 hover:text-red-700 hover:border-red-300"
-                    }`}
+            ${
+              deletingId === t.id
+                ? "opacity-60 cursor-not-allowed"
+                : "hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+            }`}
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    className="w-4 h-4"
-                    aria-hidden="true"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M8 2a2 2 0 00-2 2H4.5a.5.5 0 000 1H5h10a.5.5 0 000-1H14a2 2 0 00-2-2H8zm-2 5a.5.5 0 011 0v8a.5.5 0 01-1 0V7zm4 .5a.5.5 0 10-1 0v7a.5.5 0 001 0v-7zm2-.5a.5.5 0 011 0v8a.5.5 0 01-1 0V7zM6 5h8l-1 11a2 2 0 01-2 2H9a2 2 0 01-2-2L6 5z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                  {/* …icon… */}
                   {deletingId === t.id ? "Deleting…" : "Delete"}
                 </button>
               )}
