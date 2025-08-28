@@ -54,6 +54,21 @@ import RichReplyEditor from "../components/RichReplyEditor";
 //   );
 // }
 
+// --- pill styles ---
+const pillBase =
+  "inline-flex items-center gap-1 h-7 px-3 rounded-full border text-xs font-medium shadow-sm";
+const pillAmber = "border-amber-200 bg-amber-50 text-amber-800";
+const pillIndigo = "border-indigo-200 bg-indigo-50 text-indigo-800";
+const pillRose = "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100";
+
+// --- admin control group styles ---
+const ctrlGroup =
+  "flex items-center gap-1 rounded-full border border-gray-200 bg-white p-1 shadow-sm";
+const ctrlBtn =
+  "inline-flex items-center gap-1 h-7 px-3 rounded-full text-xs border border-transparent hover:bg-gray-50 text-gray-700";
+const ctrlActiveAmber = "bg-amber-50 border-amber-300 text-amber-800";
+const ctrlActiveIndigo = "bg-indigo-50 border-indigo-300 text-indigo-800";
+
 type AxiosLike = {
   message?: string;
   response?: { data?: { detail?: unknown } };
@@ -169,6 +184,7 @@ export default function ThreadPage() {
   useEffect(() => {
     load();
   }, [threadId]);
+  const reportHref = `/report-issue?page_url=${encodeURIComponent(canonical)}`;
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -195,84 +211,100 @@ export default function ThreadPage() {
       </Helmet>
       {thread && (
         <header className="mb-4">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <h1 className="text-2xl font-bold">
-              {stripMdHeading(thread.title)}
+              {stripMdHeading(thread!.title)}
             </h1>
 
-            {/* Visible to everyone */}
-            {thread.locked && (
-              <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
-                🔒 Locked
-              </span>
-            )}
-            {thread.latest_first && (
-              <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">
-                ⬆️ Latest updates first
-              </span>
-            )}
+            {/* pills + admin controls all in one tight group */}
+            <div className="flex flex-wrap items-center gap-2">
+              {thread?.locked && (
+                <span
+                  className={`${pillBase} ${pillAmber}`}
+                  title="Thread is locked"
+                >
+                  🔒 Locked
+                </span>
+              )}
+              {thread?.latest_first && (
+                <span
+                  className={`${pillBase} ${pillIndigo}`}
+                  title="Newest updates show first"
+                >
+                  🛈 Latest updates first
+                </span>
+              )}
 
-            {/* Admin-only lock/unlock button */}
-            {isAdmin && (
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    const next = !thread.locked;
-                    await lockForumThread(thread.id, next);
-                    setThread((t) => (t ? { ...t, locked: next } : t));
-                  } catch (err) {
-                    const msg =
-                      (err as { message?: string })?.message ||
-                      "Failed to toggle lock.";
-                    alert(msg);
-                  }
-                }}
-                className={`text-xs rounded px-2 py-1 border ${
-                  thread.locked
-                    ? "bg-amber-50 hover:bg-amber-100 border-amber-300 text-amber-800"
-                    : "bg-gray-50 hover:bg-gray-100 border-gray-300 text-gray-700"
-                }`}
-                title={thread.locked ? "Unlock thread" : "Lock thread"}
+              {/* report pill (everyone) */}
+              <Link
+                to={reportHref}
+                className={`${pillBase} ${pillRose}`}
+                title="Report a bug or issue about this thread"
               >
-                {thread.locked ? "Unlock" : "Lock"}
-              </button>
-            )}
+                🐞 Report issue
+              </Link>
 
-            {isAdmin && (
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    const next = !thread.latest_first;
-                    await updateForumThreadSettings(thread.id, {
-                      latest_first: next,
-                    });
-                    setThread((t) => (t ? { ...t, latest_first: next } : t));
-                  } catch (err) {
-                    const msg =
-                      (err as { message?: string })?.message ||
-                      "Failed to update ordering.";
-                    alert(msg);
-                  }
-                }}
-                className={`text-xs rounded px-2 py-1 border ${
-                  thread.latest_first
-                    ? "bg-indigo-50 hover:bg-indigo-100 border-indigo-300 text-indigo-800"
-                    : "bg-gray-50 hover:bg-gray-100 border-gray-300 text-gray-700"
-                }`}
-                title={
-                  thread.latest_first
-                    ? "Show oldest updates first"
-                    : "Show latest updates first"
-                }
-              >
-                {thread.latest_first ? "Oldest first" : "Latest first"}
-              </button>
-            )}
+              {/* admin controls grouped */}
+              {isAdmin && (
+                <div className={ctrlGroup}>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const next = !thread!.locked;
+                      try {
+                        await lockForumThread(thread!.id, next);
+                        setThread((t) => (t ? { ...t, locked: next } : t));
+                      } catch (e) {
+                        alert(
+                          (e as { message?: string }).message ||
+                            "Failed to toggle lock."
+                        );
+                      }
+                    }}
+                    className={`${ctrlBtn} ${
+                      thread?.locked ? ctrlActiveAmber : ""
+                    }`}
+                    title={thread?.locked ? "Unlock thread" : "Lock thread"}
+                  >
+                    {thread?.locked ? "Unlock" : "Lock"}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const next = !thread!.latest_first;
+                      try {
+                        await updateForumThreadSettings(thread!.id, {
+                          latest_first: next,
+                        });
+                        setThread((t) =>
+                          t ? { ...t, latest_first: next } : t
+                        );
+                      } catch (e) {
+                        alert(
+                          (e as { message?: string }).message ||
+                            "Failed to update ordering."
+                        );
+                      }
+                    }}
+                    className={`${ctrlBtn} ${
+                      thread?.latest_first ? ctrlActiveIndigo : ""
+                    }`}
+                    title={
+                      thread?.latest_first
+                        ? "Show oldest first"
+                        : "Show latest first"
+                    }
+                  >
+                    {thread?.latest_first ? "Oldest first" : "Latest first"}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
-          {thread.series_refs?.length ? (
+          {/* series covers row (unchanged) */}
+          {thread?.series_refs?.length ? (
             <div className="mt-2 flex flex-wrap gap-3">
               {thread.series_refs.map((s) => (
                 <Link
