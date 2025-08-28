@@ -9,6 +9,7 @@ import {
   type ForumSeriesRef,
   type ForumThread,
   lockForumThread,
+  updateForumThreadSettings,
 } from "../api/manApi";
 import { useUser } from "../login/useUser";
 
@@ -198,6 +199,11 @@ export default function ThreadPage() {
                 🔒 Locked
               </span>
             )}
+            {thread.latest_first && (
+              <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">
+                ⬆️ Latest updates first
+              </span>
+            )}
 
             {/* Admin-only lock/unlock button */}
             {isAdmin && (
@@ -223,6 +229,38 @@ export default function ThreadPage() {
                 title={thread.locked ? "Unlock thread" : "Lock thread"}
               >
                 {thread.locked ? "Unlock" : "Lock"}
+              </button>
+            )}
+
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    const next = !thread.latest_first;
+                    await updateForumThreadSettings(thread.id, {
+                      latest_first: next,
+                    });
+                    setThread((t) => (t ? { ...t, latest_first: next } : t));
+                  } catch (err) {
+                    const msg =
+                      (err as { message?: string })?.message ||
+                      "Failed to update ordering.";
+                    alert(msg);
+                  }
+                }}
+                className={`text-xs rounded px-2 py-1 border ${
+                  thread.latest_first
+                    ? "bg-indigo-50 hover:bg-indigo-100 border-indigo-300 text-indigo-800"
+                    : "bg-gray-50 hover:bg-gray-100 border-gray-300 text-gray-700"
+                }`}
+                title={
+                  thread.latest_first
+                    ? "Show oldest updates first"
+                    : "Show latest updates first"
+                }
+              >
+                {thread.latest_first ? "Oldest first" : "Latest first"}
               </button>
             )}
           </div>
@@ -310,11 +348,17 @@ export default function ThreadPage() {
             (byParent[pid] ||= []).push(p);
           });
 
-          const topLevel = (byParent[0] || []).sort(
-            (a, b) =>
-              new Date(a.created_at).getTime() -
-              new Date(b.created_at).getTime()
-          );
+          // const topLevel = (byParent[0] || []).sort(
+          //   (a, b) =>
+          //     new Date(a.created_at).getTime() -
+          //     new Date(b.created_at).getTime()
+          // );
+          const topLevel = (byParent[0] || []).sort((a, b) => {
+            const ta = new Date(a.created_at).getTime();
+            const tb = new Date(b.created_at).getTime();
+            // If latest_first is true, newest first (desc). Otherwise oldest first (asc).
+            return thread?.latest_first ? tb - ta : ta - tb;
+          });
 
           const reload = async () => {
             const data = await getForumThread(threadId);
@@ -336,6 +380,7 @@ export default function ThreadPage() {
                   isAdmin={isAdmin}
                   currentUsername={user?.username || null}
                   locked={!!thread?.locked}
+                  isUpdatesMode={!!thread?.latest_first}
                 />
               ))}
             </>
@@ -345,7 +390,9 @@ export default function ThreadPage() {
 
       {/* Top-level reply uses the Rich editor */}
       <div className="mt-6 border rounded-lg p-4">
-        <h3 className="font-semibold mb-2">Reply</h3>
+        <h3 className="font-semibold mb-2">
+          {thread?.latest_first ? "Add Update" : "Reply"}
+        </h3>
 
         {!thread?.locked || isAdmin ? (
           <RichReplyEditor
@@ -391,6 +438,7 @@ function ReplyBranch({
   isAdmin,
   currentUsername,
   locked,
+  isUpdatesMode,
 }: {
   post: ForumPost;
   depth: number;
@@ -401,6 +449,7 @@ function ReplyBranch({
   isAdmin: boolean;
   currentUsername: string | null;
   locked: boolean;
+  isUpdatesMode: boolean;
 }) {
   const railColors = [
     "#3b82f6", // blue-500
@@ -433,7 +482,11 @@ function ReplyBranch({
   const isTopLevel = depth === 0;
   const indentPx = Math.min(depth, 6) * 16;
   const labelText = isTopLevel
-    ? `Reply #${topIndex}`
+    ? isUpdatesMode
+      ? `Update #${topIndex}`
+      : `Reply #${topIndex}`
+    : isUpdatesMode
+    ? `↳ Comment on Update #${topIndex}`
     : `↳ Reply to ${
         post.author_username ? `@${post.author_username} ` : ""
       }#${topIndex}`;
@@ -518,38 +571,41 @@ function ReplyBranch({
 
         {/* Actions */}
         <div className="mt-3 flex items-center gap-3">
-          {!locked || isAdmin ? (
-            <details>
-              <summary className="cursor-pointer text-xs text-blue-600 hover:underline">
-                Reply to this reply
-              </summary>
-              <div className="mt-2">
-                <RichReplyEditor
-                  compact
-                  onSubmit={async (content, seriesIds) => {
-                    if (!content.trim()) {
-                      alert("Reply cannot be empty.");
-                      return;
-                    }
-                    try {
-                      await createForumPost(threadId, {
-                        content_markdown: content.trim(),
-                        series_ids: seriesIds,
-                        parent_id: post.id,
-                      });
-                      await reload();
-                    } catch (err: unknown) {
-                      alert(getErrorMessage(err) || "Failed to post reply.");
-                    }
-                  }}
-                />
-              </div>
-            </details>
-          ) : (
-            <span className="text-xs text-amber-700 bg-amber-50 px-2 py-1 rounded">
-              🔒 Thread is locked — replies are disabled.
-            </span>
-          )}
+          {/* In updates mode, no inline reply/comment UI at all */}
+          {!isUpdatesMode ? (
+            !locked || isAdmin ? (
+              <details>
+                <summary className="cursor-pointer text-xs text-blue-600 hover:underline">
+                  Reply to this reply
+                </summary>
+                <div className="mt-2">
+                  <RichReplyEditor
+                    compact
+                    onSubmit={async (content, seriesIds) => {
+                      if (!content.trim()) {
+                        alert("Reply cannot be empty.");
+                        return;
+                      }
+                      try {
+                        await createForumPost(threadId, {
+                          content_markdown: content.trim(),
+                          series_ids: seriesIds,
+                          parent_id: post.id,
+                        });
+                        await reload();
+                      } catch (err: unknown) {
+                        alert(getErrorMessage(err) || "Failed to post reply.");
+                      }
+                    }}
+                  />
+                </div>
+              </details>
+            ) : (
+              <span className="text-xs text-amber-700 bg-amber-50 px-2 py-1 rounded">
+                🔒 Thread is locked — replies are disabled.
+              </span>
+            )
+          ) : null}
 
           {canDelete && (
             <button
@@ -575,6 +631,7 @@ function ReplyBranch({
           isAdmin={isAdmin} // keep passing down
           currentUsername={currentUsername}
           locked={locked}
+          isUpdatesMode={isUpdatesMode}
         />
       ))}
     </div>
