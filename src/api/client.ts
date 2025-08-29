@@ -5,7 +5,7 @@ import type { AxiosError, AxiosResponse } from "axios";
 // Optional: prevent multiple rapid redirects on burst 401s
 let isLoggingOut = false;
 
-function hardLogout() {
+function hardLogout(redirectTo: string = "/login") {
   if (isLoggingOut) return;
   isLoggingOut = true;
 
@@ -14,7 +14,7 @@ function hardLogout() {
     localStorage.removeItem("user");
   } finally {
     // Force a clean app state; no dependency on React context
-    window.location.href = "/";
+    window.location.href = redirectTo;
   }
 }
 
@@ -24,15 +24,36 @@ export const api = axios.create({
   // baseURL: "http://localhost:8000",
 });
 
+// Helper to detect auth endpoints
+function isAuthRoute(url?: string) {
+  if (!url) return false;
+  // covers /auth/login, /auth/signup, /auth/verify-email, /auth/google-oauth, etc.
+  return url.startsWith("/auth/");
+}
+
 // Attach token on every request
+// api.interceptors.request.use((config) => {
+//   const token = localStorage.getItem("token");
+//   if (token) {
+//     config.headers = config.headers ?? {};
+//     // Axios header values must be strings|number|boolean
+//     (
+//       config.headers as Record<string, string>
+//     ).Authorization = `Bearer ${token}`;
+//   }
+//   return config;
+// });
+
+// Attach token EXCEPT on auth routes
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers = config.headers ?? {};
-    // Axios header values must be strings|number|boolean
-    (
-      config.headers as Record<string, string>
-    ).Authorization = `Bearer ${token}`;
+  if (!isAuthRoute(config.url)) {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers = config.headers ?? {};
+      (
+        config.headers as Record<string, string>
+      ).Authorization = `Bearer ${token}`;
+    }
   }
   return config;
 });
@@ -64,16 +85,41 @@ function isAxiosErr<T = unknown>(err: unknown): err is AxiosError<T> {
 }
 
 // Global 401 handler — works without UserContext access
+// api.interceptors.response.use(
+//   (res: AxiosResponse) => res,
+//   (err: unknown) => {
+//     // Ignore cancels here so they don't trigger logout logic
+//     if (isCanceledError(err)) {
+//       return Promise.reject(err);
+//     }
+//     if (isAxiosErr(err)) {
+//       const status = err.response?.status;
+//       if (status === 401) hardLogout();
+//     }
+//     return Promise.reject(err);
+//   }
+// );
+
+// Global 401 handler
 api.interceptors.response.use(
   (res: AxiosResponse) => res,
   (err: unknown) => {
-    // Ignore cancels here so they don't trigger logout logic
-    if (isCanceledError(err)) {
-      return Promise.reject(err);
-    }
+    if (isCanceledError(err)) return Promise.reject(err);
+
     if (isAxiosErr(err)) {
       const status = err.response?.status;
-      if (status === 401) hardLogout();
+      const url = err.config?.url;
+
+      if (status === 401) {
+        if (isAuthRoute(url)) {
+          // ❌ Do NOT redirect on failed /auth/* calls (e.g., wrong password)
+          // Let the page catch and show "Invalid username or password"
+          return Promise.reject(err);
+        }
+        // For all other 401s, nuke session and send to login
+        hardLogout("/login");
+        return new Promise(() => {}); // halt further promise chains
+      }
     }
     return Promise.reject(err);
   }

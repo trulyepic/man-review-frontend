@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../api/manApi";
 
@@ -15,6 +15,9 @@ const LoginPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [captchaToken, setCaptchaToken] = useState("");
 
+  const [submitting, setSubmitting] = useState(false);
+  const recaptchaRef = useRef<ReCAPTCHA | null>(null);
+
   const handleLogin = async () => {
     setError(null);
 
@@ -28,6 +31,8 @@ const LoginPage = () => {
       return;
     }
 
+    setSubmitting(true);
+
     try {
       const data = await login({
         username,
@@ -37,18 +42,8 @@ const LoginPage = () => {
       setUser(data.user);
       localStorage.setItem("token", data.access_token);
       localStorage.setItem("user", JSON.stringify(data.user));
-
-      // 🔐 Auto logout after 10 hours (in milliseconds)
-      // setTimeout(() => {
-      //   localStorage.removeItem("token");
-      //   localStorage.removeItem("user");
-      //   setUser(null);
-      //   alert("Session expired. Please Login again.");
-      //   window.location.href = "/";
-      // }, 10 * 60 * 60 * 1000); // 10 hours
-
-      // handleAutoLogout(setUser);
       scheduleLogoutAtJwtExp(setUser, data.access_token);
+      setError(null);
       navigate("/");
     } catch (err) {
       const msg = (err as Error).message || "";
@@ -61,9 +56,20 @@ const LoginPage = () => {
         setError("Email not verified. Please check your inbox or spam folder.");
       } else if (statusCode === "401" && detail === "Invalid credentials") {
         setError("Invalid username or password.");
+      } else if (
+        // common server phrases; adjust to your backend’s wording if needed
+        /captcha/i.test(detail) ||
+        /token/i.test(detail) ||
+        statusCode === "400"
+      ) {
+        setError("CAPTCHA expired. Please try again.");
       } else {
         setError("Login failed. Please try again.");
       }
+      setCaptchaToken("");
+      recaptchaRef.current?.reset();
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -87,16 +93,30 @@ const LoginPage = () => {
           className="w-full p-2 mb-6 border rounded bg-blue-50"
         />
         <ReCAPTCHA
+          ref={recaptchaRef}
           sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
           onChange={(token) => setCaptchaToken(token || "")}
+          onExpired={() => {
+            setCaptchaToken("");
+            setError("CAPTCHA expired. Please try again.");
+          }}
+          onError={() => {
+            setCaptchaToken("");
+            setError("CAPTCHA failed to load. Please retry.");
+          }}
           className="mb-4"
         />
 
         <button
           onClick={handleLogin}
-          className="w-full bg-blue-600/70 text-white py-2 rounded hover:bg-blue-600"
+          disabled={submitting} // ⬅️ remove `|| !captchaToken`
+          className={`w-full text-white py-2 rounded ${
+            submitting
+              ? "bg-blue-400 cursor-not-allowed"
+              : "bg-blue-600/70 hover:bg-blue-600"
+          }`}
         >
-          Login
+          {submitting ? "Signing in..." : "Login"}
         </button>
         <div className="my-4">
           <GoogleOAuthButton />
