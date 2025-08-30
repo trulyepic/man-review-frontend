@@ -11,6 +11,7 @@ import {
   lockForumThread,
   updateForumThreadSettings,
   getPublicReadingList,
+  editForumPost,
 } from "../api/manApi";
 import { useUser } from "../login/useUser";
 import ReactMarkdown from "react-markdown";
@@ -167,15 +168,10 @@ function MarkdownProse({
     >
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkBreaks]}
-        rehypePlugins={[
-          rehypeRaw, // Enable raw HTML processing
-          rehypeSanitize, // Sanitize the raw HTML to ensure safety
-        ]}
+        rehypePlugins={[rehypeRaw, rehypeSanitize]}
         components={{
           a: ({ children: linkChildren, href, ...props }) => {
             const url = String(href ?? "");
-
-            // 2) Just in case anything survived: render series links as plain text
             const isSeriesLink =
               /^series:\s*\d+$/i.test(url) ||
               /^\/series\/\d+(?:[/?#].*)?$/i.test(url);
@@ -188,14 +184,12 @@ function MarkdownProse({
               );
             }
 
-            // Legacy list pill
             if (url.startsWith("list:")) {
               const tokenOrId = url.slice("list:".length);
               const isToken = /\D/.test(tokenOrId);
               const to = isToken
                 ? `/lists/${tokenOrId}`
                 : `/my-lists#list-${tokenOrId}`;
-
               return (
                 <ListPillMaybeActive to={to}>
                   {linkChildren}
@@ -203,7 +197,6 @@ function MarkdownProse({
               );
             }
 
-            // Same-origin SPA links (incl. /lists/:token smart pill)
             const toURL = (() => {
               try {
                 const u = new URL(url, window.location.origin);
@@ -238,7 +231,6 @@ function MarkdownProse({
               );
             }
 
-            // External fallback
             const isExternal = /^https?:/i.test(url);
             return (
               <a
@@ -267,6 +259,10 @@ export default function ThreadPage() {
   const { user } = useUser();
   const isAdmin = (user?.role || "").toUpperCase() === "ADMIN";
 
+  // 🔧 edit state kept in ThreadPage and passed down
+  const [editPostId, setEditPostId] = useState<number | null>(null);
+  const [editContent, setEditContent] = useState<string>("");
+
   const loc = useLocation();
   const siteUrl = "https://toonranks.com";
 
@@ -292,6 +288,34 @@ export default function ThreadPage() {
   useEffect(() => {
     load();
   }, [threadId]);
+
+  // Called by ReplyBranch → enters edit mode for a specific post
+  const handleBeginEdit = (postId: number, content: string) => {
+    setEditPostId(postId);
+    setEditContent(content);
+  };
+
+  const handleSaveEdit = async (content: string, seriesIds: number[]) => {
+    if (editPostId == null) return;
+    try {
+      await editForumPost(threadId, editPostId, {
+        content_markdown: content,
+        series_ids: seriesIds,
+      });
+      // Reload to reflect changes (or optimistically update state)
+      await load();
+    } catch (e: unknown) {
+      alert(getErrorMessage(e) || "Failed to save changes.");
+      return; // do not close editor if save failed
+    }
+    setEditPostId(null);
+    setEditContent("");
+  };
+
+  const handleCancelEdit = () => {
+    setEditPostId(null);
+    setEditContent("");
+  };
 
   const reportHref = `/report-issue?page_url=${encodeURIComponent(canonical)}`;
 
@@ -447,7 +471,21 @@ export default function ThreadPage() {
               <span>• {new Date(posts[0].created_at).toLocaleString()}</span>
             </div>
 
-            <MarkdownProse>{posts[0].content_markdown}</MarkdownProse>
+            {/* If the original post is being edited, show editor; else markdown */}
+            {editPostId === posts[0].id ? (
+              <div className="mt-2">
+                <RichReplyEditor
+                  mode="edit"
+                  initial={editContent}
+                  onSubmit={async (content, seriesIds) => {
+                    await handleSaveEdit(content, seriesIds);
+                  }}
+                  onCancel={handleCancelEdit}
+                />
+              </div>
+            ) : (
+              <MarkdownProse>{posts[0].content_markdown}</MarkdownProse>
+            )}
 
             {(() => {
               const firstRefs: ForumSeriesRef[] =
@@ -500,6 +538,12 @@ export default function ThreadPage() {
                   currentUsername={user?.username || null}
                   locked={!!thread?.locked}
                   isUpdatesMode={!!thread?.latest_first}
+                  // 🔽 edit wiring
+                  editingPostId={editPostId}
+                  editInitial={editContent}
+                  onBeginEdit={handleBeginEdit}
+                  onSaveEdit={handleSaveEdit}
+                  onCancelEdit={handleCancelEdit}
                 />
               ))}
             </>
@@ -557,6 +601,12 @@ function ReplyBranch({
   currentUsername,
   locked,
   isUpdatesMode,
+  // 🔽 edit props from ThreadPage
+  editingPostId,
+  editInitial,
+  onBeginEdit,
+  onSaveEdit,
+  onCancelEdit,
 }: {
   post: ForumPost;
   depth: number;
@@ -568,6 +618,12 @@ function ReplyBranch({
   currentUsername: string | null;
   locked: boolean;
   isUpdatesMode: boolean;
+
+  editingPostId: number | null;
+  editInitial: string;
+  onBeginEdit: (postId: number, content: string) => void;
+  onSaveEdit: (content: string, seriesIds: number[]) => Promise<void> | void;
+  onCancelEdit: () => void;
 }) {
   const railColors = [
     "#3b82f6",
@@ -614,12 +670,12 @@ function ReplyBranch({
       new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   );
 
-  const canDelete =
+  const canModify =
     isAdmin ||
     (!!currentUsername && currentUsername === (post.author_username || null));
 
   const handleDelete = async () => {
-    if (!canDelete) return;
+    if (!canModify) return;
     if (!window.confirm("Delete this post (and its replies)?")) return;
     try {
       if (isAdmin) {
@@ -638,6 +694,8 @@ function ReplyBranch({
     }
   };
 
+  const isEditingThis = editingPostId === post.id;
+
   return (
     <div>
       <article
@@ -647,6 +705,7 @@ function ReplyBranch({
             : "rounded-lg p-3 border border-gray-200 shadow-sm bg-white") + ""
         }
         style={{
+          // marginLeft: Math.min(depth, 6) * 16,
           marginLeft: indentPx,
           marginTop: 6,
           borderLeftWidth: 4,
@@ -675,9 +734,24 @@ function ReplyBranch({
           <span>• {new Date(post.created_at).toLocaleString()}</span>
         </div>
 
-        <MarkdownProse size={isTopLevel ? "base" : "sm"}>
-          {post.content_markdown}
-        </MarkdownProse>
+        {/* Content OR Editor */}
+        {isEditingThis ? (
+          <div className="mt-1">
+            <RichReplyEditor
+              mode="edit"
+              initial={editInitial || post.content_markdown}
+              onSubmit={async (content, seriesIds) => {
+                await onSaveEdit(content, seriesIds);
+              }}
+              onCancel={onCancelEdit}
+              compact
+            />
+          </div>
+        ) : (
+          <MarkdownProse size={isTopLevel ? "base" : "sm"}>
+            {post.content_markdown}
+          </MarkdownProse>
+        )}
 
         {post.series_refs?.length ? (
           <div className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-3">
@@ -723,14 +797,23 @@ function ReplyBranch({
             )
           ) : null}
 
-          {canDelete && (
-            <button
-              onClick={handleDelete}
-              className="text-xs text-red-600 hover:underline"
-              title={isAdmin ? "Admin delete" : "Delete your post"}
-            >
-              Delete
-            </button>
+          {canModify && !isEditingThis && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => onBeginEdit(post.id, post.content_markdown)}
+                className="text-xs text-blue-600 hover:underline"
+                title="Edit your post"
+              >
+                Edit
+              </button>
+              <button
+                onClick={handleDelete}
+                className="text-xs text-red-600 hover:underline"
+                title={isAdmin ? "Admin delete" : "Delete your post"}
+              >
+                Delete
+              </button>
+            </div>
           )}
         </div>
       </article>
@@ -748,6 +831,12 @@ function ReplyBranch({
           currentUsername={currentUsername}
           locked={locked}
           isUpdatesMode={isUpdatesMode}
+          // 🔽 pass edit props down the tree as well
+          editingPostId={editingPostId}
+          editInitial={editInitial}
+          onBeginEdit={onBeginEdit}
+          onSaveEdit={onSaveEdit}
+          onCancelEdit={onCancelEdit}
         />
       ))}
     </div>

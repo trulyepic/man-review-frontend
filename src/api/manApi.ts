@@ -1103,3 +1103,60 @@ export const getPublicReadingList = async (
 
   return { name: res.data.name, items };
 };
+
+export async function editForumPost(
+  thread_id: number,
+  post_id: number,
+  input: { content_markdown: string; series_ids?: number[] }
+): Promise<ForumPost> {
+  const body: { content_markdown: string; series_ids?: number[] } = {
+    content_markdown: String(input.content_markdown).trim(),
+  };
+  if (Array.isArray(input.series_ids) && input.series_ids.length > 0) {
+    body.series_ids = input.series_ids.map(Number);
+  }
+
+  try {
+    const res = await api.patch<ForumPost>(
+      `/forum/threads/${thread_id}/posts/${post_id}`,
+      body
+    );
+    return res.data;
+  } catch (err: unknown) {
+    const status = isAxiosError(err) ? err.response?.status : undefined;
+    const data: ApiErrorData = isAxiosError(err)
+      ? (err.response?.data as unknown as ApiErrorData)
+      : undefined;
+
+    const detailStr =
+      typeof data?.detail === "string"
+        ? data.detail
+        : (typeof data?.detail === "object" && data.detail?.message) ||
+          undefined;
+
+    if (status === 423) {
+      throw new Error("This thread is locked by an admin.");
+    }
+
+    // Profanity (structured)
+    const detailObj =
+      typeof data?.detail === "object" && data?.detail !== null
+        ? (data.detail as { code?: string; message?: string })
+        : undefined;
+    if (status === 400 && detailObj?.code === "PROFANITY") {
+      throw new Error("Reply contains inappropriate language.");
+    }
+
+    // Profanity (string detail)
+    if (
+      status === 400 &&
+      detailStr &&
+      /inappropriate|profan/i.test(detailStr)
+    ) {
+      throw new Error("Reply contains inappropriate language.");
+    }
+
+    const fallback = extractApiDetail(err, "Failed to save changes");
+    throw new Error(detailStr || fallback);
+  }
+}

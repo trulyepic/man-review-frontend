@@ -7,10 +7,14 @@ export default function RichReplyEditor({
   onSubmit,
   compact = false,
   initial = "",
+  mode = "reply",
+  onCancel,
 }: {
   onSubmit: (content: string, seriesIds: number[]) => Promise<void> | void;
   compact?: boolean;
   initial?: string;
+  mode?: "reply" | "edit";
+  onCancel?: () => void;
 }) {
   const { user } = useUser();
 
@@ -207,29 +211,43 @@ export default function RichReplyEditor({
     return () => document.removeEventListener("mousedown", onDocClick);
   }, []);
 
-  const handlePost = async () => {
-    if (!user) {
-      alert("You need to be logged in to post a reply.");
-      return;
-    }
+  const handlePrimary = async () => {
     const trimmed = value.trim();
     if (!trimmed) {
-      alert("Reply cannot be empty.");
+      alert(
+        mode === "edit" ? "Content cannot be empty." : "Reply cannot be empty."
+      );
       return;
     }
     const ids = Array.from(new Set(extractIds(trimmed)));
-    if (ids.length > MAX_MENTIONS) {
-      alert(`You can mention up to ${MAX_MENTIONS} series per reply.`);
-      return;
+
+    // In reply mode, keep the original login checks
+    if (mode === "reply") {
+      if (!user) {
+        alert("You need to be logged in to post a reply.");
+        return;
+      }
+      if (ids.length > MAX_MENTIONS) {
+        alert(`You can mention up to ${MAX_MENTIONS} series per reply.`);
+        return;
+      }
     }
+
     try {
       await onSubmit(trimmed, ids);
-      setValue("");
-      setResults([]);
-      setMenuOpen(false);
-      setMentionStart(null);
+      if (mode === "reply") {
+        setValue("");
+        setResults([]);
+        setMenuOpen(false);
+        setMentionStart(null);
+      }
     } catch (err: unknown) {
-      alert(getErrorMessage(err));
+      alert(
+        getErrorMessage(
+          err,
+          mode === "edit" ? "Failed to save." : "Failed to post reply."
+        )
+      );
     }
   };
 
@@ -254,7 +272,7 @@ export default function RichReplyEditor({
           I
         </button>
 
-        {/* NEW: Insert List pill */}
+        {/* List picker */}
         <button
           type="button"
           className="px-2 py-1 rounded border hover:bg-gray-50"
@@ -279,7 +297,6 @@ export default function RichReplyEditor({
           📃 List
         </button>
 
-        {/* Popover */}
         {listMenuOpen && (
           <div
             ref={listMenuRef}
@@ -306,17 +323,15 @@ export default function RichReplyEditor({
                       title={
                         shareable
                           ? "Insert public list"
-                          : "This list is private. Open My Reading Lists and click “Share” to generate a public link."
+                          : "This list is private. Open My Reading Lists and click “Share”."
                       }
                       onClick={() => {
                         if (!shareable) {
-                          // mobile hint
                           alert(
                             "This list is private.\nOpen My Reading Lists → Share to create a public link."
                           );
                           return;
                         }
-                        // Insert pill pointing to public page via token
                         insertAtCaret(`[${l.name}](/lists/${l.share_token})`);
                         setListMenuOpen(false);
                       }}
@@ -356,7 +371,11 @@ export default function RichReplyEditor({
         value={value}
         onChange={onChange}
         onKeyDown={onKeyDown}
-        placeholder="Write a reply… (try typing @series title to mention/ref a series)"
+        placeholder={
+          mode === "edit"
+            ? "Edit your content…"
+            : "Write a reply… (try typing @series title to mention/ref a series)"
+        }
         className="w-full border rounded px-3 py-2 h-28"
       />
 
@@ -416,13 +435,30 @@ export default function RichReplyEditor({
         </div>
       )}
 
-      <div className="mt-3 flex justify-end">
-        <button
-          onClick={handlePost}
-          className="px-3 py-1.5 rounded bg-blue-600 text-white"
-        >
-          Post Reply
-        </button>
+      <div className="mt-3 flex justify-end gap-2">
+        {mode === "edit" ? (
+          <>
+            <button
+              onClick={onCancel}
+              className="px-3 py-1.5 rounded border bg-white hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handlePrimary}
+              className="px-3 py-1.5 rounded bg-blue-600 text-white"
+            >
+              Save
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={handlePrimary}
+            className="px-3 py-1.5 rounded bg-blue-600 text-white"
+          >
+            Post Reply
+          </button>
+        )}
       </div>
     </div>
   );
