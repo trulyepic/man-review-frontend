@@ -20,6 +20,9 @@ import { Helmet } from "react-helmet";
 import { stripMdHeading } from "../util/strings";
 import RichReplyEditor from "../components/RichReplyEditor";
 
+import rehypeRaw from "rehype-raw"; // Re-enable rehype-raw
+import rehypeSanitize from "rehype-sanitize"; // Re-enable rehype-sanitize
+
 const pillBase =
   "inline-flex items-center gap-1 h-7 px-3 rounded-full border text-xs font-medium shadow-sm";
 const pillAmber = "border-amber-200 bg-amber-50 text-amber-800";
@@ -92,7 +95,9 @@ function ListPillMaybeActive({
   }, [token, isPublic]);
 
   const base =
-    "inline-flex items-center max-w-full gap-1 rounded-full px-2 py-0.5 text-xs align-middle ring-1";
+    "inline-flex items-center gap-1 h-7 px-3 rounded-full border text-xs font-medium shadow-sm";
+  const activeClass =
+    "bg-emerald-50 text-emerald-700 ring-emerald-200 hover:bg-emerald-100";
 
   // Unknown: show active styling while we check (optional)
   if (isPublic === null) {
@@ -127,7 +132,7 @@ function ListPillMaybeActive({
   return (
     <Link
       to={to}
-      className={`${base} bg-emerald-50 text-emerald-700 ring-emerald-200 hover:bg-emerald-100 no-underline`}
+      className={`${base} ${activeClass} no-underline`}
       title="Open reading list"
     >
       <span aria-hidden className="text-[11px]">
@@ -162,6 +167,10 @@ function MarkdownProse({
     >
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkBreaks]}
+        rehypePlugins={[
+          rehypeRaw, // Enable raw HTML processing
+          rehypeSanitize, // Sanitize the raw HTML to ensure safety
+        ]}
         components={{
           a: ({ children: linkChildren, href, ...props }) => {
             const url = String(href ?? "");
@@ -186,16 +195,11 @@ function MarkdownProse({
               const to = isToken
                 ? `/lists/${tokenOrId}`
                 : `/my-lists#list-${tokenOrId}`;
+
               return (
-                <Link
-                  to={to}
-                  className="inline-flex items-center max-w-full gap-1 rounded-full px-2 py-0.5 text-xs bg-emerald-50 text-emerald-700 no-underline align-middle ring-1 ring-emerald-200 hover:bg-emerald-100"
-                >
-                  <span aria-hidden className="text-[11px]">
-                    📃
-                  </span>
-                  <span className="truncate">{linkChildren}</span>
-                </Link>
+                <ListPillMaybeActive to={to}>
+                  {linkChildren}
+                </ListPillMaybeActive>
               );
             }
 
@@ -760,7 +764,6 @@ function SeriesMiniCard({ s }: { s: ForumSeriesRef }) {
   const statusKey = (s.status || "").toUpperCase();
   const statusClass = statusClasses[statusKey] || "bg-gray-100 text-gray-700";
 
-  console.log("s :", s);
   return (
     <Link
       to={`/series/${s.series_id}`}
