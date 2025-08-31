@@ -247,23 +247,25 @@ export default function ForumPage() {
                     Edit
                   </button>
 
-                  <button
-                    type="button"
-                    title="Delete thread"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onDeleteThread(t);
-                    }}
-                    disabled={deletingId === t.id}
-                    className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs border ${
-                      deletingId === t.id
-                        ? "opacity-60 cursor-not-allowed"
-                        : "hover:bg-red-50 hover:text-red-700 hover:border-red-300"
-                    }`}
-                  >
-                    {deletingId === t.id ? "Deleting…" : "Delete"}
-                  </button>
+                  {!t.locked && (
+                    <button
+                      type="button"
+                      title="Delete thread"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onDeleteThread(t);
+                      }}
+                      disabled={deletingId === t.id}
+                      className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs border ${
+                        deletingId === t.id
+                          ? "opacity-60 cursor-not-allowed"
+                          : "hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+                      }`}
+                    >
+                      {deletingId === t.id ? "Deleting…" : "Delete"}
+                    </button>
+                  )}
                 </div>
               )}
             </li>
