@@ -547,6 +547,11 @@ export interface AuthResponse {
   user: AuthUser;
 }
 
+export type UpdateThreadResponse = {
+  thread: ForumThread;
+  first_post: ForumPost | null;
+};
+
 // ---------- Small helpers ----------
 function extractApiDetail(err: unknown, fallback: string): string {
   if (isAxiosError(err)) {
@@ -1157,6 +1162,64 @@ export async function editForumPost(
     }
 
     const fallback = extractApiDetail(err, "Failed to save changes");
+    throw new Error(detailStr || fallback);
+  }
+}
+
+export async function updateForumThread(
+  thread_id: number,
+  input: {
+    title?: string;
+    first_post_markdown?: string;
+    series_ids?: number[];
+  }
+): Promise<ForumThread> {
+  // Only send provided fields
+  const body: {
+    title?: string;
+    first_post_markdown?: string;
+    series_ids?: number[];
+  } = {};
+  if (typeof input.title === "string") body.title = input.title;
+  if (typeof input.first_post_markdown === "string") {
+    body.first_post_markdown = input.first_post_markdown.trim();
+  }
+  if (Array.isArray(input.series_ids)) {
+    body.series_ids = input.series_ids.map(Number);
+  }
+
+  try {
+    const res = await api.patch<ForumThread>(
+      `/forum/threads/${thread_id}`,
+      body
+    );
+    return res.data;
+  } catch (err: unknown) {
+    const status = isAxiosError(err) ? err.response?.status : undefined;
+    const data: ApiErrorData = isAxiosError(err)
+      ? (err.response?.data as unknown as ApiErrorData)
+      : undefined;
+
+    const detailStr =
+      typeof data?.detail === "string"
+        ? data.detail
+        : (typeof data?.detail === "object" && data.detail?.message) ||
+          undefined;
+
+    if (status === 423) {
+      throw new Error("This thread is locked by an admin.");
+    }
+
+    // Profanity (structured)
+    const detailObj =
+      typeof data?.detail === "object" && data?.detail !== null
+        ? (data.detail as { code?: string; message?: string })
+        : undefined;
+    if (status === 400 && detailObj?.code === "PROFANITY") {
+      throw new Error(detailObj.message || "Contains inappropriate language.");
+    }
+
+    const fallback = extractApiDetail(err, "Failed to update thread");
     throw new Error(detailStr || fallback);
   }
 }

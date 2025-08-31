@@ -6,6 +6,8 @@ import {
   type ForumSeriesRef,
   forumSeriesSearch,
   deleteForumThread,
+  getForumThread,
+  updateForumThread,
 } from "../api/manApi";
 import { Link } from "react-router-dom";
 import { useUser } from "../login/useUser";
@@ -57,6 +59,8 @@ export default function ForumPage() {
   const [q, setQ] = useState("");
   const [threads, setThreads] = useState<ForumThread[]>([]);
   const [showNew, setShowNew] = useState(false);
+  const [editingThread, setEditingThread] = useState<ForumThread | null>(null); // <-- NEW
+  const [editingBody, setEditingBody] = useState<string>("");
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [myThreadCount, setMyThreadCount] = useState(0);
   const { user } = useUser();
@@ -218,31 +222,59 @@ export default function ForumPage() {
               ) : null}
 
               {canDelete && (
-                <button
-                  type="button"
-                  title="Delete thread"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onDeleteThread(t);
-                  }}
-                  disabled={deletingId === t.id}
-                  className={`absolute top-2 right-2 inline-flex items-center gap-1 rounded px-2 py-1 text-xs border ${
-                    deletingId === t.id
-                      ? "opacity-60 cursor-not-allowed"
-                      : "hover:bg-red-50 hover:text-red-700 hover:border-red-300"
-                  }`}
-                >
-                  {deletingId === t.id ? "Deleting…" : "Delete"}
-                </button>
+                <div className="absolute top-2 right-2 flex items-center gap-2">
+                  <button
+                    type="button"
+                    title="Edit thread"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setEditingThread(t); // <-- OPEN EDIT MODE
+                      setEditingBody("");
+                      (async () => {
+                        try {
+                          const data = await getForumThread(t.id);
+                          setEditingBody(
+                            data.posts?.[0]?.content_markdown ?? ""
+                          );
+                        } catch {
+                          // leave empty if fetch fails
+                        }
+                      })();
+                    }}
+                    className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs border hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300"
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    type="button"
+                    title="Delete thread"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onDeleteThread(t);
+                    }}
+                    disabled={deletingId === t.id}
+                    className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs border ${
+                      deletingId === t.id
+                        ? "opacity-60 cursor-not-allowed"
+                        : "hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+                    }`}
+                  >
+                    {deletingId === t.id ? "Deleting…" : "Delete"}
+                  </button>
+                </div>
               )}
             </li>
           );
         })}
       </ul>
 
+      {/* CREATE */}
       {showNew && (
         <NewThreadModal
+          mode="create"
           onClose={() => setShowNew(false)}
           onCreated={(thread) => {
             setShowNew(false);
@@ -253,24 +285,59 @@ export default function ForumPage() {
           maxThreads={MAX_THREADS_PER_USER}
         />
       )}
+
+      {/* EDIT (UI ONLY FOR NOW) */}
+      {editingThread && (
+        <NewThreadModal
+          mode="edit"
+          threadId={editingThread.id}
+          initialTitle={editingThread.title}
+          initialMd={editingBody}
+          onClose={() => setEditingThread(null)}
+          onSaved={async () => {
+            {
+              /* <-- refresh list after save */
+            }
+            await load();
+            setEditingThread(null);
+          }}
+          myThreadCount={myThreadCount}
+          maxThreads={MAX_THREADS_PER_USER}
+        />
+      )}
     </div>
   );
 }
 
+/**
+ * NewThreadModal now supports mode: "create" | "edit"
+ * - "create": title = "New Thread", primary = "Create" (calls createForumThread)
+ * - "edit":   title = "Update Thread", primary = "Save" (closes modal for now)
+ */
 function NewThreadModal({
   onClose,
   onCreated,
+  onSaved,
   myThreadCount,
   maxThreads,
+  mode = "create",
+  initialTitle = "",
+  initialMd = "",
+  threadId,
 }: {
   onClose: () => void;
-  onCreated: (t: ForumThread) => void;
+  onCreated?: (t: ForumThread) => void;
+  onSaved?: () => void;
   myThreadCount: number;
   maxThreads: number;
+  mode?: "create" | "edit";
+  initialTitle?: string;
+  initialMd?: string;
+  threadId?: number;
 }) {
   const { user } = useUser();
-  const [title, setTitle] = useState("");
-  const [md, setMd] = useState("");
+  const [title, setTitle] = useState(initialTitle); // <-- seeded
+  const [md, setMd] = useState(initialMd); // <-- seeded
 
   // existing series picker state (unchanged)
   const [query, setQuery] = useState("");
@@ -462,6 +529,7 @@ function NewThreadModal({
     });
   };
 
+  // CREATE handler (unchanged)
   const create = async () => {
     if (!user) {
       alert("You need to be logged in to create a thread.");
@@ -493,7 +561,7 @@ function NewThreadModal({
         first_post_markdown: md,
         series_ids,
       });
-      onCreated(t);
+      onCreated?.(t);
     } catch (e: unknown) {
       let msg = "Failed to create thread.";
       if (typeof e === "string") msg = e;
@@ -515,23 +583,85 @@ function NewThreadModal({
     }
   };
 
+  // EDIT handler
+  const save = async () => {
+    if (mode !== "edit" || !threadId) {
+      onClose();
+      return;
+    }
+    if (!user) {
+      alert("You need to be logged in to edit a thread.");
+      return;
+    }
+
+    const cleanTitle = stripMdHeading(title);
+    const body = md.trim();
+    if (!cleanTitle || !body) {
+      alert("Title and content are required.");
+      return;
+    }
+
+    // Collect series refs from body mentions + explicit picks
+    const idsFromMentions = extractIds(body);
+    const merged = Array.from(new Set([...picked, ...idsFromMentions]));
+    const series_ids =
+      merged.length > MAX_SERIES_REFS
+        ? merged.slice(0, MAX_SERIES_REFS)
+        : merged;
+
+    try {
+      // Only include series_ids if user referenced anything;
+      // avoids wiping existing header refs when they didn’t touch them.
+      await updateForumThread(threadId, {
+        title: cleanTitle,
+        first_post_markdown: body,
+        ...(series_ids.length > 0 ? { series_ids } : {}),
+      });
+
+      onSaved?.(); // parent reloads list
+      onClose();
+    } catch (e) {
+      const msg =
+        typeof e === "string"
+          ? e
+          : e instanceof Error
+          ? e.message
+          : "Failed to save changes";
+      alert(msg);
+    }
+  };
+
+  // sync when props change (e.g., after getForumThread resolves)
+  useEffect(() => setTitle(initialTitle), [initialTitle]);
+  useEffect(() => setMd(initialMd), [initialMd]);
+
+  const headerText = mode === "edit" ? "Update Thread" : "New Thread";
+  const primaryText = mode === "edit" ? "Save" : "Create";
+  const primaryOnClick = mode === "edit" ? save : create;
+
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl p-4">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold">New Thread</h2>
+          <h2 className="text-lg font-semibold">{headerText}</h2>
           <button onClick={onClose} className="text-gray-500">
             ✕
           </button>
         </div>
 
-        <div className="text-xs text-gray-500 mb-2">
-          {user
-            ? `You can create ${remaining} more ${
-                remaining === 1 ? "thread" : "threads"
-              } (max ${maxThreads}).`
-            : "You must be logged in to create threads."}
-        </div>
+        {mode === "create" ? (
+          <div className="text-xs text-gray-500 mb-2">
+            {user
+              ? `You can create ${remaining} more ${
+                  remaining === 1 ? "thread" : "threads"
+                } (max ${maxThreads}).`
+              : "You must be logged in to create threads."}
+          </div>
+        ) : (
+          <div className="text-xs text-gray-500 mb-2">
+            Editing thread details.
+          </div>
+        )}
 
         <input
           value={title}
@@ -602,6 +732,12 @@ function NewThreadModal({
           {mdMentionCount >= MAX_MENTIONS && (
             <span className="ml-1 text-amber-700">Limit reached</span>
           )}
+          {mode === "edit" && (
+            <span className="ml-2 text-red-600 font-medium">
+              {/* Heads-up: you’ll need to re-reference any series/titles in this
+              post. */}
+            </span>
+          )}
         </div>
 
         {/* existing “Reference series” section (unchanged UI/logic) */}
@@ -653,10 +789,10 @@ function NewThreadModal({
             Cancel
           </button>
           <button
-            onClick={create}
+            onClick={primaryOnClick}
             className="px-3 py-1.5 rounded bg-blue-600 text-white"
           >
-            Create
+            {primaryText}
           </button>
         </div>
       </div>
