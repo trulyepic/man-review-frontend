@@ -42,6 +42,34 @@ type AxiosLike = {
   response?: { data?: { detail?: unknown } };
 };
 
+function toRoman(n: number): string {
+  if (!Number.isFinite(n) || n <= 0) return String(n);
+  const vals = [
+    [1000, "M"],
+    [900, "CM"],
+    [500, "D"],
+    [400, "CD"],
+    [100, "C"],
+    [90, "XC"],
+    [50, "L"],
+    [40, "XL"],
+    [10, "X"],
+    [9, "IX"],
+    [5, "V"],
+    [4, "IV"],
+    [1, "I"],
+  ] as const;
+  let num = Math.floor(n);
+  let out = "";
+  for (const [v, sym] of vals) {
+    while (num >= v) {
+      out += sym;
+      num -= v;
+    }
+  }
+  return out.toLowerCase();
+}
+
 function getErrorMessage(err: unknown): string {
   if (typeof err === "string") return err;
   if (err instanceof Error) return err.message;
@@ -655,15 +683,27 @@ function ReplyBranch({
 
   const isTopLevel = depth === 0;
   const indentPx = Math.min(depth, 6) * 16;
+  const idxRoman = toRoman(topIndex);
+
+  // const labelText = isTopLevel
+  //   ? isUpdatesMode
+  //     ? `Update #${topIndex}`
+  //     : `Reply #${topIndex}`
+  //   : isUpdatesMode
+  //   ? `↳ Comment on Update #${topIndex}`
+  //   : `↳ Reply to ${
+  //       post.author_username ? `@${post.author_username} ` : ""
+  //     }#${topIndex}`;
+
   const labelText = isTopLevel
     ? isUpdatesMode
-      ? `Update #${topIndex}`
-      : `Reply #${topIndex}`
+      ? `Update # ${idxRoman}`
+      : `Reply # ${idxRoman}`
     : isUpdatesMode
-    ? `↳ Comment on Update #${topIndex}`
+    ? `↳ Comment on Update # ${idxRoman}`
     : `↳ Reply to ${
         post.author_username ? `@${post.author_username} ` : ""
-      }#${topIndex}`;
+      }# ${idxRoman}`;
 
   const children = (byParent[post.id] || []).sort(
     (a, b) =>
