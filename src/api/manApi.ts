@@ -552,6 +552,22 @@ export type UpdateThreadResponse = {
   first_post: ForumPost | null;
 };
 
+export type Paginated<T> = {
+  items: T[];
+  page: number;
+  page_size: number;
+  total: number;
+  has_more: boolean;
+};
+
+export type ReadingListPreview = {
+  id: number;
+  name: string;
+  is_public: boolean;
+  share_token: string;
+  item_count: number;
+};
+
 // ---------- Small helpers ----------
 function extractApiDetail(err: unknown, fallback: string): string {
   if (isAxiosError(err)) {
@@ -1223,3 +1239,28 @@ export async function updateForumThread(
     throw new Error(detailStr || fallback);
   }
 }
+
+export const getMyReadingListsPaged = async (
+  page = 1,
+  page_size = 10,
+  signal?: AbortSignal
+): Promise<Paginated<ReadingListPreview>> => {
+  const res = await api.get<Paginated<ReadingListPreview>>(
+    "/reading-lists/me/paged",
+    { params: { page, page_size }, signal }
+  );
+  return res.data;
+};
+
+export const getReadingListItemsPaged = async (
+  listId: number,
+  page = 1,
+  page_size = 25,
+  signal?: AbortSignal
+): Promise<Paginated<{ series_id: number }>> => {
+  const res = await api.get<Paginated<{ series_id: number }>>(
+    `/reading-lists/${listId}/items/paged`,
+    { params: { page, page_size }, signal }
+  );
+  return res.data;
+};
