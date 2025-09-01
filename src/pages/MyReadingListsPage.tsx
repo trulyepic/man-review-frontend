@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { Link } from "react-router-dom";
 import {
@@ -57,6 +57,30 @@ function ListItems({
   const [summaries, setSummaries] = useState<Record<number, RankedSeries>>({});
   const [summariesLoading, setSummariesLoading] = useState(false);
 
+  // 🔽 NEW: filter state
+  const [filterType, setFilterType] = useState<
+    "" | "MANHWA" | "MANGA" | "MANHUA"
+  >("");
+  // const [rankMin, setRankMin] = useState<string>(""); // string to allow empty
+  // const [rankMax, setRankMax] = useState<string>("");
+  const [minStars, setMinStars] = useState<string>(""); // e.g. 7.5
+  const [minVotes, setMinVotes] = useState<string>(""); // e.g. 100
+
+  type SortKey =
+    | "DEFAULT"
+    | "RANK_ASC"
+    | "RANK_DESC"
+    | "STARS_DESC"
+    | "STARS_ASC"
+    | "VOTES_DESC"
+    | "VOTES_ASC"
+    | "TITLE_ASC"
+    | "TITLE_DESC";
+  type StatusKey = "" | "ONGOING" | "COMPLETE" | "HIATUS" | "UNKNOWN";
+  const [sortBy, setSortBy] = useState<SortKey>("DEFAULT");
+  const [filterStatus, setFilterStatus] = useState<StatusKey>("");
+  const toSortable = (it: ReadingListItem) => summaries[it.series_id];
+
   // load first page on mount
   useEffect(() => {
     let ignore = false;
@@ -77,7 +101,7 @@ function ListItems({
     return () => {
       ignore = true;
     };
-  }, [listId]); // mount-only for this list
+  }, [listId]);
 
   // summaries for the currently fetched items
   useEffect(() => {
@@ -124,181 +148,410 @@ function ListItems({
     }
   };
 
+  // 🔽 NEW: filter predicate
+  const passesFilter = (s?: RankedSeries) => {
+    // If summary not loaded yet, show it for now (it will re-evaluate once loaded)
+    if (!s) return true;
+
+    // Type
+    if (filterType && s.type !== filterType) return false;
+
+    // Status (case-insensitive)
+    if (filterStatus) {
+      const st = (s.status || "").toString().toUpperCase();
+      if (st !== filterStatus) return false;
+    }
+
+    // Stars (final_score)
+    const ms = minStars.trim() !== "" ? Number(minStars) : null;
+    if (ms != null) {
+      if (s.final_score == null) return false;
+      if (Number(s.final_score) < ms) return false;
+    }
+
+    // Votes
+    const mv = minVotes.trim() !== "" ? Number(minVotes) : null;
+    if (mv != null) {
+      if (s.vote_count == null) return false;
+      if (s.vote_count < mv) return false;
+    }
+
+    return true;
+  };
+
+  // const visibleItems = items.filter((it) =>
+  //   passesFilter(summaries[it.series_id])
+  // );
+
+  const compareNullable = <T,>(
+    aVal: T | null | undefined,
+    bVal: T | null | undefined,
+    cmp: (a: T, b: T) => number
+  ) => {
+    const aN = aVal == null;
+    const bN = bVal == null;
+    if (aN && bN) return 0;
+    if (aN) return 1; // nulls last
+    if (bN) return -1;
+    return cmp(aVal as T, bVal as T);
+  };
+
+  const byTitle = (a: string, b: string) =>
+    a.localeCompare(b, undefined, { sensitivity: "base" });
+
+  const sortedItems = (() => {
+    // base: filtered items in current order
+    const base = items.filter((it) => passesFilter(toSortable(it)));
+    if (sortBy === "DEFAULT") return base;
+
+    const withIndex = base.map((it, i) => ({ it, i }));
+    withIndex.sort((A, B) => {
+      const a = toSortable(A.it);
+      const b = toSortable(B.it);
+      switch (sortBy) {
+        case "RANK_ASC":
+          return (
+            compareNullable(a?.rank, b?.rank, (x, y) => x - y) || A.i - B.i
+          );
+        case "RANK_DESC":
+          return (
+            compareNullable(a?.rank, b?.rank, (x, y) => y - x) || A.i - B.i
+          );
+        case "STARS_DESC":
+          return (
+            compareNullable(
+              a?.final_score != null ? Number(a.final_score) : null,
+              b?.final_score != null ? Number(b.final_score) : null,
+              (x, y) => y - x
+            ) || A.i - B.i
+          );
+        case "STARS_ASC":
+          return (
+            compareNullable(
+              a?.final_score != null ? Number(a.final_score) : null,
+              b?.final_score != null ? Number(b.final_score) : null,
+              (x, y) => x - y
+            ) || A.i - B.i
+          );
+        case "VOTES_DESC":
+          return (
+            compareNullable(a?.vote_count, b?.vote_count, (x, y) => y - x) ||
+            A.i - B.i
+          );
+        case "VOTES_ASC":
+          return (
+            compareNullable(a?.vote_count, b?.vote_count, (x, y) => x - y) ||
+            A.i - B.i
+          );
+        case "TITLE_ASC":
+          return compareNullable(a?.title, b?.title, byTitle) || A.i - B.i;
+        case "TITLE_DESC":
+          return (
+            compareNullable(a?.title, b?.title, (x, y) => byTitle(y, x)) ||
+            A.i - B.i
+          );
+        default:
+          return A.i - B.i;
+      }
+    });
+
+    return withIndex.map((x) => x.it);
+  })();
+  const handleTypeChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    setFilterType(e.target.value as "" | "MANHWA" | "MANGA" | "MANHUA");
+  };
+
+  const isFiltering =
+    !!filterType ||
+    !!filterStatus ||
+    minStars.trim() !== "" ||
+    minVotes.trim() !== "" ||
+    sortBy !== "DEFAULT";
+
+  const effectiveHasMore = hasMore && !isFiltering;
+
   return initialCount === 0 ? (
     <div className="px-4 py-6 text-sm text-gray-500">No items yet.</div>
   ) : (
-    <InfiniteScroll
-      dataLength={items.length}
-      next={loadMore}
-      hasMore={hasMore}
-      loader={
-        items.length > 0 ? (
-          <div className="flex justify-center py-4">
-            <div className="w-5 h-5 border-4 border-gray-400 border-t-transparent rounded-full animate-spin" />
+    <>
+      {/* 🔽 NEW: Filter bar */}
+      <div className="px-4 pt-3 pb-2 border-b bg-white/60 backdrop-blur-sm">
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="flex flex-col">
+            <label className="text-xs text-gray-500">Type</label>
+            <select
+              value={filterType}
+              onChange={handleTypeChange}
+              className="border rounded-md px-2 py-1 text-sm"
+            >
+              <option value="">All</option>
+              <option value="MANHWA">Manhwa</option>
+              <option value="MANGA">Manga</option>
+              <option value="MANHUA">Manhua</option>
+            </select>
           </div>
-        ) : null
-      }
-      endMessage={
-        items.length > 0 ? (
-          <p className="text-center py-3 text-gray-300">End of this list.</p>
-        ) : null
-      }
-    >
-      {items.length === 0 && (loading || summariesLoading) ? (
-        <ItemRowsShimmerBlock count={Math.min(Math.max(initialCount, 4), 8)} />
-      ) : (
-        <ul className="divide-y">
-          {items.map((it) => {
-            const s = summaries[it.series_id];
-            const stx = s?.status?.toUpperCase();
-            const isThumbLoading = summariesLoading && !s;
 
-            return (
-              <li
-                key={it.series_id}
-                className="flex items-center gap-3 px-4 py-3"
-              >
-                <div className="relative">
-                  {isThumbLoading ? (
-                    <ShimmerBox className="h-16 w-12 rounded-md" />
-                  ) : s?.cover_url ? (
-                    <img
-                      src={s.cover_url}
-                      alt={s?.title || `Series ${it.series_id}`}
-                      className="h-16 w-12 object-cover rounded-md bg-gray-100"
-                      loading="lazy"
-                      decoding="async"
-                      width={80}
-                      height={120}
-                    />
-                  ) : (
-                    // true no-cover AFTER load
-                    <div
-                      className="h-16 w-12 rounded-md bg-gray-100 flex items-center justify-center text-[10px] text-gray-400"
-                      aria-label={
-                        s?.title
-                          ? `${s.title} (no cover)`
-                          : `Series ${it.series_id} (no cover)`
-                      }
-                    >
-                      —
-                    </div>
-                  )}
+          <div className="flex flex-col">
+            <label className="text-xs text-gray-500">Status</label>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value as StatusKey)}
+              className="border rounded-md px-2 py-1 text-sm"
+            >
+              <option value="">All</option>
+              <option value="ONGOING">Ongoing</option>
+              <option value="COMPLETE">Complete</option>
+              <option value="HIATUS">Hiatus</option>
+              <option value="UNKNOWN">Unknown</option>
+            </select>
+          </div>
 
-                  {s?.rank ? (
-                    <span className="absolute -top-2 -left-2 text-[10px] font-bold text-white bg-black/70 px-1.5 py-0.5 rounded-full ring-1 ring-white">
-                      #{s.rank}
-                    </span>
-                  ) : null}
+          {/* Sort (from previous step) */}
+          <div className="flex flex-col">
+            <label className="text-xs text-gray-500">Sort</label>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortKey)}
+              className="border rounded-md px-2 py-1 text-sm"
+            >
+              <option value="DEFAULT">Default (list order)</option>
+              <option value="RANK_ASC">Rank ↑</option>
+              <option value="RANK_DESC">Rank ↓</option>
+              <option value="STARS_DESC">Stars ↑ (high→low)</option>
+              <option value="STARS_ASC">Stars ↓ (low→high)</option>
+              <option value="VOTES_DESC">Votes ↑ (high→low)</option>
+              <option value="VOTES_ASC">Votes ↓ (low→high)</option>
+              <option value="TITLE_ASC">Title A–Z</option>
+              <option value="TITLE_DESC">Title Z–A</option>
+            </select>
+          </div>
 
-                  {stx ? (
-                    <div className="absolute bottom-0 right-0 z-10 pointer-events-none select-none md:hidden">
-                      <div
-                        className={
-                          "px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide whitespace-nowrap shadow ring-1 ring-white/70 " +
-                          statusClass(stx)
-                        }
-                        style={{
-                          clipPath: "polygon(0 0, 100% 0, 86% 100%, 0% 100%)",
-                        }}
-                        title={stx}
-                        aria-label={`Status: ${stx}`}
-                      >
-                        {stx}
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
+          {/* Stars ≥ and Votes ≥ */}
+          <div className="flex items-end gap-2">
+            <div className="flex flex-col">
+              <label className="text-xs text-gray-500">Stars ≥</label>
+              <input
+                type="number"
+                step="0.1"
+                inputMode="decimal"
+                value={minStars}
+                onChange={(e) => setMinStars(e.target.value)}
+                placeholder="e.g. 7.5"
+                className="w-24 border rounded-md px-2 py-1 text-sm"
+              />
+            </div>
+            <div className="flex flex-col">
+              <label className="text-xs text-gray-500">Votes ≥</label>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                value={minVotes}
+                onChange={(e) => setMinVotes(e.target.value)}
+                placeholder="e.g. 100"
+                className="w-28 border rounded-md px-2 py-1 text-sm"
+              />
+            </div>
+          </div>
 
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    {summariesLoading && !s ? (
-                      <ShimmerBox className="h-4 w-40 rounded" />
+          {/* Reset */}
+          <button
+            onClick={() => {
+              setFilterType("");
+              setFilterStatus("");
+              setMinStars("");
+              setMinVotes("");
+              setSortBy("DEFAULT");
+            }}
+            className="ml-auto text-xs px-3 py-1 rounded-md bg-gray-100 hover:bg-gray-200"
+            title="Clear filters"
+          >
+            Reset
+          </button>
+        </div>
+      </div>
+
+      <InfiniteScroll
+        key={`list-${listId}-${filterType}-${filterStatus}-${minStars}-${minVotes}-${sortBy}`}
+        dataLength={sortedItems.length}
+        next={loadMore}
+        hasMore={effectiveHasMore}
+        loader={
+          loading ? (
+            <div className="flex justify-center py-4">
+              <div className="w-5 h-5 border-4 border-gray-400 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : null
+        }
+        endMessage={
+          sortedItems.length > 0 ? (
+            <p className="text-center py-3 text-gray-300">End of this list.</p>
+          ) : null
+        }
+      >
+        {items.length === 0 && (loading || summariesLoading) ? (
+          <ItemRowsShimmerBlock
+            count={Math.min(Math.max(initialCount, 4), 8)}
+          />
+        ) : sortedItems.length === 0 ? (
+          <div className="px-4 py-6 text-sm text-gray-500">
+            No items match your filters.
+          </div>
+        ) : (
+          <ul className="divide-y">
+            {sortedItems.map((it) => {
+              const s = summaries[it.series_id];
+              const stx = s?.status?.toUpperCase();
+              const isThumbLoading = summariesLoading && !s;
+
+              return (
+                <li
+                  key={it.series_id}
+                  className="flex items-center gap-3 px-4 py-3"
+                >
+                  <div className="relative">
+                    {isThumbLoading ? (
+                      <ShimmerBox className="h-16 w-12 rounded-md" />
+                    ) : s?.cover_url ? (
+                      <img
+                        src={s.cover_url}
+                        alt={s?.title || `Series ${it.series_id}`}
+                        className="h-16 w-12 object-cover rounded-md bg-gray-100"
+                        loading="lazy"
+                        decoding="async"
+                        width={80}
+                        height={120}
+                      />
                     ) : (
-                      <Link
-                        to={`/series/${it.series_id}`}
-                        className="block font-medium hover:underline truncate"
-                        title={s?.title || `Series #${it.series_id}`}
+                      <div
+                        className="h-16 w-12 rounded-md bg-gray-100 flex items-center justify-center text-[10px] text-gray-400"
+                        aria-label={
+                          s?.title
+                            ? `${s.title} (no cover)`
+                            : `Series ${it.series_id} (no cover)`
+                        }
                       >
-                        {s?.title || `Series #${it.series_id}`}
-                      </Link>
+                        —
+                      </div>
                     )}
 
-                    {stx ? (
-                      <span
-                        className={
-                          "hidden md:inline-block leading-none px-2 py-[2px] text-[10px] font-bold uppercase tracking-wide whitespace-nowrap rounded-sm shadow ring-1 ring-white/70 " +
-                          statusClass(stx)
-                        }
-                        style={{
-                          clipPath: "polygon(0 0, 100% 0, 90% 100%, 0% 100%)",
-                        }}
-                        title={stx}
-                        aria-label={`Status: ${stx}`}
-                      >
-                        {stx}
+                    {s?.rank ? (
+                      <span className="absolute -top-2 -left-2 text-[10px] font-bold text-white bg-black/70 px-1.5 py-0.5 rounded-full ring-1 ring-white">
+                        #{s.rank}
                       </span>
-                    ) : summariesLoading && !s ? (
-                      <ShimmerBox className="h-4 w-14 rounded hidden md:inline-block" />
+                    ) : null}
+
+                    {stx ? (
+                      <div className="absolute bottom-0 right-0 z-10 pointer-events-none select-none md:hidden">
+                        <div
+                          className={
+                            "px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide whitespace-nowrap shadow ring-1 ring-white/70 " +
+                            statusClass(stx)
+                          }
+                          style={{
+                            clipPath: "polygon(0 0, 100% 0, 86% 100%, 0% 100%)",
+                          }}
+                          title={stx}
+                          aria-label={`Status: ${stx}`}
+                        >
+                          {stx}
+                        </div>
+                      </div>
                     ) : null}
                   </div>
 
-                  <div className="mt-0.5 text-sm text-gray-600 flex items-center gap-3">
-                    {summariesLoading && !s ? (
-                      <>
-                        <ShimmerBox className="h-3 w-12 rounded" />
-                        <ShimmerBox className="h-3 w-16 rounded" />
-                        <ShimmerBox className="h-3 w-20 rounded" />
-                      </>
-                    ) : (
-                      <>
-                        <span className="uppercase text-xs tracking-wide">
-                          {s?.type || "—"}
-                        </span>
-                        <span
-                          className={`text-xs font-semibold ${
-                            (s?.final_score ?? 0) >= 9
-                              ? "text-green-600"
-                              : (s?.final_score ?? 0) >= 7.5
-                              ? "text-blue-500"
-                              : (s?.final_score ?? 0) >= 5
-                              ? "text-yellow-600"
-                              : "text-gray-500"
-                          }`}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      {summariesLoading && !s ? (
+                        <ShimmerBox className="h-4 w-40 rounded" />
+                      ) : (
+                        <Link
+                          to={`/series/${it.series_id}`}
+                          className="block font-medium hover:underline truncate"
+                          title={s?.title || `Series #${it.series_id}`}
                         >
-                          {s?.final_score != null
-                            ? `★ ${Number(s.final_score).toFixed(3)}`
-                            : "★ —"}
-                        </span>
-                        <span className="text-xs text-gray-400">
-                          {s?.vote_count ? `${s.vote_count} votes` : "No votes"}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </div>
+                          {s?.title || `Series #${it.series_id}`}
+                        </Link>
+                      )}
 
-                {summariesLoading && !s ? (
-                  <ShimmerBox className="h-7 w-20 rounded-md" />
-                ) : (
-                  <button
-                    onClick={() => {
-                      onRemove(it.series_id);
-                      setItems((prev) =>
-                        prev.filter((x) => x.series_id !== it.series_id)
-                      );
-                    }}
-                    className="text-xs px-2.5 py-1 rounded-md bg-gray-200 hover:bg-gray-300"
-                  >
-                    Remove
-                  </button>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </InfiniteScroll>
+                      {stx ? (
+                        <span
+                          className={
+                            "hidden md:inline-block leading-none px-2 py-[2px] text-[10px] font-bold uppercase tracking-wide whitespace-nowrap rounded-sm shadow ring-1 ring-white/70 " +
+                            statusClass(stx)
+                          }
+                          style={{
+                            clipPath: "polygon(0 0, 100% 0, 90% 100%, 0% 100%)",
+                          }}
+                          title={stx}
+                          aria-label={`Status: ${stx}`}
+                        >
+                          {stx}
+                        </span>
+                      ) : summariesLoading && !s ? (
+                        <ShimmerBox className="h-4 w-14 rounded hidden md:inline-block" />
+                      ) : null}
+                    </div>
+
+                    <div className="mt-0.5 text-sm text-gray-600 flex items-center gap-3">
+                      {summariesLoading && !s ? (
+                        <>
+                          <ShimmerBox className="h-3 w-12 rounded" />
+                          <ShimmerBox className="h-3 w-16 rounded" />
+                          <ShimmerBox className="h-3 w-20 rounded" />
+                        </>
+                      ) : (
+                        <>
+                          <span className="uppercase text-xs tracking-wide">
+                            {s?.type || "—"}
+                          </span>
+                          <span
+                            className={`text-xs font-semibold ${
+                              (s?.final_score ?? 0) >= 9
+                                ? "text-green-600"
+                                : (s?.final_score ?? 0) >= 7.5
+                                ? "text-blue-500"
+                                : (s?.final_score ?? 0) >= 5
+                                ? "text-yellow-600"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            {s?.final_score != null
+                              ? `★ ${Number(s.final_score).toFixed(3)}`
+                              : "★ —"}
+                          </span>
+                          <span className="text-xs text-gray-400">
+                            {s?.vote_count
+                              ? `${s.vote_count} votes`
+                              : "No votes"}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {summariesLoading && !s ? (
+                    <ShimmerBox className="h-7 w-20 rounded-md" />
+                  ) : (
+                    <button
+                      onClick={() => {
+                        onRemove(it.series_id);
+                        setItems((prev) =>
+                          prev.filter((x) => x.series_id !== it.series_id)
+                        );
+                      }}
+                      className="text-xs px-2.5 py-1 rounded-md bg-gray-200 hover:bg-gray-300"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </InfiniteScroll>
+    </>
   );
 }
 
