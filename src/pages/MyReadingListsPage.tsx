@@ -14,6 +14,11 @@ import {
   type ReadingListItem,
   type ReadingListPreview,
 } from "../api/manApi";
+import {
+  ItemRowsShimmerBlock,
+  ListHeaderShimmer,
+} from "../components/ReadingListShimmers";
+import ShimmerBox from "../components/ShimmerBox";
 
 const PAGE_SIZE_LISTS = 10;
 const PAGE_SIZE_ITEMS = 25;
@@ -140,19 +145,23 @@ function ListItems({
       }
     >
       {items.length === 0 && (loading || summariesLoading) ? (
-        <div className="px-4 py-6 text-sm text-gray-500">Loading…</div>
+        <ItemRowsShimmerBlock count={Math.min(Math.max(initialCount, 4), 8)} />
       ) : (
         <ul className="divide-y">
           {items.map((it) => {
             const s = summaries[it.series_id];
             const stx = s?.status?.toUpperCase();
+            const isThumbLoading = summariesLoading && !s;
+
             return (
               <li
                 key={it.series_id}
                 className="flex items-center gap-3 px-4 py-3"
               >
                 <div className="relative">
-                  {s?.cover_url ? (
+                  {isThumbLoading ? (
+                    <ShimmerBox className="h-16 w-12 rounded-md" />
+                  ) : s?.cover_url ? (
                     <img
                       src={s.cover_url}
                       alt={s?.title || `Series ${it.series_id}`}
@@ -163,6 +172,7 @@ function ListItems({
                       height={120}
                     />
                   ) : (
+                    // true no-cover AFTER load
                     <div
                       className="h-16 w-12 rounded-md bg-gray-100 flex items-center justify-center text-[10px] text-gray-400"
                       aria-label={
@@ -202,13 +212,17 @@ function ListItems({
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <Link
-                      to={`/series/${it.series_id}`}
-                      className="block font-medium hover:underline truncate"
-                      title={s?.title || `Series #${it.series_id}`}
-                    >
-                      {s?.title || `Series #${it.series_id}`}
-                    </Link>
+                    {summariesLoading && !s ? (
+                      <ShimmerBox className="h-4 w-40 rounded" />
+                    ) : (
+                      <Link
+                        to={`/series/${it.series_id}`}
+                        className="block font-medium hover:underline truncate"
+                        title={s?.title || `Series #${it.series_id}`}
+                      >
+                        {s?.title || `Series #${it.series_id}`}
+                      </Link>
+                    )}
 
                     {stx ? (
                       <span
@@ -224,46 +238,61 @@ function ListItems({
                       >
                         {stx}
                       </span>
+                    ) : summariesLoading && !s ? (
+                      <ShimmerBox className="h-4 w-14 rounded hidden md:inline-block" />
                     ) : null}
                   </div>
 
                   <div className="mt-0.5 text-sm text-gray-600 flex items-center gap-3">
-                    <span className="uppercase text-xs tracking-wide">
-                      {s?.type || "—"}
-                    </span>
-                    <span
-                      className={`text-xs font-semibold ${
-                        (s?.final_score ?? 0) >= 9
-                          ? "text-green-600"
-                          : (s?.final_score ?? 0) >= 7.5
-                          ? "text-blue-500"
-                          : (s?.final_score ?? 0) >= 5
-                          ? "text-yellow-600"
-                          : "text-gray-500"
-                      }`}
-                    >
-                      {s?.final_score != null
-                        ? `★ ${Number(s.final_score).toFixed(3)}`
-                        : "★ —"}
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      {s?.vote_count ? `${s.vote_count} votes` : "No votes"}
-                    </span>
+                    {summariesLoading && !s ? (
+                      <>
+                        <ShimmerBox className="h-3 w-12 rounded" />
+                        <ShimmerBox className="h-3 w-16 rounded" />
+                        <ShimmerBox className="h-3 w-20 rounded" />
+                      </>
+                    ) : (
+                      <>
+                        <span className="uppercase text-xs tracking-wide">
+                          {s?.type || "—"}
+                        </span>
+                        <span
+                          className={`text-xs font-semibold ${
+                            (s?.final_score ?? 0) >= 9
+                              ? "text-green-600"
+                              : (s?.final_score ?? 0) >= 7.5
+                              ? "text-blue-500"
+                              : (s?.final_score ?? 0) >= 5
+                              ? "text-yellow-600"
+                              : "text-gray-500"
+                          }`}
+                        >
+                          {s?.final_score != null
+                            ? `★ ${Number(s.final_score).toFixed(3)}`
+                            : "★ —"}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          {s?.vote_count ? `${s.vote_count} votes` : "No votes"}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
 
-                <button
-                  onClick={() => {
-                    onRemove(it.series_id);
-                    // also optimistically remove from local items
-                    setItems((prev) =>
-                      prev.filter((x) => x.series_id !== it.series_id)
-                    );
-                  }}
-                  className="text-xs px-2.5 py-1 rounded-md bg-gray-200 hover:bg-gray-300"
-                >
-                  Remove
-                </button>
+                {summariesLoading && !s ? (
+                  <ShimmerBox className="h-7 w-20 rounded-md" />
+                ) : (
+                  <button
+                    onClick={() => {
+                      onRemove(it.series_id);
+                      setItems((prev) =>
+                        prev.filter((x) => x.series_id !== it.series_id)
+                      );
+                    }}
+                    className="text-xs px-2.5 py-1 rounded-md bg-gray-200 hover:bg-gray-300"
+                  >
+                    Remove
+                  </button>
+                )}
               </li>
             );
           })}
@@ -415,129 +444,143 @@ export default function MyReadingListsPage() {
 
   return (
     <div className="max-w-5xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">My Reading Lists</h1>
+      {/* <h1 className="text-2xl font-bold mb-6">My Reading Lists</h1> */}
 
-      <InfiniteScroll
-        dataLength={lists.length}
-        next={() => loadLists(page)}
-        hasMore={hasMore}
-        loader={
-          lists.length > 0 ? (
-            <div className="flex justify-center py-6">
-              <div className="w-6 h-6 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" />
+      {lists.length === 0 && loading ? (
+        <div className="space-y-6">
+          <ListHeaderShimmer />
+          <ListHeaderShimmer />
+        </div>
+      ) : (
+        <InfiniteScroll
+          dataLength={lists.length}
+          next={() => loadLists(page)}
+          hasMore={hasMore}
+          loader={
+            lists.length > 0 ? (
+              <div className="flex justify-center py-6">
+                <div className="w-6 h-6 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : null
+          }
+          endMessage={
+            lists.length > 0 ? (
+              <p className="text-center py-6 text-gray-400">
+                You’ve reached the end of your lists.
+              </p>
+            ) : null
+          }
+        >
+          {lists.length === 0 && !loading ? (
+            <div className="text-gray-600">
+              No lists yet. Use “+ Create Reading List” on the homepage.
             </div>
-          ) : null
-        }
-        endMessage={
-          lists.length > 0 ? (
-            <p className="text-center py-6 text-gray-400">
-              You’ve reached the end of your lists.
-            </p>
-          ) : null
-        }
-      >
-        {lists.length === 0 && !loading ? (
-          <div className="text-gray-600">
-            No lists yet. Use “+ Create Reading List” on the homepage.
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {lists.map((l) => {
-              const isOpen = !!open[l.id];
-              return (
-                <section
-                  key={l.id}
-                  id={`list-${l.id}`}
-                  className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur-sm shadow-sm"
-                >
-                  <header className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <button
-                        className="text-left"
-                        onClick={() =>
-                          setOpen((prev) => ({ ...prev, [l.id]: !prev[l.id] }))
-                        }
-                        title={isOpen ? "Collapse" : "Expand"}
-                      >
-                        <h2 className="text-lg font-semibold truncate">
-                          {isOpen ? "▾ " : "▸ "} {l.name}
-                        </h2>
-                      </button>
-                      <span
-                        className={`inline-flex items-center text-[11px] px-2 py-0.5 rounded-full ${
-                          l.is_public
-                            ? "bg-emerald-50 text-emerald-700"
-                            : "bg-gray-100 text-gray-700"
-                        }`}
-                        title={
-                          l.is_public
-                            ? "This list is public"
-                            : "This list is private"
-                        }
-                      >
-                        {l.is_public ? "Public" : "Private"}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        ({l.item_count})
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => toggleShare(l)}
-                        disabled={busyId === l.id}
-                        className="text-sm px-3 py-1 rounded-md border hover:bg-gray-50"
-                        title={l.is_public ? "Make private" : "Share publicly"}
-                      >
-                        {busyId === l.id
-                          ? "…"
-                          : l.is_public
-                          ? "Unshare"
-                          : "Share"}
-                      </button>
-
-                      {l.is_public && (
+          ) : (
+            <div className="space-y-6">
+              {lists.map((l) => {
+                const isOpen = !!open[l.id];
+                return (
+                  <section
+                    key={l.id}
+                    id={`list-${l.id}`}
+                    className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur-sm shadow-sm"
+                  >
+                    <header className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b">
+                      <div className="flex items-center gap-2 min-w-0">
                         <button
-                          onClick={() => copyPublicUrl(l)}
-                          disabled={copyId === l.id}
-                          className="text-sm px-3 py-1 rounded-md bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
-                          title="Copy public URL"
+                          className="text-left"
+                          onClick={() =>
+                            setOpen((prev) => ({
+                              ...prev,
+                              [l.id]: !prev[l.id],
+                            }))
+                          }
+                          title={isOpen ? "Collapse" : "Expand"}
                         >
-                          {copyId === l.id ? "Copying…" : "Copy Public URL"}
+                          <h2 className="text-lg font-semibold truncate">
+                            {isOpen ? "▾ " : "▸ "} {l.name}
+                          </h2>
                         </button>
-                      )}
+                        <span
+                          className={`inline-flex items-center text-[11px] px-2 py-0.5 rounded-full ${
+                            l.is_public
+                              ? "bg-emerald-50 text-emerald-700"
+                              : "bg-gray-100 text-gray-700"
+                          }`}
+                          title={
+                            l.is_public
+                              ? "This list is public"
+                              : "This list is private"
+                          }
+                        >
+                          {l.is_public ? "Public" : "Private"}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          ({l.item_count})
+                        </span>
+                      </div>
 
-                      <button
-                        onClick={() => copyPrivateAnchor(l)}
-                        disabled={copyId === l.id}
-                        className="text-sm px-3 py-1 rounded-md bg-gray-100 hover:bg-gray-200"
-                        title="Copy private anchor link"
-                      >
-                        {copyId === l.id ? "Copying…" : "Copy Private Link"}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => toggleShare(l)}
+                          disabled={busyId === l.id}
+                          className="text-sm px-3 py-1 rounded-md border hover:bg-gray-50"
+                          title={
+                            l.is_public ? "Make private" : "Share publicly"
+                          }
+                        >
+                          {busyId === l.id
+                            ? "…"
+                            : l.is_public
+                            ? "Unshare"
+                            : "Share"}
+                        </button>
 
-                      <button
-                        onClick={() => handleDeleteList(l.id)}
-                        className="text-sm px-3 py-1 rounded-md bg-red-100 text-red-700 hover:bg-red-200"
-                      >
-                        Delete List
-                      </button>
-                    </div>
-                  </header>
+                        {l.is_public && (
+                          <button
+                            onClick={() => copyPublicUrl(l)}
+                            disabled={copyId === l.id}
+                            className="text-sm px-3 py-1 rounded-md bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+                            title="Copy public URL"
+                          >
+                            {copyId === l.id ? "Copying…" : "Copy Public URL"}
+                          </button>
+                        )}
 
-                  {isOpen ? (
-                    <ListItems
-                      listId={l.id}
-                      initialCount={l.item_count}
-                      onRemove={(seriesId) => handleRemoveItem(l.id, seriesId)}
-                    />
-                  ) : null}
-                </section>
-              );
-            })}
-          </div>
-        )}
-      </InfiniteScroll>
+                        <button
+                          onClick={() => copyPrivateAnchor(l)}
+                          disabled={copyId === l.id}
+                          className="text-sm px-3 py-1 rounded-md bg-gray-100 hover:bg-gray-200"
+                          title="Copy private anchor link"
+                        >
+                          {copyId === l.id ? "Copying…" : "Copy Private Link"}
+                        </button>
+
+                        <button
+                          onClick={() => handleDeleteList(l.id)}
+                          className="text-sm px-3 py-1 rounded-md bg-red-100 text-red-700 hover:bg-red-200"
+                        >
+                          Delete List
+                        </button>
+                      </div>
+                    </header>
+
+                    {isOpen ? (
+                      <ListItems
+                        listId={l.id}
+                        initialCount={l.item_count}
+                        onRemove={(seriesId) =>
+                          handleRemoveItem(l.id, seriesId)
+                        }
+                      />
+                    ) : null}
+                  </section>
+                );
+              })}
+            </div>
+          )}
+        </InfiniteScroll>
+      )}
     </div>
   );
 }
