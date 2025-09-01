@@ -3,7 +3,7 @@ import {
   Bars3Icon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useSearch } from "./SearchContext";
 import myLogo from "../images/logo/myLogo.png";
@@ -13,6 +13,8 @@ import { useEffect, useRef } from "react";
 import { useUser } from "../login/useUser";
 import { BookmarkIcon } from "lucide-react";
 
+const DEFAULT_LABEL = "All";
+
 const Header = () => {
   const { user, setUser } = useUser();
   const navigate = useNavigate();
@@ -21,7 +23,9 @@ const Header = () => {
   const { searchTerm, setSearchTerm } = useSearch();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] =
-    useState<string>("Categories");
+    useState<string>(DEFAULT_LABEL);
+
+  const location = useLocation();
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -59,6 +63,26 @@ const Header = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    const path = location.pathname || "/";
+    if (path === "/") {
+      setSelectedCategory(DEFAULT_LABEL);
+      return;
+    }
+    if (path.startsWith("/type/")) {
+      const key = path.split("/").pop() || "";
+      const map: Record<string, string> = {
+        MANHWA: "Manhwa",
+        MANGA: "Manga",
+        MANHUA: "Manhua",
+      };
+      setSelectedCategory(map[key] ?? DEFAULT_LABEL);
+      return;
+    }
+    // Any other route → show default
+    setSelectedCategory(DEFAULT_LABEL);
+  }, [location.pathname]);
 
   const pillLink =
     "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold " +
@@ -107,7 +131,7 @@ const Header = () => {
                 onClick={() => setIsDropdownOpen((prev) => !prev)}
                 className="hover:text-blue-500 font-medium focus:outline-none"
               >
-                {selectedCategory || "Categories"} ▾
+                {selectedCategory} ▾
               </button>
 
               {isDropdownOpen && (
