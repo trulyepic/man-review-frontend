@@ -14,7 +14,6 @@ import type { User } from "../types/types";
 //   }, durationMs);
 // }
 
-
 let logoutTimer: number | null = null;
 
 function decodeJwt(token: string): { exp?: number } {
@@ -54,10 +53,12 @@ export function forceLogout(
   setUser: React.Dispatch<React.SetStateAction<User | null>>
 ) {
   try {
+    localStorage.setItem("sessionExpired", "1");
     localStorage.removeItem("token");
     localStorage.removeItem("user");
   } finally {
     setUser(null);
+    // alert("Your session has expired. Please log in again.");
     // Hard redirect to guarantee a clean state
     window.location.href = "/";
   }

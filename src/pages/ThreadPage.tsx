@@ -23,6 +23,7 @@ import RichReplyEditor from "../components/RichReplyEditor";
 
 import rehypeRaw from "rehype-raw"; // Re-enable rehype-raw
 import rehypeSanitize from "rehype-sanitize"; // Re-enable rehype-sanitize
+import { ConfirmModal } from "../components/ConfirmModal";
 
 const pillBase =
   "inline-flex items-center gap-1 h-7 px-3 rounded-full border text-xs font-medium shadow-sm";
@@ -662,6 +663,9 @@ function ReplyBranch({
     "#f0abfc",
   ];
 
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [busyDelete, setBusyDelete] = useState(false);
+
   function lightenHex(hex: string, amount = 0.35) {
     const m = hex.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
     if (!m) return hex;
@@ -716,14 +720,20 @@ function ReplyBranch({
 
   const handleDelete = async () => {
     if (!canModify) return;
-    if (!window.confirm("Delete this post (and its replies)?")) return;
+    setConfirmOpen(true); // open the modal instead of window.confirm
+  };
+
+  const actuallyDelete = async () => {
+    if (!canModify) return;
     try {
+      setBusyDelete(true);
       if (isAdmin) {
         await deleteForumPost(threadId, post.id);
       } else {
         await deleteMyForumPost(threadId, post.id);
       }
       await reload();
+      setConfirmOpen(false);
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { detail?: string } } })?.response?.data
@@ -731,6 +741,8 @@ function ReplyBranch({
         (err as Error)?.message ||
         "Failed to delete post.";
       alert(msg);
+    } finally {
+      setBusyDelete(false);
     }
   };
 
@@ -857,6 +869,28 @@ function ReplyBranch({
           )}
         </div>
       </article>
+
+      <ConfirmModal
+        open={confirmOpen}
+        title="Delete this post?"
+        message={
+          <div>
+            <div className="mb-2">This action can’t be undone.</div>
+            <div className="rounded bg-gray-50 p-2 text-sm text-gray-700">
+              {/* Small preview of the content */}
+              {post.content_markdown.length > 140
+                ? post.content_markdown.slice(0, 140) + "…"
+                : post.content_markdown || "(no content)"}
+            </div>
+          </div>
+        }
+        confirmText="Delete"
+        cancelText="Cancel"
+        destructive
+        busy={busyDelete}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={actuallyDelete}
+      />
 
       {children.map((child) => (
         <ReplyBranch
