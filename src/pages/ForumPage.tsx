@@ -13,6 +13,7 @@ import { Link } from "react-router-dom";
 import { useUser } from "../login/useUser";
 import { Helmet } from "react-helmet";
 import { stripMdHeading } from "../util/strings";
+import { ConfirmModal } from "../components/ConfirmModal";
 
 const MAX_THREADS_PER_USER = 10;
 const MAX_SERIES_REFS = 10;
@@ -63,6 +64,7 @@ export default function ForumPage() {
   const [editingBody, setEditingBody] = useState<string>("");
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [myThreadCount, setMyThreadCount] = useState(0);
+  const [confirmThread, setConfirmThread] = useState<ForumThread | null>(null);
   const { user } = useUser();
 
   const myName = user?.username || "";
@@ -110,27 +112,29 @@ export default function ForumPage() {
     const isOwner = t.author_username === myName;
     if (!(isAdmin || isOwner) || deletingId) return;
 
-    const ok = window.confirm(
-      `Delete the thread:\n\n“${t.title}”?\n\nThis will remove the original post and all replies.`
-    );
-    if (!ok) return;
+    setConfirmThread(t);
 
-    try {
-      setDeletingId(t.id);
-      await deleteForumThread(t.id);
-      setThreads((prev) => prev.filter((x) => x.id !== t.id));
-      if (isOwner) setMyThreadCount((c) => Math.max(0, c - 1));
-    } catch (err: unknown) {
-      const e = err as {
-        response?: { data?: { detail?: string } };
-        message?: string;
-      };
-      const msg =
-        e?.response?.data?.detail || e?.message || "Failed to delete thread.";
-      alert(msg);
-    } finally {
-      setDeletingId(null);
-    }
+    // const ok = window.confirm(
+    //   `Delete the thread:\n\n“${t.title}”?\n\nThis will remove the original post and all replies.`
+    // );
+    // if (!ok) return;
+
+    // try {
+    //   setDeletingId(t.id);
+    //   await deleteForumThread(t.id);
+    //   setThreads((prev) => prev.filter((x) => x.id !== t.id));
+    //   if (isOwner) setMyThreadCount((c) => Math.max(0, c - 1));
+    // } catch (err: unknown) {
+    //   const e = err as {
+    //     response?: { data?: { detail?: string } };
+    //     message?: string;
+    //   };
+    //   const msg =
+    //     e?.response?.data?.detail || e?.message || "Failed to delete thread.";
+    //   alert(msg);
+    // } finally {
+    //   setDeletingId(null);
+    // }
   };
 
   return (
@@ -305,6 +309,54 @@ export default function ForumPage() {
           }}
           myThreadCount={myThreadCount}
           maxThreads={MAX_THREADS_PER_USER}
+        />
+      )}
+
+      {confirmThread && (
+        <ConfirmModal
+          open={!!confirmThread}
+          title="Delete thread?"
+          message={
+            <div>
+              <div className="mb-2">
+                This will remove the original post and all replies.
+              </div>
+              <div className="rounded bg-gray-50 p-2 text-sm">
+                “{stripMdHeading(confirmThread.title)}”
+              </div>
+            </div>
+          }
+          confirmText="Delete"
+          cancelText="Cancel"
+          destructive
+          busy={deletingId === confirmThread.id}
+          onCancel={() => setConfirmThread(null)}
+          onConfirm={async () => {
+            if (!confirmThread) return;
+            try {
+              setDeletingId(confirmThread.id);
+              await deleteForumThread(confirmThread.id);
+              setThreads((prev) =>
+                prev.filter((x) => x.id !== confirmThread.id)
+              );
+              if (confirmThread.author_username === myName) {
+                setMyThreadCount((c) => Math.max(0, c - 1));
+              }
+              setConfirmThread(null);
+            } catch (err: unknown) {
+              const e = err as {
+                response?: { data?: { detail?: string } };
+                message?: string;
+              };
+              const msg =
+                e?.response?.data?.detail ||
+                e?.message ||
+                "Failed to delete thread.";
+              alert(msg);
+            } finally {
+              setDeletingId(null);
+            }
+          }}
         />
       )}
     </div>
