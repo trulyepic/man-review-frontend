@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import type { ForumSeriesRef, ReadingList } from "../api/manApi";
-import { forumSeriesSearch, getMyReadingLists } from "../api/manApi";
+import {
+  forumSeriesSearch,
+  getMyReadingLists,
+  uploadForumMedia,
+} from "../api/manApi"; // ⬅️ added uploadForumMedia
 import { useUser } from "../login/useUser";
+import { useNotice } from "../hooks/useNotice";
+import { NoticeModal } from "./NoticeModal";
 
 export default function RichReplyEditor({
   onSubmit,
@@ -9,12 +15,17 @@ export default function RichReplyEditor({
   initial = "",
   mode = "reply",
   onCancel,
+  // ⬇️ NEW: needed to tie uploads to the thread (+ optional editing post id)
+  threadId,
+  editingPostId = null,
 }: {
   onSubmit: (content: string, seriesIds: number[]) => Promise<void> | void;
   compact?: boolean;
   initial?: string;
   mode?: "reply" | "edit";
   onCancel?: () => void;
+  threadId: number; // ⬅️ NEW (required)
+  editingPostId?: number | null; // ⬅️ NEW (optional, pass when editing)
 }) {
   const { user } = useUser();
 
@@ -27,11 +38,17 @@ export default function RichReplyEditor({
   const taRef = useRef<HTMLTextAreaElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
+  // NEW: image upload UI
+  const fileRef = useRef<HTMLInputElement | null>(null);
+  const [uploading, setUploading] = useState(false);
+
   // NEW: list popover state
   const listMenuRef = useRef<HTMLDivElement | null>(null);
   const [listMenuOpen, setListMenuOpen] = useState(false);
   const [lists, setLists] = useState<ReadingList[]>([]);
   const [listsLoading, setListsLoading] = useState(false);
+
+  const notice = useNotice();
 
   const MAX_MENTIONS = 10;
 
@@ -214,9 +231,17 @@ export default function RichReplyEditor({
   const handlePrimary = async () => {
     const trimmed = value.trim();
     if (!trimmed) {
-      alert(
-        mode === "edit" ? "Content cannot be empty." : "Reply cannot be empty."
-      );
+      // alert(
+      //   mode === "edit" ? "Content cannot be empty." : "Reply cannot be empty."
+      // );
+      notice.show({
+        message:
+          mode === "edit"
+            ? "Content cannot be empty."
+            : "Reply cannot be empty.",
+        title: "Can’t post",
+        variant: "warning",
+      });
       return;
     }
     const ids = Array.from(new Set(extractIds(trimmed)));
@@ -224,11 +249,22 @@ export default function RichReplyEditor({
     // In reply mode, keep the original login checks
     if (mode === "reply") {
       if (!user) {
-        alert("You need to be logged in to post a reply.");
+        // alert("You need to be logged in to post a reply.");
+        notice.show({
+          message: "You need to be logged in to post a reply.",
+          title: "Sign in required",
+          variant: "warning",
+        });
         return;
       }
       if (ids.length > MAX_MENTIONS) {
-        alert(`You can mention up to ${MAX_MENTIONS} series per reply.`);
+        // alert(`You can mention up to ${MAX_MENTIONS} series per reply.`);
+        notice.show({
+          message: `You can mention up to ${MAX_MENTIONS} series per reply.`,
+          title: "Limit reached",
+          variant: "warning",
+        });
+
         return;
       }
     }
@@ -251,6 +287,51 @@ export default function RichReplyEditor({
     }
   };
 
+  // ⬇️ NEW: image/GIF picking + upload
+  async function handlePickFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+
+    const mime = (f.type || "").toLowerCase();
+    const isGif = mime === "image/gif";
+    const maxBytes = isGif ? 1_048_576 : 307_200; // 1 MB vs 300 KB
+    if (f.size > maxBytes) {
+      // alert(
+      //   isGif ? "GIF too large (max 1 MB)." : "Image too large (max 300 KB)."
+      // );
+      notice.show({
+        message: isGif
+          ? "GIF too large (max 1 MB)."
+          : "Image too large (max 300 KB).",
+        title: "Upload blocked",
+        variant: "warning",
+      });
+
+      e.currentTarget.value = "";
+      return;
+    }
+
+    try {
+      setUploading(true);
+      const { url } = await uploadForumMedia(
+        threadId,
+        f,
+        editingPostId ?? undefined
+      );
+      insertAtCaret(`![](${url})`);
+    } catch (err: unknown) {
+      // alert(err?.message || "Upload failed.");
+      notice.show({
+        message: getErrorMessage(err, "Upload failed."),
+        title: "Upload failed",
+        variant: "error",
+      });
+    } finally {
+      setUploading(false);
+      e.currentTarget.value = "";
+    }
+  }
+
   return (
     <div className={`rounded ${compact ? "bg-gray-50" : "bg-white"} relative`}>
       {/* toolbar */}
@@ -271,6 +352,24 @@ export default function RichReplyEditor({
         >
           I
         </button>
+
+        {/* NEW: Image/GIF */}
+        <button
+          type="button"
+          className="px-2 py-1 rounded border hover:bg-gray-50"
+          onClick={() => fileRef.current?.click()}
+          title="Add image or GIF"
+        >
+          + Image/GIF
+        </button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif"
+          className="hidden"
+          onChange={handlePickFile}
+        />
+        {uploading && <span className="text-xs text-gray-500">Uploading…</span>}
 
         {/* List picker */}
         <button
@@ -362,7 +461,9 @@ export default function RichReplyEditor({
 
         <span className="ml-2 text-xs text-gray-500">
           Markdown + type <span className="font-semibold">@</span> to mention a
-          series
+          series · <span className="font-medium">PNG/JPEG/WebP ≤ 300 KB</span>{" "}
+          (≤1024×1024), <span className="font-medium">GIF ≤ 1 MB</span>{" "}
+          (≤512×512)
         </span>
       </div>
 
@@ -460,6 +561,13 @@ export default function RichReplyEditor({
           </button>
         )}
       </div>
+      <NoticeModal
+        open={notice.open}
+        title={notice.title}
+        message={notice.message}
+        variant={notice.variant}
+        onClose={notice.hide}
+      />
     </div>
   );
 }

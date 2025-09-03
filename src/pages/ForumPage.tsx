@@ -14,6 +14,8 @@ import { useUser } from "../login/useUser";
 import { Helmet } from "react-helmet";
 import { stripMdHeading } from "../util/strings";
 import { ConfirmModal } from "../components/ConfirmModal";
+import { useNotice } from "../hooks/useNotice";
+import { NoticeModal } from "../components/NoticeModal";
 
 const MAX_THREADS_PER_USER = 10;
 const MAX_SERIES_REFS = 10;
@@ -60,12 +62,13 @@ export default function ForumPage() {
   const [q, setQ] = useState("");
   const [threads, setThreads] = useState<ForumThread[]>([]);
   const [showNew, setShowNew] = useState(false);
-  const [editingThread, setEditingThread] = useState<ForumThread | null>(null); // <-- NEW
+  const [editingThread, setEditingThread] = useState<ForumThread | null>(null);
   const [editingBody, setEditingBody] = useState<string>("");
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [myThreadCount, setMyThreadCount] = useState(0);
   const [confirmThread, setConfirmThread] = useState<ForumThread | null>(null);
   const { user } = useUser();
+  const notice = useNotice();
 
   const myName = user?.username || "";
   const isAdmin = (user?.role || "").toUpperCase() === "ADMIN";
@@ -96,13 +99,19 @@ export default function ForumPage() {
 
   const onClickNewThread = () => {
     if (!user) {
-      alert("You need to be logged in to create a thread.");
+      notice.show({
+        title: "Sign in required",
+        message: "You need to be logged in to create a thread.",
+        variant: "warning",
+      });
       return;
     }
     if (myThreadCount >= MAX_THREADS_PER_USER) {
-      alert(
-        `You've reached the limit of ${MAX_THREADS_PER_USER} threads.\n\nDelete one of your existing threads to create a new one.`
-      );
+      notice.show({
+        title: "Thread limit reached",
+        message: `You've reached the limit of ${MAX_THREADS_PER_USER} threads. Delete one of your existing threads to create a new one.`,
+        variant: "warning",
+      });
       return;
     }
     setShowNew(true);
@@ -111,30 +120,7 @@ export default function ForumPage() {
   const onDeleteThread = async (t: ForumThread) => {
     const isOwner = t.author_username === myName;
     if (!(isAdmin || isOwner) || deletingId) return;
-
     setConfirmThread(t);
-
-    // const ok = window.confirm(
-    //   `Delete the thread:\n\n“${t.title}”?\n\nThis will remove the original post and all replies.`
-    // );
-    // if (!ok) return;
-
-    // try {
-    //   setDeletingId(t.id);
-    //   await deleteForumThread(t.id);
-    //   setThreads((prev) => prev.filter((x) => x.id !== t.id));
-    //   if (isOwner) setMyThreadCount((c) => Math.max(0, c - 1));
-    // } catch (err: unknown) {
-    //   const e = err as {
-    //     response?: { data?: { detail?: string } };
-    //     message?: string;
-    //   };
-    //   const msg =
-    //     e?.response?.data?.detail || e?.message || "Failed to delete thread.";
-    //   alert(msg);
-    // } finally {
-    //   setDeletingId(null);
-    // }
   };
 
   return (
@@ -233,7 +219,7 @@ export default function ForumPage() {
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      setEditingThread(t); // <-- OPEN EDIT MODE
+                      setEditingThread(t);
                       setEditingBody("");
                       (async () => {
                         try {
@@ -242,7 +228,7 @@ export default function ForumPage() {
                             data.posts?.[0]?.content_markdown ?? ""
                           );
                         } catch {
-                          // leave empty if fetch fails
+                          // silent; keep empty body if fetch fails
                         }
                       })();
                     }}
@@ -286,13 +272,18 @@ export default function ForumPage() {
             setShowNew(false);
             setThreads((prev) => [thread, ...prev]);
             setMyThreadCount((c) => c + 1);
+            notice.show({
+              title: "Thread created",
+              message: "Your thread is live.",
+              variant: "success",
+            });
           }}
           myThreadCount={myThreadCount}
           maxThreads={MAX_THREADS_PER_USER}
         />
       )}
 
-      {/* EDIT (UI ONLY FOR NOW) */}
+      {/* EDIT */}
       {editingThread && (
         <NewThreadModal
           mode="edit"
@@ -301,11 +292,13 @@ export default function ForumPage() {
           initialMd={editingBody}
           onClose={() => setEditingThread(null)}
           onSaved={async () => {
-            {
-              /* <-- refresh list after save */
-            }
             await load();
             setEditingThread(null);
+            notice.show({
+              title: "Thread updated",
+              message: "Changes have been saved.",
+              variant: "success",
+            });
           }}
           myThreadCount={myThreadCount}
           maxThreads={MAX_THREADS_PER_USER}
@@ -343,6 +336,11 @@ export default function ForumPage() {
                 setMyThreadCount((c) => Math.max(0, c - 1));
               }
               setConfirmThread(null);
+              notice.show({
+                title: "Thread deleted",
+                message: "The thread and all replies were removed.",
+                variant: "success",
+              });
             } catch (err: unknown) {
               const e = err as {
                 response?: { data?: { detail?: string } };
@@ -352,21 +350,31 @@ export default function ForumPage() {
                 e?.response?.data?.detail ||
                 e?.message ||
                 "Failed to delete thread.";
-              alert(msg);
+              notice.show({
+                title: "Delete failed",
+                message: msg,
+                variant: "error",
+              });
             } finally {
               setDeletingId(null);
             }
           }}
         />
       )}
+
+      <NoticeModal
+        open={notice.open}
+        title={notice.title}
+        message={notice.message}
+        variant={notice.variant}
+        onClose={notice.hide}
+      />
     </div>
   );
 }
 
 /**
  * NewThreadModal now supports mode: "create" | "edit"
- * - "create": title = "New Thread", primary = "Create" (calls createForumThread)
- * - "edit":   title = "Update Thread", primary = "Save" (closes modal for now)
  */
 function NewThreadModal({
   onClose,
@@ -390,10 +398,12 @@ function NewThreadModal({
   threadId?: number;
 }) {
   const { user } = useUser();
-  const [title, setTitle] = useState(initialTitle); // <-- seeded
-  const [md, setMd] = useState(initialMd); // <-- seeded
+  const notice = useNotice();
 
-  // existing series picker state (unchanged)
+  const [title, setTitle] = useState(initialTitle);
+  const [md, setMd] = useState(initialMd);
+
+  // existing series picker state
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<ForumSeriesRef[]>([]);
   const [picked, setPicked] = useState<number[]>([]);
@@ -409,13 +419,11 @@ function NewThreadModal({
   const [mdMentionCount, setMdMentionCount] = useState(0);
   const [mdCapShown, setMdCapShown] = useState(false);
 
-  const MAX_MENTIONS = MAX_SERIES_REFS; // 10
+  const MAX_MENTIONS = MAX_SERIES_REFS;
 
-  // util: extract ids from "(series:123)"
   const extractIds = (text: string) =>
     Array.from(text.matchAll(/\(series:(\d+)\)/g)).map((m) => Number(m[1]));
 
-  // util: detect @token around caret
   function detectAtToken(nextValue: string, caret: number) {
     if (caret < 0 || caret > nextValue.length) return null;
     const before = nextValue.slice(0, caret);
@@ -455,12 +463,15 @@ function NewThreadModal({
     tokenEnd: number
   ) {
     const uniqueIds = Array.from(new Set(extractIds(md)));
-    // only block if this is a *new* id and we’re already at the cap
     if (
       !uniqueIds.includes(chosen.series_id) &&
       uniqueIds.length >= MAX_MENTIONS
     ) {
-      alert(`You can mention up to ${MAX_MENTIONS} series.`);
+      notice.show({
+        title: "Limit reached",
+        message: `You can mention up to ${MAX_MENTIONS} series.`,
+        variant: "warning",
+      });
       setMdMenuOpen(false);
       return;
     }
@@ -472,12 +483,14 @@ function NewThreadModal({
     })`;
     const next = `${before}${inserted}${after}`;
     setMd(next);
+
     setMdMenuOpen(false);
     setMdResults([]);
     setMdMentionStart(null);
+
     queueMicrotask(() => {
       mdRef.current?.focus();
-      const newPos = (before + inserted).length;
+      const newPos = before.length + inserted.length;
       mdRef.current?.setSelectionRange(newPos, newPos);
     });
   }
@@ -489,19 +502,18 @@ function NewThreadModal({
     const caret = e.target.selectionStart ?? next.length;
     const hit = detectAtToken(next, caret);
 
-    // NEW: keep a live unique count
     const currentCount = new Set(extractIds(next)).size;
     setMdMentionCount(currentCount);
 
-    // NEW: one-time heads-up when the user reaches the cap
     if (currentCount >= MAX_MENTIONS && !mdCapShown) {
       setMdCapShown(true);
-      alert(
-        `You've reached the limit of ${MAX_MENTIONS} series mentions in the post body.`
-      );
+      notice.show({
+        title: "Mentions cap",
+        message: `You've reached the limit of ${MAX_MENTIONS} series mentions in the post body.`,
+        variant: "warning",
+      });
     }
     if (currentCount < MAX_MENTIONS && mdCapShown) {
-      // allow another alert after the user drops below the cap and hits it again
       setMdCapShown(false);
     }
 
@@ -538,7 +550,6 @@ function NewThreadModal({
     }
   };
 
-  // close mention menu when clicking outside
   useEffect(() => {
     const onDocClick = (ev: MouseEvent) => {
       const t = ev.target as Node;
@@ -550,9 +561,8 @@ function NewThreadModal({
     document.addEventListener("mousedown", onDocClick);
     return () => document.removeEventListener("mousedown", onDocClick);
   }, []);
-  // --- end @mention support ---
 
-  // existing search for the separate "Reference series" picker (unchanged)
+  // separate “Reference series” search
   useEffect(() => {
     let active = true;
     (async () => {
@@ -576,31 +586,43 @@ function NewThreadModal({
     setPicked((p) => {
       if (p.includes(id)) return p.filter((x) => x !== id);
       if (p.length >= MAX_SERIES_REFS) {
-        alert(`You can reference up to ${MAX_SERIES_REFS} series only.`);
+        notice.show({
+          title: "Limit reached",
+          message: `You can reference up to ${MAX_SERIES_REFS} series only.`,
+          variant: "warning",
+        });
         return p;
       }
       return [...p, id];
     });
   };
 
-  // CREATE handler (unchanged)
   const create = async () => {
     if (!user) {
-      alert("You need to be logged in to create a thread.");
+      notice.show({
+        title: "Sign in required",
+        message: "You need to be logged in to create a thread.",
+        variant: "warning",
+      });
       return;
     }
     if (myThreadCount >= maxThreads) {
-      alert(
-        `You've reached the limit of ${maxThreads} threads.\n\nDelete one of your existing threads to create a new one.`
-      );
+      notice.show({
+        title: "Thread limit reached",
+        message: `You've reached the limit of ${maxThreads} threads. Delete one of your existing threads to create a new one.`,
+        variant: "warning",
+      });
       return;
     }
     if (!title.trim() || !md.trim()) {
-      alert("Title and content are required.");
+      notice.show({
+        title: "Missing info",
+        message: "Title and content are required.",
+        variant: "warning",
+      });
       return;
     }
 
-    // merge explicit picks + ids found in body mentions
     const idsFromMentions = extractIds(md);
     const merged = Array.from(new Set([...picked, ...idsFromMentions]));
     const series_ids =
@@ -633,29 +655,35 @@ function NewThreadModal({
             ? maybe.response.data.detail?.message || msg
             : maybe.message || msg;
       }
-      alert(msg);
+      notice.show({ title: "Create failed", message: msg, variant: "error" });
     }
   };
 
-  // EDIT handler
   const save = async () => {
     if (mode !== "edit" || !threadId) {
       onClose();
       return;
     }
     if (!user) {
-      alert("You need to be logged in to edit a thread.");
+      notice.show({
+        title: "Sign in required",
+        message: "You need to be logged in to edit a thread.",
+        variant: "warning",
+      });
       return;
     }
 
     const cleanTitle = stripMdHeading(title);
     const body = md.trim();
     if (!cleanTitle || !body) {
-      alert("Title and content are required.");
+      notice.show({
+        title: "Missing info",
+        message: "Title and content are required.",
+        variant: "warning",
+      });
       return;
     }
 
-    // Collect series refs from body mentions + explicit picks
     const idsFromMentions = extractIds(body);
     const merged = Array.from(new Set([...picked, ...idsFromMentions]));
     const series_ids =
@@ -664,15 +692,12 @@ function NewThreadModal({
         : merged;
 
     try {
-      // Only include series_ids if user referenced anything;
-      // avoids wiping existing header refs when they didn’t touch them.
       await updateForumThread(threadId, {
         title: cleanTitle,
         first_post_markdown: body,
         ...(series_ids.length > 0 ? { series_ids } : {}),
       });
-
-      onSaved?.(); // parent reloads list
+      onSaved?.();
       onClose();
     } catch (e) {
       const msg =
@@ -681,11 +706,10 @@ function NewThreadModal({
           : e instanceof Error
           ? e.message
           : "Failed to save changes";
-      alert(msg);
+      notice.show({ title: "Save failed", message: msg, variant: "error" });
     }
   };
 
-  // sync when props change (e.g., after getForumThread resolves)
   useEffect(() => setTitle(initialTitle), [initialTitle]);
   useEffect(() => setMd(initialMd), [initialMd]);
 
@@ -786,15 +810,9 @@ function NewThreadModal({
           {mdMentionCount >= MAX_MENTIONS && (
             <span className="ml-1 text-amber-700">Limit reached</span>
           )}
-          {mode === "edit" && (
-            <span className="ml-2 text-red-600 font-medium">
-              {/* Heads-up: you’ll need to re-reference any series/titles in this
-              post. */}
-            </span>
-          )}
         </div>
 
-        {/* existing “Reference series” section (unchanged UI/logic) */}
+        {/* “Reference series” section */}
         <div className="mt-3">
           <label className="text-sm font-medium">Reference series</label>
           <div className="text-xs text-gray-500 mb-1">
@@ -850,6 +868,15 @@ function NewThreadModal({
           </button>
         </div>
       </div>
+
+      {/* local notice host in modal context */}
+      <NoticeModal
+        open={notice.open}
+        title={notice.title}
+        message={notice.message}
+        variant={notice.variant}
+        onClose={notice.hide}
+      />
     </div>
   );
 }
