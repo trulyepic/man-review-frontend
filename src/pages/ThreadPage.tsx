@@ -247,6 +247,20 @@ function MarkdownProse({
           // Keep your smart in-app linking behavior
           a: ({ children: linkChildren, href, ...props }) => {
             const url = String(href ?? "");
+
+            if (/^https?:\/\/.+\.(?:png|jpe?g|webp|gif)$/i.test(url)) {
+              return (
+                <img
+                  src={url}
+                  alt={
+                    typeof linkChildren === "string" ? linkChildren : "image"
+                  }
+                  loading="lazy"
+                  decoding="async"
+                  className="max-w-full rounded"
+                />
+              );
+            }
             const isSeriesLink =
               /^series:\s*\d+$/i.test(url) ||
               /^\/series\/\d+(?:[/?#].*)?$/i.test(url);
