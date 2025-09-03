@@ -22,8 +22,37 @@ import { stripMdHeading } from "../util/strings";
 import RichReplyEditor from "../components/RichReplyEditor";
 
 import rehypeRaw from "rehype-raw"; // Re-enable rehype-raw
-import rehypeSanitize from "rehype-sanitize"; // Re-enable rehype-sanitize
+import rehypeSanitize, { defaultSchema } from "rehype-sanitize"; // Re-enable rehype-sanitize
 import { ConfirmModal } from "../components/ConfirmModal";
+import { useNotice } from "../hooks/useNotice";
+import { NoticeModal } from "../components/NoticeModal";
+
+// ⬇️ NEW: extend sanitize schema to allow <img> safely
+const sanitizeSchema = {
+  ...defaultSchema,
+  tagNames: [...(defaultSchema.tagNames || []), "img"],
+  attributes: {
+    ...(defaultSchema.attributes || {}),
+    img: [
+      // Only allow http(s) image sources
+      ["src", /^https?:\/\//i],
+      "alt",
+      "title",
+      "loading",
+      "decoding",
+      "width",
+      "height",
+      // you can add "referrerpolicy" if you want: e.g., "no-referrer"
+    ],
+    a: [
+      ...(defaultSchema.attributes?.a || []),
+      ["href", /^https?:\/\//i], // ensure links are http(s) (optional, but safe)
+      "target",
+      "rel",
+      "title",
+    ],
+  },
+};
 
 const pillBase =
   "inline-flex items-center gap-1 h-7 px-3 rounded-full border text-xs font-medium shadow-sm";
@@ -182,7 +211,7 @@ function MarkdownProse({
   className?: string;
   size?: "base" | "sm";
 }) {
-  // 1) Remove [Title](series:123) and [Title](/series/123) from the markdown itself
+  // Remove [Title](series:123) and [Title](/series/123) from the markdown itself
   const safeMd = children
     // [Title](series:123)
     .replace(/\[([^\]]+?)\]\(\s*series:\s*\d+\s*\)/gi, "$1")
@@ -197,8 +226,25 @@ function MarkdownProse({
     >
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkBreaks]}
-        rehypePlugins={[rehypeRaw, rehypeSanitize]}
+        rehypePlugins={[
+          rehypeRaw,
+          [rehypeSanitize, sanitizeSchema], // ⬅️ use our schema that allows <img> http(s)
+        ]}
         components={{
+          // Render http(s) images (schema already guarantees http(s))
+          img: ({ src = "", alt = "", ...props }) => {
+            return (
+              <img
+                src={src}
+                alt={alt}
+                loading="lazy"
+                decoding="async"
+                {...props}
+              />
+            );
+          },
+
+          // Keep your smart in-app linking behavior
           a: ({ children: linkChildren, href, ...props }) => {
             const url = String(href ?? "");
             const isSeriesLink =
@@ -292,6 +338,8 @@ export default function ThreadPage() {
   const [editPostId, setEditPostId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState<string>("");
 
+  const notice = useNotice();
+
   const loc = useLocation();
   const siteUrl = "https://toonranks.com";
 
@@ -334,7 +382,12 @@ export default function ThreadPage() {
       // Reload to reflect changes (or optimistically update state)
       await load();
     } catch (e: unknown) {
-      alert(getErrorMessage(e) || "Failed to save changes.");
+      // alert(getErrorMessage(e) || "Failed to save changes.");
+      notice.show({
+        message: getErrorMessage(e) || "Failed to save changes.",
+        title: "Save failed",
+        variant: "error",
+      });
       return; // do not close editor if save failed
     }
     setEditPostId(null);
@@ -411,10 +464,17 @@ export default function ThreadPage() {
                         await lockForumThread(thread!.id, next);
                         setThread((t) => (t ? { ...t, locked: next } : t));
                       } catch (e) {
-                        alert(
-                          (e as { message?: string }).message ||
-                            "Failed to toggle lock."
-                        );
+                        // alert(
+                        //   (e as { message?: string }).message ||
+                        //     "Failed to toggle lock."
+                        // );
+                        notice.show({
+                          message:
+                            (e as { message?: string }).message ||
+                            "Failed to toggle lock.",
+                          title: "Action failed",
+                          variant: "error",
+                        });
                       }
                     }}
                     className={`${ctrlBtn} ${
@@ -437,10 +497,17 @@ export default function ThreadPage() {
                           t ? { ...t, latest_first: next } : t
                         );
                       } catch (e) {
-                        alert(
-                          (e as { message?: string }).message ||
-                            "Failed to update ordering."
-                        );
+                        // alert(
+                        //   (e as { message?: string }).message ||
+                        //     "Failed to update ordering."
+                        // );
+                        notice.show({
+                          message:
+                            (e as { message?: string }).message ||
+                            "Failed to update ordering.",
+                          title: "Action failed",
+                          variant: "error",
+                        });
                       }
                     }}
                     className={`${ctrlBtn} ${
@@ -506,6 +573,8 @@ export default function ThreadPage() {
                 <RichReplyEditor
                   mode="edit"
                   initial={editContent}
+                  threadId={threadId}
+                  editingPostId={posts[0].id}
                   onSubmit={async (content, seriesIds) => {
                     await handleSaveEdit(content, seriesIds);
                   }}
@@ -573,6 +642,7 @@ export default function ThreadPage() {
                   onBeginEdit={handleBeginEdit}
                   onSaveEdit={handleSaveEdit}
                   onCancelEdit={handleCancelEdit}
+                  notify={notice.show}
                 />
               ))}
             </>
@@ -588,14 +658,27 @@ export default function ThreadPage() {
         {!thread?.locked || isAdmin ? (
           <RichReplyEditor
             compact={false}
+            threadId={threadId}
             onSubmit={async (content, seriesIds) => {
               if (!user) {
-                alert("You need to be logged in to post a reply.");
+                // alert("You need to be logged in to post a reply.");
+                notice.show({
+                  message: "You need to be logged in to post a reply.",
+                  title: "Sign in required",
+                  variant: "warning",
+                });
+
                 return;
               }
               const trimmed = content.trim();
               if (!trimmed) {
-                alert("Reply cannot be empty.");
+                // alert("Reply cannot be empty.");
+                notice.show({
+                  message: "Reply cannot be empty.",
+                  title: "Can’t post",
+                  variant: "warning",
+                });
+
                 return;
               }
               try {
@@ -605,7 +688,12 @@ export default function ThreadPage() {
                 });
                 setPosts((prev) => [...prev, p]);
               } catch (err: unknown) {
-                alert(getErrorMessage(err) || "Failed to post reply.");
+                // alert(getErrorMessage(err) || "Failed to post reply.");
+                notice.show({
+                  message: getErrorMessage(err) || "Failed to post reply.",
+                  title: "Post failed",
+                  variant: "error",
+                });
               }
             }}
           />
@@ -615,6 +703,13 @@ export default function ThreadPage() {
           </div>
         )}
       </div>
+      <NoticeModal
+        open={notice.open}
+        title={notice.title}
+        message={notice.message}
+        variant={notice.variant}
+        onClose={notice.hide}
+      />
     </div>
   );
 }
@@ -636,6 +731,7 @@ function ReplyBranch({
   onBeginEdit,
   onSaveEdit,
   onCancelEdit,
+  notify,
 }: {
   post: ForumPost;
   depth: number;
@@ -653,6 +749,11 @@ function ReplyBranch({
   onBeginEdit: (postId: number, content: string) => void;
   onSaveEdit: (content: string, seriesIds: number[]) => Promise<void> | void;
   onCancelEdit: () => void;
+  notify: (opts: {
+    title?: string;
+    message: string | React.ReactNode;
+    variant?: "info" | "success" | "warning" | "error";
+  }) => void;
 }) {
   const railColors = [
     "#3b82f6",
@@ -740,7 +841,12 @@ function ReplyBranch({
           ?.detail ||
         (err as Error)?.message ||
         "Failed to delete post.";
-      alert(msg);
+      // alert(msg);
+      notify({
+        message: msg,
+        title: "Delete failed",
+        variant: "error",
+      });
     } finally {
       setBusyDelete(false);
     }
@@ -792,6 +898,8 @@ function ReplyBranch({
             <RichReplyEditor
               mode="edit"
               initial={editInitial || post.content_markdown}
+              threadId={threadId}
+              editingPostId={post.id}
               onSubmit={async (content, seriesIds) => {
                 await onSaveEdit(content, seriesIds);
               }}
@@ -823,6 +931,7 @@ function ReplyBranch({
                 <div className="mt-2">
                   <RichReplyEditor
                     compact
+                    threadId={threadId}
                     onSubmit={async (content, seriesIds) => {
                       if (!content.trim()) {
                         alert("Reply cannot be empty.");
@@ -911,6 +1020,7 @@ function ReplyBranch({
           onBeginEdit={onBeginEdit}
           onSaveEdit={onSaveEdit}
           onCancelEdit={onCancelEdit}
+          notify={notify}
         />
       ))}
     </div>

@@ -1264,3 +1264,33 @@ export const getReadingListItemsPaged = async (
   );
   return res.data;
 };
+
+// ---------- Forum Media (tiny images & GIFs) ----------
+export const uploadForumMedia = async (
+  threadId: number,
+  file: File,
+  postId?: number
+): Promise<{
+  url: string;
+  mime: string;
+  width: number;
+  height: number;
+  size: number;
+}> => {
+  const form = new FormData();
+  form.append("thread_id", String(threadId));
+  if (typeof postId === "number") form.append("post_id", String(postId));
+  form.append("file", file);
+
+  const res = await api.post<{
+    url: string;
+    mime: string;
+    width: number;
+    height: number;
+    size: number;
+  }>("/forum/media/upload", form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+
+  return res.data;
+};
