@@ -12,6 +12,7 @@ import {
   updateForumThreadSettings,
   getPublicReadingList,
   editForumPost,
+  toggleHeart,
 } from "../api/manApi";
 import { useUser } from "../login/useUser";
 import ReactMarkdown from "react-markdown";
@@ -26,6 +27,7 @@ import rehypeSanitize, { defaultSchema } from "rehype-sanitize"; // Re-enable re
 import { ConfirmModal } from "../components/ConfirmModal";
 import { useNotice } from "../hooks/useNotice";
 import { NoticeModal } from "../components/NoticeModal";
+import { HeartButton } from "../components/HeartButton";
 
 // ⬇️ NEW: extend sanitize schema to allow <img> safely
 const sanitizeSchema = {
@@ -599,6 +601,22 @@ export default function ThreadPage() {
               <MarkdownProse>{posts[0].content_markdown}</MarkdownProse>
             )}
 
+            <div className="mt-2">
+              <HeartButton
+                initialOn={!!posts[0].viewer_has_hearted}
+                initialCount={posts[0].heart_count ?? 0}
+                ariaLabelBase="Heart this post"
+                onToggle={async () => {
+                  try {
+                    const r = await toggleHeart(threadId, posts[0].id);
+                    return { ok: true, count: r.count, hearted: r.hearted };
+                  } catch {
+                    return { ok: false };
+                  }
+                }}
+              />
+            </div>
+
             {(() => {
               const firstRefs: ForumSeriesRef[] =
                 posts[0].series_refs && posts[0].series_refs.length > 0
@@ -990,6 +1008,25 @@ function ReplyBranch({
               </button>
             </div>
           )}
+          <HeartButton
+            initialOn={!!post.viewer_has_hearted}
+            initialCount={post.heart_count ?? 0}
+            ariaLabelBase="Heart this reply"
+            onToggle={async () => {
+              try {
+                const r = await toggleHeart(threadId, post.id);
+                return { ok: true, count: r.count, hearted: r.hearted };
+              } catch {
+                // silent revert (AC says silent), but if you'd like:
+                notify({
+                  title: "Action failed",
+                  message: "Could not update like.",
+                  variant: "error",
+                });
+                return { ok: false };
+              }
+            }}
+          />
         </div>
       </article>
 
