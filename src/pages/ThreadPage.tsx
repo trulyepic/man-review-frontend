@@ -365,12 +365,95 @@ export default function ThreadPage() {
 
   const canonical = `${siteUrl}${loc.pathname.replace(/\/+$/, "")}`;
 
+  // — SEO helpers —
+  const IMG_MD_RE = /!\[[^\]]*]\((?<src>https?:\/\/[^\s)]+)\)/i;
+
+  function firstImageFromMarkdown(md: string): string | null {
+    const m = IMG_MD_RE.exec(md || "");
+    return m?.groups?.src ?? null;
+  }
+
+  function safeText(s: string, max = 155): string {
+    return (s || "")
+      .replace(/[#*_`>]+/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, max);
+  }
+
   const raw = posts[0]?.content_markdown || "";
   const desc = raw
     .replace(/[#*_`>]+/g, "")
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 155);
+
+  // Prefer the first inline image in the OP, else a series cover, else site icon
+  const op = posts[0];
+  const opImgFromMd = op ? firstImageFromMarkdown(op.content_markdown) : null;
+  const ogImage =
+    opImgFromMd ||
+    thread?.series_refs?.[0]?.cover_url ||
+    "https://toonranks.com/android-chrome-512x512.png";
+
+  // Dates for structured data
+  const publishedTime = op ? new Date(op.created_at).toISOString() : undefined;
+  const modifiedTime = op ? new Date(op.updated_at).toISOString() : undefined;
+
+  // Engagement signals
+  const likeCount = op?.heart_count ?? 0;
+  const commentCount = Math.max(0, posts.length - 1);
+
+  // JSON-LD: DiscussionForumPosting + BreadcrumbList
+  const threadJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "DiscussionForumPosting",
+    headline: thread?.title || "Forum thread",
+    articleBody: safeText(raw, 10000),
+    url: canonical,
+    image: ogImage ? [ogImage] : undefined,
+    datePublished: publishedTime,
+    dateModified: modifiedTime,
+    author: op?.author_username
+      ? { "@type": "Person", name: op.author_username }
+      : undefined,
+    interactionStatistic: [
+      likeCount > 0
+        ? {
+            "@type": "InteractionCounter",
+            interactionType: { "@type": "LikeAction" },
+            userInteractionCount: likeCount,
+          }
+        : null,
+      commentCount > 0
+        ? {
+            "@type": "InteractionCounter",
+            interactionType: { "@type": "CommentAction" },
+            userInteractionCount: commentCount,
+          }
+        : null,
+    ].filter(Boolean),
+    commentCount,
+  };
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Forum",
+        item: `${siteUrl}/forum`,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: thread?.title || "Thread",
+        item: canonical,
+      },
+    ],
+  };
 
   const load = async () => {
     const data = await getForumThread(threadId);
@@ -420,24 +503,51 @@ export default function ThreadPage() {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <Helmet>
+        {/* Basic SEO */}
         <title>{threadTitle}</title>
         <link rel="canonical" href={canonical} />
         <meta
           name="description"
           content={desc || "Read and reply to this Toon Ranks forum thread."}
         />
+        <meta
+          name="robots"
+          content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1"
+        />
+
+        {/* Open Graph */}
+        <meta property="og:site_name" content="Toon Ranks" />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={canonical} />
         <meta property="og:title" content={thread?.title || "Forum thread"} />
         <meta
           property="og:description"
           content={desc || "Join the discussion on Toon Ranks."}
         />
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content={canonical} />
-        <meta
-          property="og:image"
-          content="https://toonranks.com/android-chrome-512x512.png"
-        />
+        <meta property="og:image" content={ogImage} />
+        {publishedTime && (
+          <meta property="article:published_time" content={publishedTime} />
+        )}
+        {modifiedTime && (
+          <meta property="article:modified_time" content={modifiedTime} />
+        )}
+
+        {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={thread?.title || "Forum thread"} />
+        <meta
+          name="twitter:description"
+          content={desc || "Join the discussion on Toon Ranks."}
+        />
+        <meta name="twitter:image" content={ogImage} />
+
+        {/* Structured data: DiscussionForumPosting + Breadcrumbs */}
+        <script type="application/ld+json">
+          {JSON.stringify(threadJsonLd)}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify(breadcrumbJsonLd)}
+        </script>
       </Helmet>
 
       {thread && (
