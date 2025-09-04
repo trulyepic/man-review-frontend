@@ -463,6 +463,8 @@ export type ForumPost = {
   updated_at: string;
   series_refs: ForumSeriesRef[];
   parent_id?: number | null;
+  heart_count?: number;
+  viewer_has_hearted?: boolean;
 };
 
 export interface Issue {
@@ -1294,3 +1296,13 @@ export const uploadForumMedia = async (
 
   return res.data;
 };
+
+export async function toggleHeart(
+  thread_id: number,
+  post_id: number
+): Promise<{ hearted: boolean; count: number }> {
+  const res = await api.post<{ hearted: boolean; count: number }>(
+    `/forum/threads/${thread_id}/posts/${post_id}/heart`
+  );
+  return res.data;
+}
