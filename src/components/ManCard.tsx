@@ -24,7 +24,7 @@ type Props = {
   isCompared?: boolean | void;
   onAddToReadingList?: () => void;
   isInReadingList?: boolean;
-  status?: "ONGOING" | "COMPLETE" | "HIATUS" | "UNKNOWN" | null;
+  status?: "ONGOING" | "COMPLETE" | "HIATUS" | "UNKNOWN" | "SEASON_END" | null;
 };
 
 const ManCard = ({
@@ -62,6 +62,8 @@ const ManCard = ({
         return "bg-amber-500 text-white";
       case "UNKNOWN":
         return "bg-gray-400 text-white";
+      case "SEASON_END":
+        return "bg-purple-600 text-white";
       default:
         return ""; // render nothing when null/undefined
     }
@@ -159,7 +161,7 @@ const ManCard = ({
                 title={status}
                 aria-label={`Status: ${status}`}
               >
-                {status}
+                {status.replace("_", " ")}
               </div>
             </div>
           ) : null}

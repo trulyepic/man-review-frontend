@@ -34,6 +34,8 @@ function statusClass(status?: string) {
       return "bg-amber-500 text-white";
     case "UNKNOWN":
       return "bg-gray-400 text-white";
+    case "SEASON_END":
+      return "bg-purple-600 text-white";
     default:
       return "bg-gray-400 text-white";
   }

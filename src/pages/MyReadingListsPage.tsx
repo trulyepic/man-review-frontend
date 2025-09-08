@@ -33,6 +33,8 @@ function statusClass(status?: string): string {
       return "bg-amber-500 text-white";
     case "UNKNOWN":
       return "bg-gray-400 text-white";
+    case "SEASON_END":
+      return "bg-purple-600 text-white";
     default:
       return "bg-gray-400 text-white";
   }
@@ -76,7 +78,13 @@ function ListItems({
     | "VOTES_ASC"
     | "TITLE_ASC"
     | "TITLE_DESC";
-  type StatusKey = "" | "ONGOING" | "COMPLETE" | "HIATUS" | "UNKNOWN";
+  type StatusKey =
+    | ""
+    | "ONGOING"
+    | "COMPLETE"
+    | "HIATUS"
+    | "SEASON_END"
+    | "UNKNOWN";
   const [sortBy, setSortBy] = useState<SortKey>("DEFAULT");
   const [filterStatus, setFilterStatus] = useState<StatusKey>("");
   const toSortable = (it: ReadingListItem) => summaries[it.series_id];
@@ -302,6 +310,7 @@ function ListItems({
               <option value="ONGOING">Ongoing</option>
               <option value="COMPLETE">Complete</option>
               <option value="HIATUS">Hiatus</option>
+              <option value="SEASON_END">Season End</option>
               <option value="UNKNOWN">Unknown</option>
             </select>
           </div>

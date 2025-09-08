@@ -110,6 +110,7 @@ const AddSeriesModal = ({ onClose }: Props) => {
           <option value="ONGOING">Ongoing</option>
           <option value="COMPLETE">Complete</option>
           <option value="HIATUS">Hiatus</option>
+          <option value="SEASON_END">Season End</option>
           <option value="UNKNOWN">Unknown</option>
         </select>
 
