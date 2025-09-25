@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   fetchRankedSeriesPaginated,
   deleteSeries,
@@ -16,14 +16,16 @@ import { useSearch } from "../components/SearchContext";
 import ShimmerLoader from "../components/ShimmerLoader";
 import CompareManager from "../components/CompareManager";
 import { useUser } from "../login/useUser";
-import ReadingListModal from "../components/ReadingListModal"; 
+import ReadingListModal from "../components/ReadingListModal";
 import { isRequestCanceled } from "../api/client";
+import GenreStrip from "../components/GenreStrip";
 
 const PAGE_SIZE = 25;
 
 const FilteredSeriesPage = () => {
   const { seriesType } = useParams();
-  const { searchTerm } = useSearch();
+  // const { searchTerm } = useSearch();
+  const { searchTerm, setSearchTerm } = useSearch();
 
   const [items, setItems] = useState<RankedSeries[]>([]);
   const [page, setPage] = useState(1);
@@ -41,6 +43,65 @@ const FilteredSeriesPage = () => {
     undefined
   );
   const [myLists, setMyLists] = useState<ReadingList[] | null>(null);
+
+  // const normalizeGenre = (g: string) =>
+  //   g
+  //     .split(" ")
+  //     .map((w) => (w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : w))
+  //     .join(" ")
+  //     .replace(/\bSci-fi\b/gi, "Sci-Fi");
+
+  // // Build unique, sorted genre list from currently loaded items
+  // const derivedGenres = useMemo(() => {
+  //   const set = new Set<string>();
+  //   for (const it of items) {
+  //     if (!it?.genre) continue;
+  //     // support comma-separated genres like "Action, Thriller"
+  //     const pieces = String(it.genre)
+  //       .split(",")
+  //       .map((s) => normalizeGenre(s.trim()))
+  //       .filter(Boolean);
+  //     pieces.forEach((p) => set.add(p));
+  //   }
+  //   return Array.from(set).sort((a, b) => a.localeCompare(b));
+  // }, [items]);
+
+  // // Determine active genre from searchTerm if it matches one of the derived genres
+  // const activeGenre =
+  //   derivedGenres.find(
+  //     (g) => g.toLowerCase() === searchTerm.trim().toLowerCase()
+  //   ) || null;
+
+  const normalizeGenre = (g: string) =>
+    g
+      .split(" ")
+      .map((w) => (w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : w))
+      .join(" ")
+      .replace(/\bSci-fi\b/gi, "Sci-Fi");
+
+  const activeGenre = useMemo(() => {
+    const s = searchTerm.trim();
+    return s ? normalizeGenre(s) : null;
+  }, [searchTerm]);
+
+  const derivedGenres = useMemo(() => {
+    const set = new Set<string>();
+
+    // pull from items
+    for (const it of items) {
+      if (!it?.genre) continue;
+      String(it.genre)
+        .split(",")
+        .map((s) => normalizeGenre(s.trim()))
+        .filter(Boolean)
+        .forEach((p) => set.add(p));
+    }
+
+    // ensure the selected genre appears even if no items match in this type
+    if (activeGenre) set.add(activeGenre);
+
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [items, activeGenre]);
 
   // Fetch lists when user present (same as Home)
   useEffect(() => {
@@ -156,7 +217,8 @@ const FilteredSeriesPage = () => {
       }
     };
 
-    if (!searchTerm.trim()) loadInitial();
+    loadInitial();
+    // if (!searchTerm.trim()) loadInitial();
 
     return () => controller.abort();
   }, [seriesType]);
@@ -202,10 +264,10 @@ const FilteredSeriesPage = () => {
         setItems(all);
         if (all.length < PAGE_SIZE) setHasMore(false);
       } catch (err: unknown) {
-         if (!isRequestCanceled(err)) {
+        if (!isRequestCanceled(err)) {
           console.error("Failed to fetch series:", err);
           alert("Failed to load series");
-      }
+        }
       } finally {
         setLoading(false);
       }
@@ -233,97 +295,128 @@ const FilteredSeriesPage = () => {
   };
 
   return (
-    <div className="flex justify-center px-4">
-      <div className="w-full max-w-7xl py-6">
-        {/* Toolbar – same as Home */}
-        {canCreateMoreLists && (
-          <div className="flex justify-start mb-4">
-            <button
-              onClick={openCreateListOnly}
-              className="px-5 py-2.5 rounded-md font-medium text-blue-800 bg-blue-100 border border-blue-300 shadow hover:bg-blue-200 transition-all duration-200"
-            >
-              + Create Reading List
-            </button>
-          </div>
-        )}
+    <>
+      <GenreStrip
+        genres={derivedGenres}
+        active={activeGenre}
+        onSelect={(g) => setSearchTerm(g ?? "")}
+      />
 
-        <CompareManager>
-          {({ toggleCompare, isSelectedForCompare }) => (
-            <InfiniteScroll
-              dataLength={items.length}
-              next={() => setPage((prev) => prev + 1)}
-              hasMore={!searchTerm && hasMore}
-              loader={
-                items.length > 0 ? (
-                  <p className="text-center py-6 text-gray-500">Loading...</p>
-                ) : null
-              }
-              endMessage={
-                !loading && items.length > 0 ? (
-                  <p className="text-center py-6 text-gray-400">
-                    🎉 You’ve seen everything, new series added priodically.
-                  </p>
-                ) : null
-              }
-            >
-              {items.length === 0 && loading ? (
-                <ShimmerLoader />
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                  {items.map((item) => (
-                    <ManCard
-                      key={item.id}
-                      id={item.id}
-                      rank={item.rank ?? "-"}
-                      title={item.title}
-                      genre={item.genre}
-                      votes={item.vote_count}
-                      coverUrl={item.cover_url}
-                      type={item.type}
-                      author={item.author}
-                      artist={item.artist}
-                      avgScore={item.final_score}
-                      onDelete={handleDelete}
-                      isAdmin={isAdmin}
-                      onEdit={() => setEditItem(item)}
-                      onCompareToggle={() => toggleCompare(item)}
-                      isCompared={isSelectedForCompare(item.id)}
-                      onAddToReadingList={
-                        user ? () => openAddSeriesToList(item.id) : undefined
-                      }
-                      isInReadingList={inAnyListIds.has(item.id)}
-                      status={item.status}
-                    />
-                  ))}
-                </div>
-              )}
-            </InfiniteScroll>
+      <div className="flex justify-center px-4">
+        <div className="w-full max-w-7xl py-6">
+          {/* Toolbar – same as Home */}
+          {canCreateMoreLists && (
+            <div className="flex justify-start mb-4">
+              <button
+                onClick={openCreateListOnly}
+                className="px-5 py-2.5 rounded-md font-medium text-blue-800 bg-blue-100 border border-blue-300 shadow hover:bg-blue-200 transition-all duration-200"
+              >
+                + Create Reading List
+              </button>
+            </div>
           )}
-        </CompareManager>
 
-        {editItem && (
-          <EditSeriesModal
-            id={editItem.id}
-            initialData={editItem}
-            onClose={() => setEditItem(null)}
-            onSuccess={() => {
-              setItems([]);
-              setPage(1);
-              setHasMore(true);
-              loadSeries(1);
-            }}
+          <CompareManager>
+            {({ toggleCompare, isSelectedForCompare }) => (
+              <InfiniteScroll
+                dataLength={items.length}
+                next={() => setPage((prev) => prev + 1)}
+                hasMore={!searchTerm.trim() && hasMore}
+                loader={
+                  items.length > 0 ? (
+                    <p className="text-center py-6 text-gray-500">Loading...</p>
+                  ) : null
+                }
+                endMessage={
+                  !loading && items.length > 0 ? (
+                    <p className="text-center py-6 text-gray-400">
+                      🎉 You’ve seen everything, new series added periodically.
+                    </p>
+                  ) : null
+                }
+              >
+                {/* Loading placeholder when list is empty */}
+                {items.length === 0 && loading ? <ShimmerLoader /> : null}
+
+                {/* EMPTY STATE (keeps selected genre; doesn't reset it) */}
+                {items.length === 0 && !loading ? (
+                  <div className="py-12 text-center text-gray-600">
+                    <p className="mb-3">
+                      {activeGenre
+                        ? `No ${
+                            seriesType?.toUpperCase() ?? ""
+                          } titles found for “${activeGenre}”.`
+                        : `No ${seriesType?.toUpperCase() ?? ""} titles found.`}
+                    </p>
+                    {activeGenre && (
+                      <button
+                        onClick={() => setSearchTerm("")}
+                        className="inline-flex items-center px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800"
+                      >
+                        Clear genre filter
+                      </button>
+                    )}
+                  </div>
+                ) : null}
+
+                {/* GRID */}
+                {items.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                    {items.map((item) => (
+                      <ManCard
+                        key={item.id}
+                        id={item.id}
+                        rank={item.rank ?? "-"}
+                        title={item.title}
+                        genre={item.genre}
+                        votes={item.vote_count}
+                        coverUrl={item.cover_url}
+                        type={item.type}
+                        author={item.author}
+                        artist={item.artist}
+                        avgScore={item.final_score}
+                        onDelete={handleDelete}
+                        isAdmin={isAdmin}
+                        onEdit={() => setEditItem(item)}
+                        onCompareToggle={() => toggleCompare(item)}
+                        isCompared={isSelectedForCompare(item.id)}
+                        onAddToReadingList={
+                          user ? () => openAddSeriesToList(item.id) : undefined
+                        }
+                        isInReadingList={inAnyListIds.has(item.id)}
+                        status={item.status}
+                      />
+                    ))}
+                  </div>
+                ) : null}
+              </InfiniteScroll>
+            )}
+          </CompareManager>
+
+          {editItem && (
+            <EditSeriesModal
+              id={editItem.id}
+              initialData={editItem}
+              onClose={() => setEditItem(null)}
+              onSuccess={() => {
+                setItems([]);
+                setPage(1);
+                setHasMore(true);
+                loadSeries(1);
+              }}
+            />
+          )}
+
+          {/* Reading list modal (same as Home) */}
+          <ReadingListModal
+            open={showListModal}
+            onClose={() => setShowListModal(false)}
+            seriesId={modalSeriesId}
+            onDone={handleModalDone}
           />
-        )}
-
-        {/* Reading list modal (same as Home) */}
-        <ReadingListModal
-          open={showListModal}
-          onClose={() => setShowListModal(false)}
-          seriesId={modalSeriesId}
-          onDone={handleModalDone}
-        />
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

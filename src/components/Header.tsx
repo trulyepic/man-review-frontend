@@ -13,7 +13,7 @@ import { useEffect, useRef } from "react";
 import { useUser } from "../login/useUser";
 import { BookmarkIcon } from "lucide-react";
 
-const DEFAULT_LABEL = "All";
+const DEFAULT_LABEL = "ALL";
 
 const Header = () => {
   const { user, setUser } = useUser();
@@ -73,9 +73,9 @@ const Header = () => {
     if (path.startsWith("/type/")) {
       const key = path.split("/").pop() || "";
       const map: Record<string, string> = {
-        MANHWA: "Manhwa",
-        MANGA: "Manga",
-        MANHUA: "Manhua",
+        MANHWA: "MANHWA",
+        MANGA: "MANGA",
+        MANHUA: "MANHUA",
       };
       setSelectedCategory(map[key] ?? DEFAULT_LABEL);
       return;
@@ -129,7 +129,7 @@ const Header = () => {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsDropdownOpen((prev) => !prev)}
-                className="hover:text-blue-500 font-medium focus:outline-none"
+                className="hover:text-blue-500 font-bold focus:outline-none"
               >
                 {selectedCategory} ▾
               </button>
@@ -141,52 +141,49 @@ const Header = () => {
                       to="/"
                       onClick={() => {
                         setIsDropdownOpen(false);
-                        setSelectedCategory("All");
+                        setSelectedCategory("ALL");
                       }}
                       className="block px-4 py-2 hover:bg-blue-50"
                     >
-                      All
+                      ALL
                     </NavLink>
                     <NavLink
                       to="/type/MANHWA"
                       onClick={() => {
                         setIsDropdownOpen(false);
-                        setSelectedCategory("Manhwa");
+                        setSelectedCategory("MANHWA");
                       }}
                       className="block px-4 py-2 hover:bg-blue-50"
                     >
-                      Manhwa
+                      MANHWA
                     </NavLink>
                     <NavLink
                       to="/type/MANGA"
                       onClick={() => {
                         setIsDropdownOpen(false);
-                        setSelectedCategory("Manga");
+                        setSelectedCategory("MANGA");
                       }}
                       className="block px-4 py-2 hover:bg-blue-50"
                     >
-                      Manga
+                      MANGA
                     </NavLink>
                     <NavLink
                       to="/type/MANHUA"
                       onClick={() => {
                         setIsDropdownOpen(false);
-                        setSelectedCategory("Manhua");
+                        setSelectedCategory("MANHUA");
                       }}
                       className="block px-4 py-2 hover:bg-blue-50"
                     >
-                      Manhua
+                      MANHUA
                     </NavLink>
                   </div>
                 </div>
               )}
             </div>
 
-            <NavLink
-              to="/forum"
-              className="hover:text-blue-500 font-medium px-1"
-            >
-              Forum
+            <NavLink to="/forum" className="hover:text-blue-500 font-bold px-1">
+              FORUM
             </NavLink>
 
             {/* <NavLink
@@ -290,31 +287,31 @@ const Header = () => {
             onClick={() => setMobileMenuOpen(false)}
             className="text-gray-800 hover:text-blue-400 "
           >
-            All
+            ALL
           </NavLink>
           <NavLink
             to="/type/MANHWA"
             onClick={() => setMobileMenuOpen(false)}
             className="text-gray-800 hover:text-blue-400"
           >
-            Manhwa
+            MANHWA
           </NavLink>
           <NavLink
             to="/type/MANGA"
             onClick={() => setMobileMenuOpen(false)}
             className="text-gray-800 hover:text-blue-400"
           >
-            Manga
+            MANGA
           </NavLink>
           <NavLink
             to="/type/MANHUA"
             onClick={() => setMobileMenuOpen(false)}
             className="text-gray-800 hover:text-blue-400"
           >
-            Manhua
+            MANHUA
           </NavLink>
           <NavLink to="/forum" className="text-gray-800 hover:text-blue-400">
-            Forum
+            FORUM
           </NavLink>
 
           {/* <NavLink
