@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ManCard from "../components/ManCard";
 import AddSeriesModal from "../components/AddSeriesModal";
 import EditSeriesModal from "../components/EditSeriesModal";
@@ -18,6 +18,7 @@ import { Helmet } from "react-helmet";
 import CompareManager from "../components/CompareManager";
 import { useUser } from "../login/useUser";
 import ReadingListModal from "../components/ReadingListModal";
+import GenreStrip from "../components/GenreStrip";
 // import { Link } from "react-router-dom";
 
 const PAGE_SIZE = 25;
@@ -38,9 +39,39 @@ const Home = () => {
   );
   const [myLists, setMyLists] = useState<ReadingList[] | null>(null); // null=unknown, []=none
 
-  const { searchTerm } = useSearch();
+  // const { searchTerm } = useSearch();
+  const { searchTerm, setSearchTerm } = useSearch();
   const { user } = useUser();
   const isAdmin = user?.role === "ADMIN";
+
+  // Normalize a single genre label (e.g., "sci-fi" -> "Sci-Fi")
+  const normalizeGenre = (g: string) =>
+    g
+      .split(" ")
+      .map((w) => (w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : w))
+      .join(" ")
+      .replace(/\bSci-fi\b/gi, "Sci-Fi");
+
+  // Build unique, sorted genre list from currently loaded items
+  const derivedGenres = useMemo(() => {
+    const set = new Set<string>();
+    for (const it of items) {
+      if (!it?.genre) continue;
+      // support comma-separated genres like "Action, Thriller"
+      const pieces = String(it.genre)
+        .split(",")
+        .map((s) => normalizeGenre(s.trim()))
+        .filter(Boolean);
+      pieces.forEach((p) => set.add(p));
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [items]);
+
+  // Determine active genre from searchTerm if it matches one of the derived genres
+  const activeGenre =
+    derivedGenres.find(
+      (g) => g.toLowerCase() === searchTerm.trim().toLowerCase()
+    ) || null;
 
   // fetch lists once when user present
   useEffect(() => {
@@ -241,6 +272,12 @@ const Home = () => {
           })}
         </script>
       </Helmet>
+
+      <GenreStrip
+        genres={derivedGenres}
+        active={activeGenre}
+        onSelect={(g) => setSearchTerm(g ?? "")}
+      />
       <div className="flex justify-center px-4">
         <div className="w-full max-w-7xl py-6">
           {/* Toolbar: right-aligned */}
