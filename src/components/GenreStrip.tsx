@@ -48,22 +48,25 @@ export default function GenreStrip({ genres, active, onSelect }: Props) {
     return () => cancelAnimationFrame(id);
   }, [genres]);
 
-  // WEBTOON-style tabs: text + underline (no pills), uppercase, tracking
+  // Webtoon-style tabs
   const tabBase =
     "whitespace-nowrap px-3 py-2 text-sm md:text-base font-semibold uppercase tracking-wide transition-colors border-b-2 border-transparent";
   const tabActive = "text-black border-black";
   const tabIdle = "text-gray-500 hover:text-black";
 
-  //   if (!genres || genres.length === 0) return null;
-
   return (
     <div className="relative border-b bg-white">
       <div className="mx-auto max-w-7xl px-4">
         <div className="relative py-4">
-          {/* Scroll row */}
+          {/* Scroll row: touch-scroll on mobile, arrows on desktop */}
           <div
             ref={scrollerRef}
-            className="flex gap-4 overflow-x-hidden pr-10 items-center"
+            className="
+              flex gap-4 items-center pr-10
+              overflow-x-auto sm:overflow-x-hidden
+              no-scrollbar
+              [touch-action:pan-x] [-webkit-overflow-scrolling:touch]
+            "
           >
             <button
               className={`${tabBase} ${
@@ -84,7 +87,6 @@ export default function GenreStrip({ genres, active, onSelect }: Props) {
                     isActive ? tabActive : tabIdle
                   } flex-shrink-0`}
                   onClick={() => onSelect(g)}
-                  // Keep natural case in tooltip for readability
                   title={g}
                 >
                   {g.toUpperCase()}
@@ -93,10 +95,10 @@ export default function GenreStrip({ genres, active, onSelect }: Props) {
             })}
           </div>
 
-          {/* Left arrow */}
+          {/* Desktop-only arrows */}
           <button
             onClick={() => scrollByX(-240)}
-            className={`flex items-center justify-center absolute left-0 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white border border-gray-300 shadow hover:bg-gray-50 transition-opacity duration-200 z-30 ${
+            className={`hidden sm:flex items-center justify-center absolute left-0 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white border border-gray-300 shadow hover:bg-gray-50 transition-opacity duration-200 z-30 ${
               canScrollLeft ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
             aria-label="Scroll left"
@@ -106,10 +108,9 @@ export default function GenreStrip({ genres, active, onSelect }: Props) {
             <ChevronLeft className="w-4 h-4" />
           </button>
 
-          {/* Right arrow */}
           <button
             onClick={() => scrollByX(240)}
-            className={`flex items-center justify-center absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white border border-gray-300 shadow hover:bg-gray-50 transition-opacity duration-200 z-30 ${
+            className={`hidden sm:flex items-center justify-center absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white border border-gray-300 shadow hover:bg-gray-50 transition-opacity duration-200 z-30 ${
               canScrollRight ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
             aria-label="Scroll right"
