@@ -652,25 +652,80 @@ export const login = async (credentials: {
   password: string;
   captcha_token: string;
 }): Promise<AuthResponse> => {
-  const res = await api.post<AuthResponse>("/auth/login", credentials);
+  try {
+    const res = await api.post<AuthResponse>("/auth/login", credentials);
 
-  // Keep existing behavior: persist token + user here
-  localStorage.setItem("token", res.data.access_token);
-  localStorage.setItem("user", JSON.stringify(res.data.user));
-  return res.data;
+    // persist like before
+    localStorage.setItem("token", res.data.access_token);
+    localStorage.setItem("user", JSON.stringify(res.data.user));
+    return res.data;
+  } catch (err: unknown) {
+    if (isAxiosError(err)) {
+      const status = err.response?.status ?? 0;
+
+      // Safely derive a detail string without using `any`
+      const data = err.response?.data;
+      let detail = "Login failed";
+      if (data && typeof data === "object") {
+        const maybe = data as { detail?: unknown; message?: unknown };
+        if (typeof maybe.detail === "string") detail = maybe.detail;
+        else if (typeof maybe.message === "string") detail = maybe.message;
+        else if (typeof err.message === "string") detail = err.message;
+      } else if (typeof err.message === "string") {
+        detail = err.message;
+      }
+
+      // Re-throw in the "STATUS: detail" format your LoginPage expects
+      throw new Error(`${status}:${detail}`);
+    }
+
+    // Non-Axios errors
+    throw err instanceof Error ? err : new Error("Login failed");
+  }
 };
 
-export const signup = async (credentials: {
+export const signup = async (payload: {
   username: string;
   password: string;
   email: string;
   captcha_token: string;
 }): Promise<{ message: string; token: string }> => {
-  const res = await api.post<{ message: string; token: string }>(
-    "/auth/signup",
-    credentials
-  );
-  return res.data;
+  // Normalize before sending
+  const body = {
+    username: payload.username.trim(),
+    password: payload.password,
+    email: payload.email.trim().toLowerCase(),
+    captcha_token: payload.captcha_token,
+  };
+
+  try {
+    const res = await api.post<{ message: string; token: string }>(
+      "/auth/signup",
+      body
+    );
+    return res.data;
+  } catch (err: unknown) {
+    if (isAxiosError(err)) {
+      const status = err.response?.status ?? 0;
+
+      // Derive a readable detail without `any`
+      const data = err.response?.data;
+      let detail = "Signup failed";
+      if (data && typeof data === "object") {
+        const maybe = data as { detail?: unknown; message?: unknown };
+        if (typeof maybe.detail === "string") detail = maybe.detail;
+        else if (typeof maybe.message === "string") detail = maybe.message;
+        else if (typeof err.message === "string") detail = err.message;
+      } else if (typeof err.message === "string") {
+        detail = err.message;
+      }
+
+      // Re-throw like login: "409: Email already exists", etc.
+      throw new Error(`${status}:${detail}`);
+    }
+
+    throw err instanceof Error ? err : new Error("Signup failed");
+  }
 };
 
 export const googleOAuthLogin = async (
@@ -689,6 +744,18 @@ export const verifyEmail = async (token: string): Promise<string> => {
     params: { token },
   });
   return res.data.message;
+};
+
+export const resendVerificationEmail = async (payload: {
+  email?: string;
+  username?: string;
+  captcha_token?: string;
+}): Promise<{ message: string }> => {
+  const res = await api.post<{ message: string }>(
+    "/auth/resend-verification",
+    payload
+  );
+  return res.data;
 };
 
 // ---------- Series Details / Voting ----------

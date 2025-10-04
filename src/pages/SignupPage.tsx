@@ -14,31 +14,52 @@ const SignupPage = () => {
   const [captchaToken, setCaptchaToken] = useState("");
 
   const handleSignup = async () => {
-    if (!username.trim() || !password.trim() || !email.trim()) {
+    const u = username.trim();
+    const p = password.trim();
+    const e = email.trim().toLowerCase();
+
+    if (!u || !p || !e) {
       alert("All fields are required.");
       return;
     }
-
     if (!captchaToken) {
       alert("Please complete the CAPTCHA.");
       return;
     }
 
     try {
-      await signup({ username, password, email, captcha_token: captchaToken });
+      await signup({
+        username: u,
+        password: p,
+        email: e,
+        captcha_token: captchaToken,
+      });
 
       alert("Signup successful! Please verify your email.");
       navigate("/check-your-email");
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Something went wrong";
-      if (message.includes("409")) {
-        alert("Username already exists. Try a different one.");
-      } else if (message.includes("422")) {
+      const raw = err instanceof Error ? err.message : "0:Signup failed";
+      const [status, ...rest] = raw.split(":");
+      const detail = rest.join(":").trim().toLowerCase();
+
+      if (status === "409") {
+        if (detail.includes("email")) {
+          alert(
+            "Email already exists. Please log in or use a different email."
+          );
+        } else if (detail.includes("username")) {
+          alert("Username already exists. Try a different one.");
+        } else {
+          alert("Account already exists.");
+        }
+      } else if (status === "422") {
         alert("Invalid email. Only Gmail or Yahoo addresses are allowed.");
+      } else if (status === "400") {
+        alert("Please complete the CAPTCHA.");
       } else {
         alert("Signup failed");
       }
+
       console.error("Signup error:", err);
     }
   };
