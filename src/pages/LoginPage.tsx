@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { login } from "../api/manApi";
+import { login, resendVerificationEmail } from "../api/manApi";
 
 import GoogleOAuthButton from "../components/GoogleOAuthButton";
 import ReCAPTCHA from "react-google-recaptcha";
@@ -17,6 +17,13 @@ const LoginPage = () => {
 
   const [submitting, setSubmitting] = useState(false);
   const recaptchaRef = useRef<ReCAPTCHA | null>(null);
+
+  const [showResend, setShowResend] = useState(false);
+  const [resendEmail, setResendEmail] = useState("");
+  const [resendMsg, setResendMsg] = useState<string | null>(null);
+  const [resending, setResending] = useState(false);
+
+  const [resendCaptcha, setResendCaptcha] = useState("");
 
   const handleLogin = async () => {
     setError(null);
@@ -54,6 +61,7 @@ const LoginPage = () => {
 
       if (statusCode === "403" && detail === "Email not verified") {
         setError("Email not verified. Please check your inbox or spam folder.");
+        setShowResend(true);
       } else if (statusCode === "401" && detail === "Invalid credentials") {
         setError("Invalid username or password.");
       } else if (
@@ -70,6 +78,27 @@ const LoginPage = () => {
       recaptchaRef.current?.reset();
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const triggerResend = async () => {
+    setResendMsg(null);
+    setResending(true);
+    try {
+      const { message } = await resendVerificationEmail({
+        // Prefer email; fallback to username if you want
+        email: resendEmail || undefined,
+        username: !resendEmail ? username : undefined,
+        captcha_token: resendCaptcha || undefined,
+      });
+      setResendMsg(message || "If an account exists, a new link was sent.");
+    } catch (err) {
+      console.error("Resend error:", (err as Error).message || err);
+      setResendMsg("If an account exists, a new link was sent.");
+    } finally {
+      setResending(false);
+      setResendCaptcha("");
+      recaptchaRef.current?.reset();
     }
   };
 
@@ -118,6 +147,45 @@ const LoginPage = () => {
         >
           {submitting ? "Signing in..." : "Login"}
         </button>
+
+        {showResend && (
+          <div className="mt-6 p-4 border rounded bg-yellow-50">
+            <p className="text-sm mb-2 font-medium">
+              Your verification link may have expired. Enter your email to
+              resend:
+            </p>
+            <input
+              type="email"
+              placeholder="Email used at signup (preferred)"
+              value={resendEmail}
+              onChange={(e) => setResendEmail(e.target.value)}
+              className="w-full p-2 mb-3 border rounded bg-white"
+            />
+            <ReCAPTCHA
+              ref={recaptchaRef}
+              sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+              onChange={(t) => setResendCaptcha(t || "")}
+              className="mb-3"
+            />
+            <button
+              onClick={triggerResend}
+              disabled={resending}
+              className={`w-full text-white py-2 rounded ${
+                resending
+                  ? "bg-blue-400 cursor-not-allowed"
+                  : "bg-blue-600/70 hover:bg-blue-600"
+              }`}
+            >
+              {resending ? "Resending..." : "Resend verification email"}
+            </button>
+            {resendMsg && (
+              <p className="mt-3 text-center text-sm text-gray-700">
+                {resendMsg}
+              </p>
+            )}
+          </div>
+        )}
+
         <div className="my-4">
           <GoogleOAuthButton />
         </div>
