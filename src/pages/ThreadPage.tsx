@@ -1,7 +1,11 @@
 import { useEffect, useState, type CSSProperties } from "react";
-import { useParams, Link, useLocation } from "react-router-dom";
 import {
-  getForumThread,
+  useParams,
+  Link,
+  useLocation,
+  useSearchParams,
+} from "react-router-dom";
+import {
   createForumPost,
   deleteForumPost,
   type ForumPost,
@@ -13,6 +17,7 @@ import {
   getPublicReadingList,
   editForumPost,
   toggleHeart,
+  getForumThreadPaged,
 } from "../api/manApi";
 import { useUser } from "../login/useUser";
 import ReactMarkdown from "react-markdown";
@@ -342,11 +347,83 @@ function MarkdownProse({
   );
 }
 
+function Pager({
+  page,
+  totalPages,
+  hasPrev,
+  hasNext,
+  onGo,
+}: {
+  page: number;
+  totalPages: number;
+  hasPrev?: boolean;
+  hasNext?: boolean;
+  onGo: (p: number) => void;
+}) {
+  const nums: number[] = [];
+  const add = (n: number) => {
+    if (n >= 1 && n <= totalPages) nums.push(n);
+  };
+  add(1);
+  add(2);
+  for (let n = page - 2; n <= page + 2; n++) add(n);
+  add(totalPages - 1);
+  add(totalPages);
+  const unique = Array.from(new Set(nums)).sort((a, b) => a - b);
+
+  return (
+    <nav className="flex items-center gap-2 text-sm" aria-label="Pagination">
+      <button
+        className="px-2 py-1 border rounded disabled:opacity-50"
+        onClick={() => onGo(page - 1)}
+        // disabled={page <= 1}
+        disabled={hasPrev === undefined ? page <= 1 : !hasPrev}
+      >
+        Prev
+      </button>
+      {unique.map((n, i) => {
+        const prev = unique[i - 1];
+        const gap = prev != null && n - prev > 1;
+        return (
+          <span key={n} className="flex items-center">
+            {gap && <span className="px-1">…</span>}
+            <button
+              className={`px-2 py-1 border rounded ${
+                n === page ? "bg-gray-100 font-semibold" : ""
+              }`}
+              onClick={() => onGo(n)}
+              aria-current={n === page ? "page" : undefined}
+            >
+              {n}
+            </button>
+          </span>
+        );
+      })}
+      <button
+        className="px-2 py-1 border rounded disabled:opacity-50"
+        onClick={() => onGo(page + 1)}
+        // disabled={page >= totalPages}
+        disabled={hasNext === undefined ? page >= totalPages : !hasNext}
+      >
+        Next
+      </button>
+    </nav>
+  );
+}
+
 export default function ThreadPage() {
   const { id } = useParams();
   const threadId = Number(id);
   const [thread, setThread] = useState<ForumThread | null>(null);
   const [posts, setPosts] = useState<ForumPost[]>([]);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(15);
+  const [totalTopLevel, setTotalTopLevel] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [hasPrev, setHasPrev] = useState(false);
+  const [hasNext, setHasNext] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const { user } = useUser();
   const isAdmin = (user?.role || "").toUpperCase() === "ADMIN";
 
@@ -358,6 +435,12 @@ export default function ThreadPage() {
 
   const loc = useLocation();
   const siteUrl = "https://toonranks.com";
+
+  // Read page from URL
+  useEffect(() => {
+    const p = parseInt(searchParams.get("page") || "1", 10);
+    setPage(Number.isFinite(p) && p > 0 ? p : 1);
+  }, [searchParams]);
 
   const threadTitle = thread?.title
     ? `${thread.title} — Forum — Toon Ranks`
@@ -402,7 +485,8 @@ export default function ThreadPage() {
 
   // Engagement signals
   const likeCount = op?.heart_count ?? 0;
-  const commentCount = Math.max(0, posts.length - 1);
+  // const commentCount = Math.max(0, posts.length - 1);
+  const commentCount = Math.max(0, (thread?.post_count ?? 0) - 1);
 
   // JSON-LD: DiscussionForumPosting + BreadcrumbList
   const threadJsonLd = {
@@ -455,15 +539,30 @@ export default function ThreadPage() {
     ],
   };
 
+  // const load = async () => {
+  //   const data = await getForumThread(threadId);
+  //   setThread(data.thread);
+  //   setPosts(data.posts);
+  // };
+
   const load = async () => {
-    const data = await getForumThread(threadId);
-    setThread(data.thread);
-    setPosts(data.posts);
+    const r = await getForumThreadPaged(threadId, page, pageSize);
+    setThread(r.thread);
+    setPosts(r.posts);
+    setTotalTopLevel(r.total_top_level);
+    setTotalPages(r.total_pages);
+    setHasPrev(r.has_prev);
+    setHasNext(r.has_next);
   };
+
+  // useEffect(() => {
+  //   load();
+  // }, [threadId]);
 
   useEffect(() => {
     load();
-  }, [threadId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [threadId, page]);
 
   // Called by ReplyBranch → enters edit mode for a specific post
   const handleBeginEdit = (postId: number, content: string) => {
@@ -499,6 +598,13 @@ export default function ThreadPage() {
   };
 
   const reportHref = `/report-issue?page_url=${encodeURIComponent(canonical)}`;
+
+  const goToPage = (p: number) => {
+    const next = Math.max(1, Math.min(totalPages, p));
+    const qp: Record<string, string> = {};
+    qp.page = String(next);
+    setSearchParams(qp); // triggers useEffect → load()
+  };
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -744,6 +850,24 @@ export default function ThreadPage() {
           </article>
         )}
 
+        {/* TOP controls (pager) */}
+        {totalPages > 1 && (
+          <div className="mt-4 flex items-center justify-between text-sm text-gray-600">
+            <div>
+              Page <strong>{page}</strong> of <strong>{totalPages}</strong> •{" "}
+              Top-level replies: <strong>{totalTopLevel}</strong>
+            </div>
+            {/* <Pager page={page} totalPages={totalPages} onGo={goToPage} /> */}
+            <Pager
+              page={page}
+              totalPages={totalPages}
+              hasPrev={hasPrev}
+              hasNext={hasNext}
+              onGo={goToPage}
+            />
+          </div>
+        )}
+
         {(() => {
           const byParent: Record<number, ForumPost[]> = {};
           posts.slice(1).forEach((p) => {
@@ -757,10 +881,16 @@ export default function ThreadPage() {
             return thread?.latest_first ? tb - ta : ta - tb;
           });
 
+          // const reload = async () => {
+          //   const data = await getForumThread(threadId);
+          //   setThread(data.thread);
+          //   setPosts(data.posts);
+          // };
+
           const reload = async () => {
-            const data = await getForumThread(threadId);
-            setThread(data.thread);
-            setPosts(data.posts);
+            const r = await getForumThreadPaged(threadId, page, pageSize);
+            setThread(r.thread);
+            setPosts(r.posts);
           };
 
           return (
@@ -791,6 +921,13 @@ export default function ThreadPage() {
           );
         })()}
       </section>
+
+      {/* BOTTOM controls (pager) */}
+      {totalPages > 1 && (
+        <div className="mt-4">
+          <Pager page={page} totalPages={totalPages} onGo={goToPage} />
+        </div>
+      )}
 
       <div className="mt-6 border rounded-lg p-4">
         <h3 className="font-semibold mb-2">

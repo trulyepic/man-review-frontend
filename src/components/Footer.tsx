@@ -50,7 +50,7 @@ const Footer = () => {
                   Terms
                 </span>
               </li>
-              <li>
+              {/* <li>
                 <a
                   href="https://github.com/trulyepic/man-review-frontend"
                   target="_blank"
@@ -59,7 +59,7 @@ const Footer = () => {
                 >
                   GitHub
                 </a>
-              </li>
+              </li> */}
               <li>
                 <a
                   href="/how-rankings-work"

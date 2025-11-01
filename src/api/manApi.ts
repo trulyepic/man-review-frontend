@@ -560,12 +560,25 @@ export type UpdateThreadResponse = {
   first_post: ForumPost | null;
 };
 
+// export type Paginated<T> = {
+//   items: T[];
+//   page: number;
+//   page_size: number;
+//   total: number;
+//   has_more: boolean;
+// };
+
 export type Paginated<T> = {
   items: T[];
   page: number;
   page_size: number;
   total: number;
-  has_more: boolean;
+  // new fields (standard pagination)
+  total_pages: number;
+  has_prev: boolean;
+  has_next: boolean;
+  // legacy field kept for compatibility if you used it elsewhere
+  has_more?: boolean;
 };
 
 export type ReadingListPreview = {
@@ -574,6 +587,17 @@ export type ReadingListPreview = {
   is_public: boolean;
   share_token: string;
   item_count: number;
+};
+
+export type ThreadPostsPage = {
+  thread: ForumThread;
+  posts: ForumPost[]; // OP first
+  page: number;
+  page_size: number;
+  total_top_level: number;
+  total_pages: number;
+  has_prev: boolean;
+  has_next: boolean;
 };
 
 // ---------- Small helpers ----------
@@ -974,6 +998,24 @@ export async function listForumThreads(
   return res.data;
 }
 
+export async function listForumThreadsPaged(
+  q = "",
+  page = 1,
+  page_size = 20,
+  opts?: { author_id?: number; signal?: AbortSignal }
+): Promise<Paginated<ForumThread>> {
+  const res = await api.get<Paginated<ForumThread>>("/forum/threads-paged", {
+    params: {
+      q: q || undefined,
+      page,
+      page_size,
+      ...(opts?.author_id != null ? { author_id: opts.author_id } : {}),
+    },
+    signal: opts?.signal,
+  });
+  return res.data;
+}
+
 export async function createForumThread(input: {
   title: string;
   first_post_markdown: string;
@@ -1023,6 +1065,18 @@ export async function getForumThread(
 ): Promise<{ thread: ForumThread; posts: ForumPost[] }> {
   const res = await api.get<{ thread: ForumThread; posts: ForumPost[] }>(
     `/forum/threads/${thread_id}`
+  );
+  return res.data;
+}
+
+export async function getForumThreadPaged(
+  thread_id: number,
+  page = 1,
+  page_size = 25
+): Promise<ThreadPostsPage> {
+  const res = await api.get<ThreadPostsPage>(
+    `/forum/threads/${thread_id}/posts-paged`,
+    { params: { page, page_size } }
   );
   return res.data;
 }

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  listForumThreads,
   createForumThread,
   type ForumThread,
   type ForumSeriesRef,
@@ -8,8 +7,9 @@ import {
   deleteForumThread,
   getForumThread,
   updateForumThread,
+  listForumThreadsPaged,
 } from "../api/manApi";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useUser } from "../login/useUser";
 import { Helmet } from "react-helmet";
 import { stripMdHeading } from "../util/strings";
@@ -58,6 +58,73 @@ function SeriesRefPill({ s }: { s: ForumThread["series_refs"][number] }) {
   );
 }
 
+function Pager({
+  page,
+  totalPages,
+  hasPrev,
+  hasNext,
+  onGo,
+}: {
+  page: number;
+  totalPages: number;
+  hasPrev?: boolean;
+  hasNext?: boolean;
+  onGo: (p: number) => void;
+}) {
+  const nums: number[] = [];
+  const add = (n: number) => {
+    if (n >= 1 && n <= totalPages) nums.push(n);
+  };
+  add(1);
+  add(2);
+  for (let n = page - 2; n <= page + 2; n++) add(n);
+  add(totalPages - 1);
+  add(totalPages);
+  const unique = Array.from(new Set(nums)).sort((a, b) => a - b);
+
+  return (
+    <nav
+      className="flex items-center gap-2 text-sm mt-4"
+      aria-label="Pagination"
+    >
+      <button
+        className="px-2 py-1 border rounded disabled:opacity-50"
+        onClick={() => onGo(page - 1)}
+        disabled={hasPrev === undefined ? page <= 1 : !hasPrev}
+        // disabled={page <= 1}
+      >
+        Prev
+      </button>
+      {unique.map((n, i) => {
+        const prev = unique[i - 1];
+        const gap = prev != null && n - prev > 1;
+        return (
+          <span key={n} className="flex items-center">
+            {gap && <span className="px-1">…</span>}
+            <button
+              className={`px-2 py-1 border rounded ${
+                n === page ? "bg-gray-100 font-semibold" : ""
+              }`}
+              onClick={() => onGo(n)}
+              aria-current={n === page ? "page" : undefined}
+            >
+              {n}
+            </button>
+          </span>
+        );
+      })}
+      <button
+        className="px-2 py-1 border rounded disabled:opacity-50"
+        onClick={() => onGo(page + 1)}
+        // disabled={page >= totalPages}
+        disabled={hasNext === undefined ? page >= totalPages : !hasNext}
+      >
+        Next
+      </button>
+    </nav>
+  );
+}
+
 export default function ForumPage() {
   const [q, setQ] = useState("");
   const [threads, setThreads] = useState<ForumThread[]>([]);
@@ -70,6 +137,14 @@ export default function ForumPage() {
   const { user } = useUser();
   const notice = useNotice();
 
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(15); // tweak if you like
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [hasPrev, setHasPrev] = useState(false);
+  const [hasNext, setHasNext] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const myName = user?.username || "";
   const isAdmin = (user?.role || "").toUpperCase() === "ADMIN";
 
@@ -80,22 +155,60 @@ export default function ForumPage() {
     ? `Forum search “${q.trim()}” — Toon Ranks`
     : "Forum — Toon Ranks";
 
-  const load = async () => {
-    const data = await listForumThreads(q);
-    setThreads(promotePatchNotes(data.slice()));
+  // keep URL as the source of truth for the current page
+  useEffect(() => {
+    const p = parseInt(searchParams.get("page") || "1", 10);
+    setPage(Number.isFinite(p) && p > 0 ? p : 1);
+  }, [searchParams]);
 
-    if (user) {
-      const all = await listForumThreads("", 1, 1000);
-      setMyThreadCount(all.filter((t) => t.author_username === myName).length);
+  // const load = async () => {
+  //   const data = await listForumThreads(q);
+  //   setThreads(promotePatchNotes(data.slice()));
+
+  //   if (user) {
+  //     const all = await listForumThreads("", 1, 1000);
+  //     setMyThreadCount(all.filter((t) => t.author_username === myName).length);
+  //   } else {
+  //     setMyThreadCount(0);
+  //   }
+  // };
+
+  const load = async () => {
+    const r = await listForumThreadsPaged(q, page, pageSize);
+    // Only promote pinned/patch notes on page 1 to avoid duplicates
+    const items =
+      page === 1 ? promotePatchNotes(r.items.slice()) : r.items.slice();
+
+    setThreads(items);
+    setTotal(r.total);
+    setTotalPages(r.total_pages);
+    setHasPrev(r.has_prev);
+    setHasNext(r.has_next);
+
+    // Optional: get "my threads" count fast without fetching 1000 rows
+    if (user?.id) {
+      try {
+        const mine = await listForumThreadsPaged("", 1, 1, {
+          author_id: user.id,
+        });
+        setMyThreadCount(mine.total ?? 0); // stays a number
+      } catch {
+        setMyThreadCount(0);
+      }
     } else {
       setMyThreadCount(0);
     }
   };
 
+  // useEffect(() => {
+  //   load();
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [q, user?.username]);
+
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q, user?.username]);
+  }, [q, page, user?.id]);
 
   const onClickNewThread = () => {
     if (!user) {
@@ -121,6 +234,15 @@ export default function ForumPage() {
     const isOwner = t.author_username === myName;
     if (!(isAdmin || isOwner) || deletingId) return;
     setConfirmThread(t);
+  };
+
+  const goToPage = (p: number) => {
+    const next = Math.max(1, Math.min(totalPages, p));
+    const qp: Record<string, string> = {};
+    if (q.trim()) qp.q = q.trim();
+    qp.page = String(next);
+    setSearchParams(qp);
+    // `useEffect` above will react to this and call load()
   };
 
   return (
@@ -155,6 +277,36 @@ export default function ForumPage() {
         >
           + New Thread
         </button>
+      </div>
+
+      {/* TOP controls (totals + pager) */}
+      <div className="flex items-center justify-between mt-2">
+        <div className="text-sm text-gray-600">
+          Showing <strong>{threads.length}</strong> of <strong>{total}</strong>
+          {q.trim() ? <> results for “{q.trim()}”</> : <> threads</>}
+          {totalPages > 1 && (
+            <>
+              {" "}
+              — page {page} of {totalPages}
+            </>
+          )}
+          {/* ← Add the badge here */}
+          {user && myThreadCount > 0 && (
+            <span className="ml-3 inline-block text-xs px-2 py-0.5 border rounded">
+              Your threads: <strong>{myThreadCount}</strong>
+            </span>
+          )}
+        </div>
+        {totalPages > 1 && (
+          // <Pager page={page} totalPages={totalPages} onGo={goToPage} />
+          <Pager
+            page={page}
+            totalPages={totalPages}
+            hasPrev={hasPrev}
+            hasNext={hasNext}
+            onGo={goToPage}
+          />
+        )}
       </div>
 
       <input
@@ -262,6 +414,13 @@ export default function ForumPage() {
           );
         })}
       </ul>
+
+      {/* BOTTOM controls (pager) */}
+      {totalPages > 1 && (
+        <div className="mt-4">
+          <Pager page={page} totalPages={totalPages} onGo={goToPage} />
+        </div>
+      )}
 
       {/* CREATE */}
       {showNew && (
