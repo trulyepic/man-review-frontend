@@ -100,7 +100,7 @@ function ListItems({
         if (ignore) return;
         setItems(res.items);
         setPage(res.page + 1);
-        setHasMore(res.has_more);
+        setHasMore(!!res.has_more);
       } finally {
         if (!ignore) setLoading(false);
       }
@@ -150,7 +150,7 @@ function ListItems({
       const incoming = res.items.filter((i) => !existing.has(i.series_id));
       setItems((prev) => [...prev, ...incoming]);
       setPage(res.page + 1);
-      setHasMore(res.has_more);
+      setHasMore(!!res.has_more);
     } finally {
       setLoading(false);
     }
@@ -602,7 +602,7 @@ export default function MyReadingListsPage() {
         return nextOpen;
       });
 
-      setHasMore(res.has_more);
+      setHasMore(!!res.has_more);
       setPage(res.page + 1);
     } catch (e) {
       setError((e as Error).message || "Failed to load lists");
