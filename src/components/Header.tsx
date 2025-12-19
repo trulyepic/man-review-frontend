@@ -201,8 +201,9 @@ const Header = () => {
             {/* <div className="flex-1" /> */}
 
             {/* Socials and Ex-hibt Link */}
-            <div className="flex items-center gap-4">
-              {/* <SocialLinks variant="header" /> */}
+            {/* deactivated website */}
+            {/* <div className="flex items-center gap-4">
+              
               <a
                 href="https://ex-hibt.com/collection-homepage/59"
                 target="_blank"
@@ -217,7 +218,7 @@ const Header = () => {
                 />
                 Ex-hibt
               </a>
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -332,8 +333,8 @@ const Header = () => {
           </NavLink> */}
 
           <SocialLinks variant="header" />
-
-          <a
+          {/* deactivated website */}
+          {/* <a
             href="https://ex-hibt.com/collection-homepage/59"
             target="_blank"
             rel="noopener noreferrer"
@@ -345,7 +346,7 @@ const Header = () => {
               className="w-5 h-5 object-contain"
             />
             Ex-hibt Collections
-          </a>
+          </a> */}
 
           {/* Search form for mobile */}
 
