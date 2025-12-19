@@ -6,7 +6,6 @@ import {
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useSearch } from "./SearchContext";
-import myLogo from "../images/logo/myLogo.png";
 import myHomeLogo from "../images/logo/myHomeLogo.png";
 import SocialLinks from "./SocialLinks";
 import { useEffect, useRef } from "react";
