@@ -13,6 +13,7 @@ import SeriesDetailShimmer from "../components/SeriesDetailShimmer";
 import type { SeriesDetailData } from "../types/types";
 import { Helmet } from "react-helmet";
 import RatingInfoTooltip from "../components/RatingInfoTooltip";
+import { getDisplayVoteCounts } from "../util/displayVoteCounts";
 
 const dummyData = {
   id: 1,
@@ -63,6 +64,9 @@ const SeriesDetailPage = () => {
   });
 
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const [displayCounts, setDisplayCounts] = useState<Record<string, number>>(
+    {}
+  );
 
   const validScores = Object.values(ratings).filter((s) => s !== -1);
   const avgScore =
@@ -125,7 +129,10 @@ const SeriesDetailPage = () => {
         }
 
         setRatings(newRatings);
-        setCounts(detail.vote_counts || {});
+
+        const baseCounts = detail.vote_counts || {};
+        setCounts(baseCounts);
+        setDisplayCounts(getDisplayVoteCounts(baseCounts, Number(id)));
       } catch (err) {
         console.error("Failed to fetch series detail", err);
       }
@@ -338,7 +345,8 @@ const SeriesDetailPage = () => {
                   key={label}
                   label={label}
                   score={score}
-                  count={counts[label]}
+                  // count={counts[label]}
+                  count={displayCounts[label]}
                 />
               ))}
             </div>
