@@ -4,6 +4,7 @@ import { getSeriesDetailById } from "../api/manApi";
 import { UsersIcon } from "@heroicons/react/24/outline";
 import { UserIcon } from "lucide-react";
 import type { SeriesDetailData } from "../types/types";
+import { getDisplayVoteCounts } from "../util/displayVoteCounts";
 
 const ComparePage = () => {
   const location = useLocation();
@@ -99,13 +100,19 @@ const ComparePage = () => {
                     : "-"}
                 </p>
 
-                <p className="text-xs text-gray-600 mb-3">
+                {/*temp comment. will remove when more people vote */}
+                {/* <p className="text-xs text-gray-600 mb-3">
                   Votes: {item.vote_count.toLocaleString()}
-                </p>
+                </p> */}
 
                 <div className="grid grid-cols-1 gap-2 mt-auto">
                   {Object.entries(ratings).map(([label, score]) => {
-                    const voteCount = detail.vote_counts?.[label];
+                    // const voteCount = detail.vote_counts?.[label];
+                    const displayCounts = getDisplayVoteCounts(
+                      detail.vote_counts,
+                      item.id
+                    );
+                    const voteCount = displayCounts[label];
                     return (
                       <div
                         key={label}
@@ -175,14 +182,20 @@ const ComparePage = () => {
                     : "-"}
                 </p>
 
-                <p className="text-xs sm:text-sm text-gray-600 mb-3">
+                {/*temp comment. will remove when more people vote */}
+                {/* <p className="text-xs sm:text-sm text-gray-600 mb-3">
                   Votes: {item.vote_count.toLocaleString()}
-                </p>
+                </p> */}
 
                 <div className="grid grid-cols-1 gap-2 mt-auto">
                   {Object.entries(calculateRatings(detail)).map(
                     ([label, score]) => {
-                      const voteCount = detail.vote_counts?.[label];
+                      // const voteCount = detail.vote_counts?.[label];
+                      const displayCounts = getDisplayVoteCounts(
+                        detail.vote_counts,
+                        item.id
+                      );
+                      const voteCount = displayCounts[label];
                       return (
                         <div
                           key={label}
