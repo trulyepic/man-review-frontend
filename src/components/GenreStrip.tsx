@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useLayoutEffect } from "react";
+import { useRef, useState, useEffect, useLayoutEffect, useMemo } from "react";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 
 type Props = {
@@ -7,10 +7,58 @@ type Props = {
   onSelect: (genre: string | null) => void;
 };
 
+function normalizeKey(input: string) {
+  // lowercase, trim, and remove all non-alphanumeric so:
+  // "SCI FI" === "SCI-FI" === "sci_fi"
+  return input
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "");
+}
+
+// unify known variants to one canonical display label
+// add more as needed
+const CANOCICAL_LABEL_BY_KEY: Record<string, string> = {
+  scifi: "Sci-Fi",
+  scifiandfantasy: "Sci-Fi & Fantasy",
+  shounen: "Shounen",
+  shonen: "Shounen",
+  seinen: "Seinen",
+  martialart: "Martial Arts",
+  martialarts: "Martial Arts",
+};
+
+function canonicalizeLabel(raw: string) {
+  const key = normalizeKey(raw);
+  return CANOCICAL_LABEL_BY_KEY[key] ?? raw.trim();
+}
+
 export default function GenreStrip({ genres, active, onSelect }: Props) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+
+  // Build a deduped, canonical list once per genres change
+  const dedupedGenres = useMemo(() => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+
+    for (const raw of genres ?? []) {
+      if (!raw) continue;
+
+      const canonical = canonicalizeLabel(raw);
+      const key = normalizeKey(canonical);
+
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(canonical);
+    }
+
+    return out;
+  }, [genres]);
+
+  const activeKey = normalizeKey(active ?? "");
 
   const updateScrollState = () => {
     const el = scrollerRef.current;
@@ -46,7 +94,7 @@ export default function GenreStrip({ genres, active, onSelect }: Props) {
   useLayoutEffect(() => {
     const id = requestAnimationFrame(updateScrollState);
     return () => cancelAnimationFrame(id);
-  }, [genres]);
+  }, [dedupedGenres]);
 
   // Webtoon-style tabs
   const tabBase =
@@ -78,7 +126,7 @@ export default function GenreStrip({ genres, active, onSelect }: Props) {
               ALL
             </button>
 
-            {(genres ?? []).map((g) => {
+            {/* {(genres ?? []).map((g) => {
               const isActive = (active || "").toLowerCase() === g.toLowerCase();
               return (
                 <button
@@ -90,6 +138,22 @@ export default function GenreStrip({ genres, active, onSelect }: Props) {
                   title={g}
                 >
                   {g.toUpperCase()}
+                </button>
+              );
+            })}
+          </div> */}
+            {dedupedGenres.map((label) => {
+              const isActive = activeKey === normalizeKey(label);
+              return (
+                <button
+                  key={normalizeKey(label)} // stable + dedup-safe
+                  className={`${tabBase} ${
+                    isActive ? tabActive : tabIdle
+                  } flex-shrink-0`}
+                  onClick={() => onSelect(label)} // return canonical label
+                  title={label}
+                >
+                  {label.toUpperCase()}
                 </button>
               );
             })}
