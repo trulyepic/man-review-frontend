@@ -10,6 +10,7 @@ import {
 } from "../api/manApi";
 import { ItemRowsShimmerBlock } from "../components/ReadingListShimmers";
 import ShimmerBox from "../components/ShimmerBox";
+import { getDisplayVoteCount } from "../util/displayVoteCounts";
 
 const PAGE_SIZE_ITEMS = 25;
 
@@ -325,6 +326,10 @@ export default function PublicReadingListPage() {
                 const s = summaries[it.series_id];
                 const st = s?.status?.toUpperCase();
                 const isLoading = summariesLoading && !s;
+                const displayVoteCount = getDisplayVoteCount(
+                  s?.vote_count,
+                  it.series_id
+                );
 
                 return (
                   <li
@@ -447,8 +452,8 @@ export default function PublicReadingListPage() {
                                 : "★ —"}
                             </span>
                             <span className="text-xs text-gray-400">
-                              {s?.vote_count
-                                ? `${s.vote_count} votes`
+                              {displayVoteCount
+                                ? `${displayVoteCount} votes`
                                 : "No votes"}
                             </span>
                           </>
