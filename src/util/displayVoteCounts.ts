@@ -37,3 +37,17 @@ export function getDisplayVoteCounts(
 
   return out;
 }
+
+export function getDisplayVoteCount(
+  actual: number | null | undefined,
+  seriesId: number,
+  label = "total_votes"
+): number | null | undefined {
+  if (typeof actual !== "number") return actual;
+  if (actual >= 10) return actual;
+
+  const seed = hashString(`${seriesId}:${label}`);
+  const rnd = mulberry32(seed)();
+  const bump = 50 + Math.floor(rnd * 100);
+  return actual + bump;
+}
