@@ -28,6 +28,7 @@ export default function ReadingListModal({
   const [error, setError] = useState<string | null>(null);
   const [selectedListId, setSelectedListId] = useState<number | null>(null);
   const [newListName, setNewListName] = useState("");
+  const [leftOffChapter, setLeftOffChapter] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -39,6 +40,7 @@ export default function ReadingListModal({
         const data = await getMyReadingLists();
         setLists(data);
         if (data.length > 0) setSelectedListId(data[0].id);
+        setLeftOffChapter("");
       } catch (e) {
         setError((e as Error).message || "Failed to load lists");
       } finally {
@@ -82,7 +84,11 @@ export default function ReadingListModal({
     setSubmitting(true);
     setError(null);
     try {
-      await addSeriesToReadingList(selectedListId, seriesId);
+      await addSeriesToReadingList(
+        selectedListId,
+        seriesId,
+        leftOffChapter.trim() || null
+      );
       onDone?.();
       onClose();
     } catch (e) {
@@ -158,6 +164,22 @@ export default function ReadingListModal({
                     Create
                   </button>
                 </div>
+              </div>
+            )}
+
+            {seriesId && (
+              <div className="mb-4">
+                <label className="block text-sm text-gray-600 mb-2">
+                  Left off chapter
+                </label>
+                <input
+                  type="text"
+                  className="w-full border rounded px-2 py-1"
+                  placeholder="Optional, e.g. 128 or 128.5"
+                  value={leftOffChapter}
+                  onChange={(e) => setLeftOffChapter(e.target.value)}
+                  maxLength={50}
+                />
               </div>
             )}
 

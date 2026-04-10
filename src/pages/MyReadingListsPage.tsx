@@ -6,6 +6,7 @@ import {
   getReadingListItemsPaged,
   deleteReadingList,
   removeSeriesFromReadingList,
+  updateReadingListItem,
   getSeriesSummary,
   shareReadingList,
   unshareReadingList,
@@ -54,6 +55,9 @@ function ListItems({
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(initialCount > 0);
   const [loading, setLoading] = useState(false);
+  const [savingSeriesId, setSavingSeriesId] = useState<number | null>(null);
+  const [chapterDrafts, setChapterDrafts] = useState<Record<number, string>>({});
+  const [editingSeriesId, setEditingSeriesId] = useState<number | null>(null);
 
   // summaries cache only for items we fetched
   const [summaries, setSummaries] = useState<Record<number, RankedSeries>>({});
@@ -88,6 +92,11 @@ function ListItems({
   const [sortBy, setSortBy] = useState<SortKey>("DEFAULT");
   const [filterStatus, setFilterStatus] = useState<StatusKey>("");
   const toSortable = (it: ReadingListItem) => summaries[it.series_id];
+  const normalizeChapter = (value?: string | null) => value?.trim() ?? "";
+
+  const isChapterDirty = (item: ReadingListItem) =>
+    normalizeChapter(chapterDrafts[item.series_id] ?? item.left_off_chapter) !==
+    normalizeChapter(item.left_off_chapter);
 
   // load first page on mount
   useEffect(() => {
@@ -153,6 +162,40 @@ function ListItems({
       setHasMore(!!res.has_more);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleChapterSave = async (
+    seriesId: number,
+    leftOffChapter: string | null
+  ) => {
+    try {
+      setSavingSeriesId(seriesId);
+      const updatedList = await updateReadingListItem(
+        listId,
+        seriesId,
+        leftOffChapter
+      );
+      const nextItem = updatedList.items.find((item) => item.series_id === seriesId);
+      setItems((prev) =>
+        prev.map((item) =>
+          item.series_id === seriesId
+            ? {
+                ...item,
+                left_off_chapter: nextItem?.left_off_chapter ?? null,
+              }
+            : item
+        )
+      );
+      setChapterDrafts((prev) => ({
+        ...prev,
+        [seriesId]: nextItem?.left_off_chapter ?? "",
+      }));
+      setEditingSeriesId(null);
+    } catch (e) {
+      alert((e as Error).message || "Failed to save chapter");
+    } finally {
+      setSavingSeriesId(null);
     }
   };
 
@@ -536,6 +579,135 @@ function ListItems({
                           </span>
                         </>
                       )}
+                    </div>
+
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      {(() => {
+                        const draftValue =
+                          chapterDrafts[it.series_id] ?? it.left_off_chapter ?? "";
+                        const normalizedDraft = normalizeChapter(draftValue);
+                        const hasSavedChapter = normalizeChapter(it.left_off_chapter) !== "";
+                        const isDirty = isChapterDirty(it);
+                        const isSaving = savingSeriesId === it.series_id;
+                        const isEditing = editingSeriesId === it.series_id;
+
+                        return (
+                          <>
+                            <span className="text-xs font-medium text-gray-500">
+                              Left off chapter
+                            </span>
+                            {isEditing ? (
+                              <>
+                                <input
+                                  id={`chapter-${listId}-${it.series_id}`}
+                                  type="text"
+                                  value={draftValue}
+                                  onChange={(e) => {
+                                    const nextValue = e.target.value;
+                                    setChapterDrafts((prev) => ({
+                                      ...prev,
+                                      [it.series_id]: nextValue,
+                                    }));
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter" && !isSaving && isDirty) {
+                                      e.preventDefault();
+                                      handleChapterSave(
+                                        it.series_id,
+                                        normalizedDraft || null
+                                      );
+                                    }
+                                    if (e.key === "Escape" && !isSaving) {
+                                      setChapterDrafts((prev) => ({
+                                        ...prev,
+                                        [it.series_id]: it.left_off_chapter ?? "",
+                                      }));
+                                      setEditingSeriesId(null);
+                                    }
+                                  }}
+                                  placeholder="Optional"
+                                  maxLength={50}
+                                  autoFocus
+                                  className={`w-36 rounded-md border px-2 py-1 text-xs ${
+                                    isDirty
+                                      ? "border-amber-300 bg-amber-50"
+                                      : "border-gray-200"
+                                  }`}
+                                />
+                                <button
+                                  onClick={() =>
+                                    handleChapterSave(
+                                      it.series_id,
+                                      normalizedDraft || null
+                                    )
+                                  }
+                                  disabled={isSaving || !isDirty}
+                                  className="text-xs px-2.5 py-1 rounded-md bg-blue-100 text-blue-800 hover:bg-blue-200 disabled:opacity-50"
+                                >
+                                  {isSaving ? "Saving..." : "Save"}
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setChapterDrafts((prev) => ({
+                                      ...prev,
+                                      [it.series_id]: it.left_off_chapter ?? "",
+                                    }));
+                                    setEditingSeriesId(null);
+                                  }}
+                                  disabled={isSaving}
+                                  className="text-xs px-2.5 py-1 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
+                                >
+                                  Cancel
+                                </button>
+                                {hasSavedChapter && (
+                                  <button
+                                    onClick={() => handleChapterSave(it.series_id, null)}
+                                    disabled={isSaving}
+                                    className="text-xs px-2.5 py-1 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
+                                  >
+                                    Clear
+                                  </button>
+                                )}
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() => {
+                                    setChapterDrafts((prev) => ({
+                                      ...prev,
+                                      [it.series_id]: it.left_off_chapter ?? "",
+                                    }));
+                                    setEditingSeriesId(it.series_id);
+                                  }}
+                                  className={`text-xs px-2.5 py-1 rounded-md border ${
+                                    hasSavedChapter
+                                      ? "border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100"
+                                      : "border-dashed border-gray-300 text-gray-500 hover:bg-gray-50"
+                                  }`}
+                                >
+                                  {hasSavedChapter
+                                    ? `Chapter ${it.left_off_chapter}`
+                                    : "Add chapter"}
+                                </button>
+                                {hasSavedChapter && (
+                                  <button
+                                    onClick={() => {
+                                      setChapterDrafts((prev) => ({
+                                        ...prev,
+                                        [it.series_id]: it.left_off_chapter ?? "",
+                                      }));
+                                      setEditingSeriesId(it.series_id);
+                                    }}
+                                    className="text-xs px-2.5 py-1 rounded-md bg-gray-100 hover:bg-gray-200"
+                                  >
+                                    Edit
+                                  </button>
+                                )}
+                              </>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
 

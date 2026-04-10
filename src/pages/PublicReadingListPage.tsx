@@ -454,6 +454,11 @@ export default function PublicReadingListPage() {
                           </>
                         )}
                       </div>
+                      {it.left_off_chapter ? (
+                        <div className="mt-2 text-xs font-medium text-gray-500">
+                          Left off chapter: {it.left_off_chapter}
+                        </div>
+                      ) : null}
                     </div>
                   </li>
                 );

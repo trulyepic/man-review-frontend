@@ -532,6 +532,7 @@ export interface RankedSeries {
 // ---------- Reading List Types ----------
 export interface ReadingListItem {
   series_id: number;
+  left_off_chapter?: string | null;
 }
 
 export interface ReadingList {
@@ -886,11 +887,13 @@ export const createReadingList = async (name: string): Promise<ReadingList> => {
 
 export const addSeriesToReadingList = async (
   listId: number,
-  seriesId: number
+  seriesId: number,
+  leftOffChapter?: string | null
 ): Promise<ReadingList> => {
   try {
     const res = await api.post<ReadingList>(`/reading-lists/${listId}/items`, {
       series_id: seriesId,
+      left_off_chapter: leftOffChapter ?? null,
     });
     return res.data;
   } catch (err: unknown) {
@@ -910,6 +913,43 @@ export const removeSeriesFromReadingList = async (
     return res.data;
   } catch (err: unknown) {
     const detail = extractApiDetail(err, "Failed to remove series from list");
+    throw new Error(detail);
+  }
+};
+
+export const updateReadingListItem = async (
+  listId: number,
+  seriesId: number,
+  leftOffChapter?: string | null
+): Promise<ReadingList> => {
+  try {
+    const res = await api.patch<ReadingList>(
+      `/reading-lists/${listId}/items/${seriesId}`,
+      {
+        left_off_chapter: leftOffChapter ?? null,
+      }
+    );
+    return res.data;
+  } catch (err: unknown) {
+    if (
+      isAxiosError(err) &&
+      (err.response?.status === 404 || err.response?.status === 405)
+    ) {
+      try {
+        const res = await api.post<ReadingList>(`/reading-lists/${listId}/items`, {
+          series_id: seriesId,
+          left_off_chapter: leftOffChapter ?? null,
+        });
+        return res.data;
+      } catch (fallbackErr: unknown) {
+        const detail = extractApiDetail(
+          fallbackErr,
+          "Failed to update reading progress"
+        );
+        throw new Error(detail);
+      }
+    }
+    const detail = extractApiDetail(err, "Failed to update reading progress");
     throw new Error(detail);
   }
 };
@@ -1205,7 +1245,12 @@ export async function updateForumThreadSettings(
 // ---------- Reading Lists (new helpers) ----------
 export interface PublicReadingList {
   name: string;
-  items: { series_id: number; title?: string; cover_url?: string }[];
+  items: {
+    series_id: number;
+    title?: string;
+    cover_url?: string;
+    left_off_chapter?: string | null;
+  }[];
 }
 
 /** Owner-only: make list public (ensures share_token server-side) */
@@ -1231,9 +1276,10 @@ export const unshareReadingList = async (
 export const getPublicReadingList = async (
   token: string
 ): Promise<PublicReadingList> => {
-  const res = await api.get<{ name: string; items: { series_id: number }[] }>(
-    `/reading-lists/public/${token}`
-  );
+  const res = await api.get<{
+    name: string;
+    items: { series_id: number; left_off_chapter?: string | null }[];
+  }>(`/reading-lists/public/${token}`);
 
   // lightweight enrichment so the UI can show covers/titles
   const items = await Promise.all(
@@ -1244,6 +1290,7 @@ export const getPublicReadingList = async (
           series_id: it.series_id,
           title: s.title,
           cover_url: s.cover_url,
+          left_off_chapter: it.left_off_chapter ?? null,
         };
       } catch {
         return it;
@@ -1386,8 +1433,8 @@ export const getReadingListItemsPaged = async (
   page = 1,
   page_size = 25,
   signal?: AbortSignal
-): Promise<Paginated<{ series_id: number }>> => {
-  const res = await api.get<Paginated<{ series_id: number }>>(
+): Promise<Paginated<ReadingListItem>> => {
+  const res = await api.get<Paginated<ReadingListItem>>(
     `/reading-lists/${listId}/items/paged`,
     { params: { page, page_size }, signal }
   );
