@@ -42,6 +42,16 @@ function statusClass(status?: string): string {
   }
 }
 
+function statChipClass(tone: "neutral" | "accent" | "muted" = "neutral"): string {
+  if (tone === "accent") {
+    return "inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700 ring-1 ring-inset ring-blue-100";
+  }
+  if (tone === "muted") {
+    return "inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-500 ring-1 ring-inset ring-slate-200";
+  }
+  return "inline-flex items-center rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600 ring-1 ring-inset ring-slate-200";
+}
+
 /** Child that loads/paginates items only when mounted (list expanded). */
 function ListItems({
   listId,
@@ -327,14 +337,16 @@ function ListItems({
   ) : (
     <>
       {/* 🔽 NEW: Filter bar */}
-      <div className="px-4 pt-3 pb-2 border-b bg-white/60 backdrop-blur-sm">
+      <div className="border-b border-slate-200/80 bg-slate-50/80 px-5 py-4 backdrop-blur-sm">
         <div className="flex flex-wrap items-end gap-3">
-          <div className="flex flex-col">
-            <label className="text-xs text-gray-500">Type</label>
+          <div className="flex min-w-[110px] flex-col gap-1">
+            <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Type
+            </label>
             <select
               value={filterType}
               onChange={handleTypeChange}
-              className="border rounded-md px-2 py-1 text-sm"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-200"
             >
               <option value="">All</option>
               <option value="MANHWA">Manhwa</option>
@@ -343,12 +355,14 @@ function ListItems({
             </select>
           </div>
 
-          <div className="flex flex-col">
-            <label className="text-xs text-gray-500">Status</label>
+          <div className="flex min-w-[130px] flex-col gap-1">
+            <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Status
+            </label>
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value as StatusKey)}
-              className="border rounded-md px-2 py-1 text-sm"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-200"
             >
               <option value="">All</option>
               <option value="ONGOING">Ongoing</option>
@@ -360,12 +374,14 @@ function ListItems({
           </div>
 
           {/* Sort (from previous step) */}
-          <div className="flex flex-col">
-            <label className="text-xs text-gray-500">Sort</label>
+          <div className="flex min-w-[180px] flex-col gap-1">
+            <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Sort
+            </label>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortKey)}
-              className="border rounded-md px-2 py-1 text-sm"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-200"
             >
               <option value="DEFAULT">Default (list order)</option>
               <option value="RANK_ASC">Rank ↑</option>
@@ -462,18 +478,16 @@ function ListItems({
               );
 
               return (
-                <li
-                  key={it.series_id}
-                  className="flex items-center gap-3 px-4 py-3"
-                >
-                  <div className="relative">
+                <li key={it.series_id} className="px-4 py-4 sm:px-5">
+                  <div className="flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_12px_30px_-24px_rgba(15,23,42,0.55)] transition hover:border-slate-300/80 hover:shadow-[0_18px_40px_-28px_rgba(15,23,42,0.65)]">
+                  <div className="relative shrink-0">
                     {isThumbLoading ? (
-                      <ShimmerBox className="h-16 w-12 rounded-md" />
+                      <ShimmerBox className="h-24 w-16 rounded-2xl" />
                     ) : s?.cover_url ? (
                       <img
                         src={s.cover_url}
                         alt={s?.title || `Series ${it.series_id}`}
-                        className="h-16 w-12 object-cover rounded-md bg-gray-100"
+                        className="h-24 w-16 rounded-2xl bg-slate-100 object-cover shadow-sm"
                         loading="lazy"
                         decoding="async"
                         width={80}
@@ -481,7 +495,7 @@ function ListItems({
                       />
                     ) : (
                       <div
-                        className="h-16 w-12 rounded-md bg-gray-100 flex items-center justify-center text-[10px] text-gray-400"
+                        className="flex h-24 w-16 items-center justify-center rounded-2xl bg-slate-100 text-[10px] text-slate-400"
                         aria-label={
                           s?.title
                             ? `${s.title} (no cover)`
@@ -493,7 +507,7 @@ function ListItems({
                     )}
 
                     {s?.rank ? (
-                      <span className="absolute -top-2 -left-2 text-[10px] font-bold text-white bg-black/70 px-1.5 py-0.5 rounded-full ring-1 ring-white">
+                      <span className="absolute -left-2 -top-2 rounded-full bg-slate-900/80 px-2 py-1 text-[10px] font-bold text-white ring-2 ring-white">
                         #{s.rank}
                       </span>
                     ) : null}
@@ -518,13 +532,13 @@ function ListItems({
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-start gap-2">
                       {summariesLoading && !s ? (
                         <ShimmerBox className="h-4 w-40 rounded" />
                       ) : (
                         <Link
                           to={`/series/${it.series_id}`}
-                          className="block font-medium hover:underline truncate"
+                          className="block truncate text-base font-semibold text-slate-900 transition hover:text-slate-700 hover:underline"
                           title={s?.title || `Series #${it.series_id}`}
                         >
                           {s?.title || `Series #${it.series_id}`}
@@ -550,34 +564,34 @@ function ListItems({
                       ) : null}
                     </div>
 
-                    <div className="mt-0.5 text-sm text-gray-600 flex items-center gap-3">
+                    <div className="mt-3 flex flex-wrap items-center gap-2.5 text-sm text-slate-600">
                       {summariesLoading && !s ? (
                         <>
-                          <ShimmerBox className="h-3 w-12 rounded" />
-                          <ShimmerBox className="h-3 w-16 rounded" />
-                          <ShimmerBox className="h-3 w-20 rounded" />
+                          <ShimmerBox className="h-7 w-20 rounded-full" />
+                          <ShimmerBox className="h-7 w-20 rounded-full" />
+                          <ShimmerBox className="h-7 w-24 rounded-full" />
                         </>
                       ) : (
                         <>
-                          <span className="uppercase text-xs tracking-wide">
+                          <span className={statChipClass("muted")}>
                             {s?.type || "—"}
                           </span>
                           <span
-                            className={`text-xs font-semibold ${
+                            className={`${statChipClass("accent")} ${
                               (s?.final_score ?? 0) >= 9
-                                ? "text-green-600"
+                                ? "text-emerald-700 bg-emerald-50 ring-emerald-100"
                                 : (s?.final_score ?? 0) >= 7.5
-                                ? "text-blue-500"
+                                ? "text-blue-700 bg-blue-50 ring-blue-100"
                                 : (s?.final_score ?? 0) >= 5
-                                ? "text-yellow-600"
-                                : "text-gray-500"
+                                ? "text-amber-700 bg-amber-50 ring-amber-100"
+                                : "text-slate-500 bg-slate-100 ring-slate-200"
                             }`}
                           >
                             {s?.final_score != null
                               ? `★ ${Number(s.final_score).toFixed(3)}`
                               : "★ —"}
                           </span>
-                          <span className="text-xs text-gray-400">
+                          <span className={statChipClass()}>
                             {displayVoteCount
                               ? `${displayVoteCount} votes`
                               : "No votes"}
@@ -586,7 +600,7 @@ function ListItems({
                       )}
                     </div>
 
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50/90 p-3">
                       {(() => {
                         const draftValue =
                           chapterDrafts[it.series_id] ?? it.left_off_chapter ?? "";
@@ -597,12 +611,19 @@ function ListItems({
                         const isEditing = editingSeriesId === it.series_id;
 
                         return (
-                          <>
-                            <span className="text-xs font-medium text-gray-500">
-                              Left off chapter
-                            </span>
+                          <div className="flex flex-col gap-3">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                              <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                Reading progress
+                              </span>
+                              {!isEditing && hasSavedChapter ? (
+                                <span className="inline-flex items-center rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-200">
+                                  Ch. {it.left_off_chapter}
+                                </span>
+                              ) : null}
+                            </div>
                             {isEditing ? (
-                              <>
+                              <div className="flex flex-wrap items-center gap-2.5">
                                 <input
                                   id={`chapter-${listId}-${it.series_id}`}
                                   type="text"
@@ -633,10 +654,10 @@ function ListItems({
                                   placeholder="Optional"
                                   maxLength={50}
                                   autoFocus
-                                  className={`w-36 rounded-md border px-2 py-1 text-xs ${
+                                  className={`w-36 rounded-xl border px-3 py-2 text-xs shadow-sm outline-none transition ${
                                     isDirty
                                       ? "border-amber-300 bg-amber-50"
-                                      : "border-gray-200"
+                                      : "border-slate-200 bg-white"
                                   }`}
                                 />
                                 <button
@@ -647,7 +668,7 @@ function ListItems({
                                     )
                                   }
                                   disabled={isSaving || !isDirty}
-                                  className="text-xs px-2.5 py-1 rounded-md bg-blue-100 text-blue-800 hover:bg-blue-200 disabled:opacity-50"
+                                  className="rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                   {isSaving ? "Saving..." : "Save"}
                                 </button>
@@ -660,7 +681,7 @@ function ListItems({
                                     setEditingSeriesId(null);
                                   }}
                                   disabled={isSaving}
-                                  className="text-xs px-2.5 py-1 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
+                                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                   Cancel
                                 </button>
@@ -668,14 +689,14 @@ function ListItems({
                                   <button
                                     onClick={() => handleChapterSave(it.series_id, null)}
                                     disabled={isSaving}
-                                    className="text-xs px-2.5 py-1 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
+                                    className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
                                   >
                                     Clear
                                   </button>
                                 )}
-                              </>
+                              </div>
                             ) : (
-                              <>
+                              <div className="flex flex-wrap items-center gap-2.5">
                                 <button
                                   onClick={() => {
                                     setChapterDrafts((prev) => ({
@@ -684,14 +705,14 @@ function ListItems({
                                     }));
                                     setEditingSeriesId(it.series_id);
                                   }}
-                                  className={`text-xs px-2.5 py-1 rounded-md border ${
+                                  className={`rounded-xl px-3 py-2 text-xs font-semibold transition ${
                                     hasSavedChapter
-                                      ? "border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100"
-                                      : "border-dashed border-gray-300 text-gray-500 hover:bg-gray-50"
+                                      ? "border border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
+                                      : "border border-dashed border-slate-300 bg-transparent text-slate-500 hover:bg-white"
                                   }`}
                                 >
                                   {hasSavedChapter
-                                    ? `Chapter ${it.left_off_chapter}`
+                                    ? "Update chapter"
                                     : "Add chapter"}
                                 </button>
                                 {hasSavedChapter && (
@@ -703,21 +724,21 @@ function ListItems({
                                       }));
                                       setEditingSeriesId(it.series_id);
                                     }}
-                                    className="text-xs px-2.5 py-1 rounded-md bg-gray-100 hover:bg-gray-200"
+                                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-100"
                                   >
                                     Edit
                                   </button>
                                 )}
-                              </>
+                              </div>
                             )}
-                          </>
+                          </div>
                         );
                       })()}
                     </div>
                   </div>
 
                   {summariesLoading && !s ? (
-                    <ShimmerBox className="h-7 w-20 rounded-md" />
+                    <ShimmerBox className="h-10 w-20 rounded-xl" />
                   ) : (
                     <button
                       onClick={() => {
@@ -726,11 +747,12 @@ function ListItems({
                           prev.filter((x) => x.series_id !== it.series_id)
                         );
                       }}
-                      className="text-xs px-2.5 py-1 rounded-md bg-gray-200 hover:bg-gray-300"
+                      className="self-start rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
                     >
                       Remove
                     </button>
                   )}
+                  </div>
                 </li>
               );
             })}
@@ -869,7 +891,7 @@ export default function MyReadingListsPage() {
 
   if (error) {
     return (
-      <div className="max-w-5xl mx-auto p-6">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="text-red-600 mb-3">{error}</div>
         <button
           className="px-3 py-1 rounded-md border hover:bg-gray-50"
@@ -882,8 +904,20 @@ export default function MyReadingListsPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
-      {/* <h1 className="text-2xl font-bold mb-6">My Reading Lists</h1> */}
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+      <section className="mb-8 overflow-hidden rounded-[28px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.14),_transparent_34%),linear-gradient(135deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.95))] px-6 py-7 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.45)] sm:px-8">
+        <div className="max-w-3xl">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">
+            Library dashboard
+          </p>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
+            Keep every reading list tidy, scannable, and easy to pick back up.
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">
+            Review your collections, manage sharing, and jump back into each title.
+          </p>
+        </div>
+      </section>
 
       {lists.length === 0 && loading ? (
         <div className="space-y-6">
@@ -911,7 +945,7 @@ export default function MyReadingListsPage() {
           }
         >
           {lists.length === 0 && !loading ? (
-            <div className="text-gray-600">
+            <div className="rounded-[24px] border border-dashed border-slate-300 bg-white/80 px-6 py-12 text-center text-slate-600 shadow-sm">
               No lists yet. Use “+ Create Reading List” on the homepage.
             </div>
           ) : (
@@ -922,10 +956,10 @@ export default function MyReadingListsPage() {
                   <section
                     key={l.id}
                     id={`list-${l.id}`}
-                    className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur-sm shadow-sm"
+                    className="overflow-hidden rounded-[28px] border border-slate-200 bg-white/90 shadow-[0_22px_55px_-40px_rgba(15,23,42,0.45)] backdrop-blur-sm"
                   >
-                    <header className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b">
-                      <div className="flex items-center gap-2 min-w-0">
+                    <header className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200/80 bg-[linear-gradient(180deg,_rgba(248,250,252,0.96),_rgba(255,255,255,0.98))] px-5 py-5">
+                      <div className="min-w-0">
                         <button
                           className="text-left"
                           onClick={() =>
@@ -936,34 +970,36 @@ export default function MyReadingListsPage() {
                           }
                           title={isOpen ? "Collapse" : "Expand"}
                         >
-                          <h2 className="text-lg font-semibold truncate">
+                          <h2 className="flex items-center gap-2 truncate text-xl font-semibold tracking-tight text-slate-950">
                             {isOpen ? "▾ " : "▸ "} {l.name}
                           </h2>
                         </button>
-                        <span
-                          className={`inline-flex items-center text-[11px] px-2 py-0.5 rounded-full ${
-                            l.is_public
-                              ? "bg-emerald-50 text-emerald-700"
-                              : "bg-gray-100 text-gray-700"
-                          }`}
-                          title={
-                            l.is_public
-                              ? "This list is public"
-                              : "This list is private"
-                          }
-                        >
-                          {l.is_public ? "Public" : "Private"}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          ({l.item_count})
-                        </span>
+                        <div className="mt-3 flex flex-wrap items-center gap-2.5">
+                          <span
+                            className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${
+                              l.is_public
+                                ? "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-100"
+                                : "bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-200"
+                            }`}
+                            title={
+                              l.is_public
+                                ? "This list is public"
+                                : "This list is private"
+                            }
+                          >
+                            {l.is_public ? "Public" : "Private"}
+                          </span>
+                          <span className="inline-flex items-center rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-500 ring-1 ring-inset ring-slate-200">
+                            {l.item_count} {l.item_count === 1 ? "title" : "titles"}
+                          </span>
+                        </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center justify-end gap-2">
                         <button
                           onClick={() => toggleShare(l)}
                           disabled={busyId === l.id}
-                          className="text-sm px-3 py-1 rounded-md border hover:bg-gray-50"
+                          className="rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
                           title={
                             l.is_public ? "Make private" : "Share publicly"
                           }
@@ -979,7 +1015,7 @@ export default function MyReadingListsPage() {
                           <button
                             onClick={() => copyPublicUrl(l)}
                             disabled={copyId === l.id}
-                            className="text-sm px-3 py-1 rounded-md bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+                            className="rounded-xl bg-emerald-50 px-3.5 py-2 text-sm font-medium text-emerald-700 ring-1 ring-inset ring-emerald-100 transition hover:bg-emerald-100"
                             title="Copy public URL"
                           >
                             {copyId === l.id ? "Copying…" : "Copy Public URL"}
@@ -989,7 +1025,7 @@ export default function MyReadingListsPage() {
                         <button
                           onClick={() => copyPrivateAnchor(l)}
                           disabled={copyId === l.id}
-                          className="text-sm px-3 py-1 rounded-md bg-gray-100 hover:bg-gray-200"
+                          className="rounded-xl bg-slate-100 px-3.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-200"
                           title="Copy private anchor link"
                         >
                           {copyId === l.id ? "Copying…" : "Copy Private Link"}
@@ -997,7 +1033,7 @@ export default function MyReadingListsPage() {
 
                         <button
                           onClick={() => handleDeleteList(l.id)}
-                          className="text-sm px-3 py-1 rounded-md bg-red-100 text-red-700 hover:bg-red-200"
+                          className="rounded-xl bg-red-50 px-3.5 py-2 text-sm font-medium text-red-700 ring-1 ring-inset ring-red-100 transition hover:bg-red-100"
                         >
                           Delete List
                         </button>
