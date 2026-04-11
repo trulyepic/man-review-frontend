@@ -273,35 +273,59 @@ const Home = () => {
         </script>
       </Helmet>
 
-      <GenreStrip
-        genres={derivedGenres}
-        active={activeGenre}
-        onSelect={(g) => setSearchTerm(g ?? "")}
-      />
-      <div className="flex justify-center px-4">
-        <div className="w-full max-w-7xl py-6">
-          {/* Toolbar: right-aligned */}
-          {(isAdmin || canCreateMoreLists) && (
-            <div className="flex justify-start mb-4 gap-2">
-              {canCreateMoreLists && (
-                <button
-                  onClick={openCreateListOnly}
-                  className="px-5 py-2.5 rounded-md font-medium text-blue-800 bg-blue-100 border border-blue-300 shadow hover:bg-blue-200 transition-all duration-200"
-                >
-                  + Create Reading List
-                </button>
-              )}
-              {isAdmin && (
-                <button
-                  onClick={() => setShowModal(true)}
-                  className="px-5 py-2.5 rounded-md font-medium text-gray-800 bg-white/80 border border-gray-300 shadow hover:bg-white hover:shadow-lg transition-all"
-                >
-                  + Add Series
-                </button>
+      <div className="mx-auto w-full max-w-7xl px-3 pb-8 pt-4 sm:px-6 sm:pb-10 sm:pt-6 lg:px-8">
+        <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white/90 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.45)]">
+          <div className="flex flex-col gap-4 border-b border-slate-200/80 px-3.5 py-4 sm:gap-5 sm:px-6 sm:py-6">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 ring-1 ring-inset ring-slate-200 sm:px-3 sm:py-1.5 sm:text-xs sm:tracking-[0.18em]">
+                  Rankings
+                </span>
+                <span className="inline-flex items-center rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-200 sm:px-3 sm:py-1.5 sm:text-sm">
+                  {items.length} loaded
+                </span>
+                {activeGenre ? (
+                  <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-100 sm:px-3 sm:py-1.5 sm:text-sm">
+                    {activeGenre}
+                  </span>
+                ) : null}
+                {searchTerm.trim() ? (
+                  <span className="inline-flex max-w-full items-center rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-100 sm:px-3 sm:py-1.5 sm:text-sm">
+                    Search: {searchTerm.trim()}
+                  </span>
+                ) : null}
+              </div>
+
+              {(isAdmin || canCreateMoreLists) && (
+                <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
+                  {canCreateMoreLists && (
+                    <button
+                      onClick={openCreateListOnly}
+                      className="w-full rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-medium text-blue-800 shadow-sm transition hover:bg-blue-100 sm:w-auto"
+                    >
+                      + Create Reading List
+                    </button>
+                  )}
+                  {isAdmin && (
+                    <button
+                      onClick={() => setShowModal(true)}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 sm:w-auto"
+                    >
+                      + Add Series
+                    </button>
+                  )}
+                </div>
               )}
             </div>
-          )}
 
+            <GenreStrip
+              genres={derivedGenres}
+              active={activeGenre}
+              onSelect={(g) => setSearchTerm(g ?? "")}
+            />
+          </div>
+
+          <div className="px-3.5 py-6 sm:px-6 sm:py-8">
           {/* {isAdmin && (
             <div className="flex justify-end mb-4">
               <button
@@ -344,7 +368,7 @@ const Home = () => {
                 {items.length === 0 && loading ? (
                   <ShimmerLoader />
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 sm:gap-x-4 sm:gap-y-6 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
                     {items.map((item) => (
                       <ManCard
                         key={item.id}
@@ -396,13 +420,14 @@ const Home = () => {
             />
           )}
 
-          <ReadingListModal
-            open={showListModal}
-            onClose={() => setShowListModal(false)}
-            seriesId={modalSeriesId}
-            onDone={handleModalDone}
-          />
-        </div>
+            <ReadingListModal
+              open={showListModal}
+              onClose={() => setShowListModal(false)}
+              seriesId={modalSeriesId}
+              onDone={handleModalDone}
+            />
+          </div>
+        </section>
         {/* {compareList.length >= 2 && (
           <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
             <Link

@@ -84,11 +84,11 @@ function Pager({
 
   return (
     <nav
-      className="flex items-center gap-2 text-sm mt-4"
+      className="flex flex-wrap items-center gap-2 text-sm"
       aria-label="Pagination"
     >
       <button
-        className="px-2 py-1 border rounded disabled:opacity-50"
+        className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
         onClick={() => onGo(page - 1)}
         disabled={hasPrev === undefined ? page <= 1 : !hasPrev}
         // disabled={page <= 1}
@@ -102,8 +102,10 @@ function Pager({
           <span key={n} className="flex items-center">
             {gap && <span className="px-1">…</span>}
             <button
-              className={`px-2 py-1 border rounded ${
-                n === page ? "bg-gray-100 font-semibold" : ""
+              className={`rounded-full border px-3 py-1.5 transition ${
+                n === page
+                  ? "border-slate-900 bg-slate-900 font-semibold text-white"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
               }`}
               onClick={() => onGo(n)}
               aria-current={n === page ? "page" : undefined}
@@ -114,7 +116,7 @@ function Pager({
         );
       })}
       <button
-        className="px-2 py-1 border rounded disabled:opacity-50"
+        className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
         onClick={() => onGo(page + 1)}
         // disabled={page >= totalPages}
         disabled={hasNext === undefined ? page >= totalPages : !hasNext}
@@ -151,9 +153,14 @@ export default function ForumPage() {
   const siteUrl = "https://toonranks.com";
   const isSearching = !!q.trim();
   const canonical = `${siteUrl}/forum`;
-  const pageTitle = isSearching
-    ? `Forum search “${q.trim()}” — Toon Ranks`
-    : "Forum — Toon Ranks";
+  const queryLabel = q.trim();
+  const pageTitleSafe = isSearching
+    ? `Forum search "${queryLabel}" - Toon Ranks`
+    : "Forum - Toon Ranks";
+  const pageDescription = isSearching
+    ? `Search results for "${queryLabel}" in the Toon Ranks forum.`
+    : "Community forum on Toon Ranks.";
+  const resultsLabel = isSearching ? `results for "${queryLabel}"` : "threads";
 
   // keep URL as the source of truth for the current page
   useEffect(() => {
@@ -246,19 +253,12 @@ export default function ForumPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-6 relative bg-[radial-gradient(900px_260px_at_50%_-100px,rgba(99,102,241,0.10),transparent)]">
+    <div className="relative mx-auto max-w-5xl bg-[radial-gradient(900px_260px_at_50%_-100px,rgba(99,102,241,0.10),transparent)] px-3 py-6 sm:px-6 sm:py-8">
       <Helmet>
-        <title>{pageTitle}</title>
+        <title>{pageTitleSafe}</title>
         <link rel="canonical" href={canonical} />
-        <meta
-          name="description"
-          content={
-            isSearching
-              ? `Search results for “${q.trim()}” in the Toon Ranks forum.`
-              : "Community forum on Toon Ranks."
-          }
-        />
-        <meta property="og:title" content={pageTitle} />
+        <meta name="description" content={pageDescription} />
+        <meta property="og:title" content={pageTitleSafe} />
         <meta property="og:description" content="Join community discussions." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={canonical} />
@@ -269,52 +269,69 @@ export default function ForumPage() {
         <meta name="twitter:card" content="summary_large_image" />
       </Helmet>
 
-      <div className="flex items-center justify-between gap-3 mb-4">
-        <h1 className="text-2xl font-bold">Forum</h1>
+      <div className="mb-4 rounded-[2rem] border border-slate-200/80 bg-white/80 px-4 py-4 shadow-[0_18px_50px_rgba(15,23,42,0.06)] backdrop-blur-sm sm:mb-6 sm:px-6 sm:py-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="space-y-2">
+            <div className="text-xs font-semibold uppercase tracking-[0.32em] text-slate-500">
+              Community
+            </div>
+            <div className="space-y-2">
+              <h1 className="text-3xl font-semibold tracking-tight text-slate-950">
+                Forum
+              </h1>
+              <p className="max-w-2xl text-sm leading-6 text-slate-600 sm:text-[15px]">
+                Follow updates, start discussions, and keep series talk in one
+                place.
+              </p>
+            </div>
+          </div>
         <button
           onClick={onClickNewThread}
-          className="px-3 py-1.5 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+          className="inline-flex w-full items-center justify-center rounded-full bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 sm:w-auto"
         >
-          + New Thread
+          New Thread
         </button>
+        </div>
       </div>
 
-      {/* TOP controls (totals + pager) */}
-      <div className="flex items-center justify-between mt-2">
-        <div className="text-sm text-gray-600">
+      <div className="mb-4 flex flex-col gap-3 rounded-[1.75rem] border border-slate-200/80 bg-white/80 px-4 py-4 shadow-[0_18px_50px_rgba(15,23,42,0.05)] backdrop-blur-sm sm:px-6">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
           Showing <strong>{threads.length}</strong> of <strong>{total}</strong>
-          {q.trim() ? <> results for “{q.trim()}”</> : <> threads</>}
+          <span>{resultsLabel}</span>
           {totalPages > 1 && (
             <>
               {" "}
-              — page {page} of {totalPages}
+              - page {page} of {totalPages}
             </>
           )}
-          {/* ← Add the badge here */}
+          {/* summary badge */}
           {user && myThreadCount > 0 && (
-            <span className="ml-3 inline-block text-xs px-2 py-0.5 border rounded">
-              Your threads: <strong>{myThreadCount}</strong>
+            <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+              Your threads <strong>{myThreadCount}</strong>
             </span>
           )}
         </div>
         {totalPages > 1 && (
           // <Pager page={page} totalPages={totalPages} onGo={goToPage} />
-          <Pager
-            page={page}
-            totalPages={totalPages}
-            hasPrev={hasPrev}
-            hasNext={hasNext}
-            onGo={goToPage}
-          />
+          <div className="overflow-x-auto pb-1">
+            <Pager
+              page={page}
+              totalPages={totalPages}
+              hasPrev={hasPrev}
+              hasNext={hasNext}
+              onGo={goToPage}
+            />
+          </div>
         )}
+
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search threads..."
+          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+        />
       </div>
 
-      <input
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder="Search threads…"
-        className="w-full mb-4 border rounded px-3 py-2"
-      />
 
       <ul className="space-y-3">
         {threads.map((t) => {
@@ -326,90 +343,94 @@ export default function ForumPage() {
           return (
             <li
               key={t.id}
-              className="relative rounded-2xl p-4 border border-white/70 ring-1 ring-black/5 bg-white/40 backdrop-blur-md shadow-sm hover:shadow-md hover:bg-white/60 transition"
+              className="rounded-2xl border border-white/70 bg-white/40 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md transition hover:bg-white/60 hover:shadow-md"
             >
-              <Link
-                to={`/forum/${t.id}`}
-                className="text-lg font-semibold hover:underline"
-              >
-                {stripMdHeading(t.title)}
-              </Link>
-
-              <div className="flex flex-wrap items-center gap-2 mt-1">
-                <div className="text-xs text-gray-500">
-                  {t.post_count} posts · updated{" "}
-                  {new Date(t.updated_at).toLocaleString()}
-                  {t.author_username ? ` · by ${t.author_username}` : null}
-                </div>
-
-                {isPatchNotes && (
-                  <span className="inline-flex items-center text-[10px] px-1.5 py-0.5 rounded bg-violet-50 text-violet-700">
-                    📌 Pinned
-                  </span>
-                )}
-
-                {t.locked && (
-                  <span className="inline-flex items-center text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
-                    🔒 Locked
-                  </span>
-                )}
-              </div>
-
-              {t.series_refs?.length ? (
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {t.series_refs.map((s) => (
-                    <SeriesRefPill key={s.series_id} s={s} />
-                  ))}
-                </div>
-              ) : null}
-
-              {canDelete && (
-                <div className="absolute top-2 right-2 flex items-center gap-2">
-                  <button
-                    type="button"
-                    title="Edit thread"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setEditingThread(t);
-                      setEditingBody("");
-                      (async () => {
-                        try {
-                          const data = await getForumThread(t.id);
-                          setEditingBody(
-                            data.posts?.[0]?.content_markdown ?? ""
-                          );
-                        } catch {
-                          // silent; keep empty body if fetch fails
-                        }
-                      })();
-                    }}
-                    className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs border hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300"
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <Link
+                    to={`/forum/${t.id}`}
+                    className="text-base font-semibold leading-6 hover:underline sm:text-lg"
                   >
-                    Edit
-                  </button>
+                    {stripMdHeading(t.title)}
+                  </Link>
 
-                  {!t.locked && (
-                    <button
-                      type="button"
-                      title="Delete thread"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        onDeleteThread(t);
-                      }}
-                      disabled={deletingId === t.id}
-                      className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs border ${
-                        deletingId === t.id
-                          ? "opacity-60 cursor-not-allowed"
-                          : "hover:bg-red-50 hover:text-red-700 hover:border-red-300"
-                      }`}
-                    >
-                      {deletingId === t.id ? "Deleting…" : "Delete"}
-                    </button>
+                  {canDelete && (
+                    <div className="flex items-center gap-2 self-start sm:self-auto">
+                      <button
+                        type="button"
+                        title="Edit thread"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setEditingThread(t);
+                          setEditingBody("");
+                          (async () => {
+                            try {
+                              const data = await getForumThread(t.id);
+                              setEditingBody(
+                                data.posts?.[0]?.content_markdown ?? ""
+                              );
+                            } catch {
+                              // silent; keep empty body if fetch fails
+                            }
+                          })();
+                        }}
+                        className="inline-flex items-center rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+                      >
+                        Edit
+                      </button>
+
+                      {!t.locked && (
+                        <button
+                          type="button"
+                          title="Delete thread"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onDeleteThread(t);
+                          }}
+                          disabled={deletingId === t.id}
+                          className={`inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                            deletingId === t.id
+                              ? "cursor-not-allowed border-slate-200 text-slate-400"
+                              : "border-slate-200 text-slate-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700"
+                          }`}
+                        >
+                          {deletingId === t.id ? "Deleting..." : "Delete"}
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
-              )}
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="text-xs text-gray-500">
+                    {t.post_count} posts - updated{" "}
+                    {new Date(t.updated_at).toLocaleString()}
+                    {t.author_username ? ` - by ${t.author_username}` : null}
+                  </div>
+
+                  {isPatchNotes && (
+                    <span className="inline-flex items-center rounded-full bg-violet-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-700">
+                      Pinned
+                    </span>
+                  )}
+
+                  {t.locked && (
+                    <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-800">
+                      Locked
+                    </span>
+                  )}
+                </div>
+
+                {t.series_refs?.length ? (
+                  <div className="flex flex-wrap gap-2">
+                    {t.series_refs.map((s) => (
+                      <SeriesRefPill key={s.series_id} s={s} />
+                    ))}
+                  </div>
+                ) : null}
+              </div>
             </li>
           );
         })}
@@ -474,7 +495,7 @@ export default function ForumPage() {
                 This will remove the original post and all replies.
               </div>
               <div className="rounded bg-gray-50 p-2 text-sm">
-                “{stripMdHeading(confirmThread.title)}”
+                "{stripMdHeading(confirmThread.title)}"
               </div>
             </div>
           }
@@ -721,7 +742,7 @@ function NewThreadModal({
     return () => document.removeEventListener("mousedown", onDocClick);
   }, []);
 
-  // separate “Reference series” search
+  // separate "Reference series" search
   useEffect(() => {
     let active = true;
     (async () => {
@@ -877,12 +898,12 @@ function NewThreadModal({
   const primaryOnClick = mode === "edit" ? save : create;
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl p-4">
-        <div className="flex items-center justify-between mb-3">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4">
+      <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-[1.75rem] bg-white p-4 shadow-xl sm:max-h-[calc(100vh-2rem)] sm:max-w-2xl sm:rounded-xl sm:p-5">
+        <div className="mb-3 flex items-center justify-between">
           <h2 className="text-lg font-semibold">{headerText}</h2>
           <button onClick={onClose} className="text-gray-500">
-            ✕
+            x
           </button>
         </div>
 
@@ -904,7 +925,7 @@ function NewThreadModal({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Thread title"
-          className="w-full border rounded px-3 py-2 mb-3"
+          className="mb-3 w-full rounded-xl border border-slate-200 px-3 py-2.5"
         />
 
         {/* body with @-mention support */}
@@ -914,8 +935,8 @@ function NewThreadModal({
             value={md}
             onChange={onMdChange}
             onKeyDown={onMdKeyDown}
-            placeholder="Say something (Markdown supported)…  Tip: type @ to mention a series"
-            className="w-full border rounded px-3 py-2 h-40"
+            placeholder="Say something (Markdown supported)... Tip: type @ to mention a series"
+            className="h-36 w-full rounded-xl border border-slate-200 px-3 py-2.5 sm:h-40"
           />
 
           {mdMenuOpen && mdResults.length > 0 && (
@@ -971,7 +992,7 @@ function NewThreadModal({
           )}
         </div>
 
-        {/* “Reference series” section */}
+        {/* "Reference series" section */}
         <div className="mt-3">
           <label className="text-sm font-medium">Reference series</label>
           <div className="text-xs text-gray-500 mb-1">
@@ -980,8 +1001,8 @@ function NewThreadModal({
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search series…"
-            className="w-full border rounded px-3 py-2 mt-1"
+            placeholder="Search series..."
+            className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5"
           />
           {results.length > 0 && (
             <div className="mt-2 max-h-40 overflow-auto border rounded p-2 space-y-1">
@@ -1015,13 +1036,16 @@ function NewThreadModal({
           )}
         </div>
 
-        <div className="mt-4 flex justify-end gap-2">
-          <button onClick={onClose} className="px-3 py-1.5 rounded border">
+        <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button
+            onClick={onClose}
+            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 sm:w-auto"
+          >
             Cancel
           </button>
           <button
             onClick={primaryOnClick}
-            className="px-3 py-1.5 rounded bg-blue-600 text-white"
+            className="w-full rounded-xl bg-blue-600 px-3 py-2 text-sm font-semibold text-white sm:w-auto"
           >
             {primaryText}
           </button>

@@ -393,22 +393,16 @@ export default function PublicReadingListPage() {
                       ) : null}
 
                       {st ? (
-                        <div className="absolute bottom-0 right-0 z-10 pointer-events-none select-none md:hidden">
-                          <div
-                            className={
-                              "px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide whitespace-nowrap shadow ring-1 ring-white/70 " +
-                              statusClass(st)
-                            }
-                            style={{
-                              clipPath:
-                                "polygon(0 0, 100% 0, 86% 100%, 0% 100%)",
-                            }}
-                            title={st}
-                            aria-label={`Status: ${st}`}
-                          >
-                            {st}
-                          </div>
-                        </div>
+                        <span
+                          className={
+                            "absolute bottom-2 right-2 inline-flex items-center rounded-full px-2 py-1 text-[9px] font-bold uppercase tracking-[0.16em] shadow-sm ring-1 ring-white/80 md:hidden " +
+                            statusClass(st)
+                          }
+                          title={st}
+                          aria-label={`Status: ${st}`}
+                        >
+                          {st}
+                        </span>
                       ) : null}
                     </div>
 
@@ -429,13 +423,9 @@ export default function PublicReadingListPage() {
                         {st ? (
                           <span
                             className={
-                              "hidden md:inline-block leading-none px-2 py-[2px] text-[10px] font-bold uppercase tracking-wide whitespace-nowrap rounded-sm shadow ring-1 ring-white/70 " +
+                              "hidden md:inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] shadow-sm ring-1 ring-white/80 " +
                               statusClass(st)
                             }
-                            style={{
-                              clipPath:
-                                "polygon(0 0, 100% 0, 90% 100%, 0% 100%)",
-                            }}
                             title={st}
                             aria-label={`Status: ${st}`}
                           >

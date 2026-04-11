@@ -98,19 +98,19 @@ export default function GenreStrip({ genres, active, onSelect }: Props) {
 
   // Webtoon-style tabs
   const tabBase =
-    "whitespace-nowrap px-3 py-2 text-sm md:text-base font-semibold uppercase tracking-wide transition-colors border-b-2 border-transparent";
-  const tabActive = "text-black border-black";
-  const tabIdle = "text-gray-500 hover:text-black";
+    "whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] transition-colors sm:px-3.5 sm:py-2 sm:text-sm sm:tracking-[0.14em]";
+  const tabActive =
+    "bg-slate-900 text-white shadow-[0_10px_24px_-18px_rgba(15,23,42,0.9)]";
+  const tabIdle = "text-slate-500 hover:bg-slate-100 hover:text-slate-900";
 
   return (
-    <div className="relative border-b bg-white">
-      <div className="mx-auto max-w-7xl px-4">
-        <div className="relative py-4">
+    <div className="relative">
+        <div className="relative py-0.5 sm:py-1">
           {/* Scroll row: touch-scroll on mobile, arrows on desktop */}
           <div
             ref={scrollerRef}
             className="
-              flex gap-4 items-center pr-10
+              flex gap-1.5 items-center pr-8 sm:gap-2 sm:pr-10
               overflow-x-auto sm:overflow-x-hidden
               no-scrollbar
               [touch-action:pan-x] [-webkit-overflow-scrolling:touch]
@@ -162,7 +162,7 @@ export default function GenreStrip({ genres, active, onSelect }: Props) {
           {/* Desktop-only arrows */}
           <button
             onClick={() => scrollByX(-240)}
-            className={`hidden sm:flex items-center justify-center absolute left-0 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white border border-gray-300 shadow hover:bg-gray-50 transition-opacity duration-200 z-30 ${
+            className={`hidden sm:flex items-center justify-center absolute left-0 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full border border-slate-200 bg-white shadow-sm hover:bg-slate-50 transition-opacity duration-200 z-30 ${
               canScrollLeft ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
             aria-label="Scroll left"
@@ -174,7 +174,7 @@ export default function GenreStrip({ genres, active, onSelect }: Props) {
 
           <button
             onClick={() => scrollByX(240)}
-            className={`hidden sm:flex items-center justify-center absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white border border-gray-300 shadow hover:bg-gray-50 transition-opacity duration-200 z-30 ${
+            className={`hidden sm:flex items-center justify-center absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full border border-slate-200 bg-white shadow-sm hover:bg-slate-50 transition-opacity duration-200 z-30 ${
               canScrollRight ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
             aria-label="Scroll right"
@@ -184,7 +184,6 @@ export default function GenreStrip({ genres, active, onSelect }: Props) {
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
-      </div>
     </div>
   );
 }

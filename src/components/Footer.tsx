@@ -1,79 +1,74 @@
 import SocialLinks from "./SocialLinks";
 
+const footerLinkClass =
+  "rounded-full px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900";
+
 const Footer = () => {
   return (
-    <footer className="mt-12 bg-gray-100 border-t border-gray-200 py-8">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="text-center text-sm text-gray-500">
-          {/* Social */}
-          <div className="mb-3 flex justify-center">
-            <SocialLinks variant="footer" />
+    <footer className="mt-16 border-t border-slate-200/80 bg-[linear-gradient(180deg,_rgba(248,250,252,0.9),_rgba(255,255,255,1))]">
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="rounded-[28px] border border-slate-200 bg-white/90 px-6 py-8 shadow-[0_20px_50px_-40px_rgba(15,23,42,0.45)] backdrop-blur-sm sm:px-8">
+          <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
+            <div className="max-w-md">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">
+                Toon Ranks
+              </p>
+              <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">
+                Rank, compare, and keep up with the series worth your time.
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-slate-600">
+                Explore manga, manhwa, and manhua with a cleaner way to browse,
+                vote, and track what you want to keep reading.
+              </p>
+            </div>
+
+            <div className="flex flex-col items-start gap-4 md:items-end">
+              <div className="flex items-center gap-3 rounded-full bg-slate-50 px-4 py-2 ring-1 ring-inset ring-slate-200">
+                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Follow
+                </span>
+                <SocialLinks variant="footer" />
+              </div>
+              <p className="text-sm text-slate-500">
+                &copy; {new Date().getFullYear()} ToonRank. All rights reserved.
+              </p>
+            </div>
           </div>
 
-          {/* Links */}
-          <nav aria-label="Footer">
-            <ul className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 md:gap-x-4 text-blue-500 text-sm">
+          <nav aria-label="Footer" className="mt-8">
+            <ul className="flex flex-wrap gap-2">
               <li>
-                <a
-                  href="/about"
-                  className="px-1.5 py-0.5 rounded hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
-                >
+                <a href="/about" className={footerLinkClass}>
                   About
                 </a>
               </li>
               <li>
-                <a
-                  href="/contact"
-                  className="px-1.5 py-0.5 rounded hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
-                >
+                <a href="/contact" className={footerLinkClass}>
                   Contact
                 </a>
               </li>
               <li>
-                <a
-                  href="/report-issue"
-                  className="px-1.5 py-0.5 rounded hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
-                >
+                <a href="/report-issue" className={footerLinkClass}>
                   Report an Issue
                 </a>
               </li>
               <li>
-                <a
-                  href="/issues"
-                  className="px-1.5 py-0.5 rounded hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
-                >
+                <a href="/issues" className={footerLinkClass}>
                   Issues
                 </a>
               </li>
               <li>
-                <span className="px-1.5 py-0.5 text-gray-400 select-none">
-                  Terms
-                </span>
-              </li>
-              {/* <li>
-                <a
-                  href="https://github.com/trulyepic/man-review-frontend"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-1.5 py-0.5 rounded hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
-                >
-                  GitHub
-                </a>
-              </li> */}
-              <li>
-                <a
-                  href="/how-rankings-work"
-                  className="px-1.5 py-0.5 rounded hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
-                >
+                <a href="/how-rankings-work" className={footerLinkClass}>
                   Ranks
                 </a>
               </li>
+              <li>
+                <span className="inline-flex rounded-full px-3 py-1.5 text-sm font-medium text-slate-400">
+                  Terms
+                </span>
+              </li>
             </ul>
           </nav>
-
-          <p className="mt-3 text-sm">
-            &copy; {new Date().getFullYear()} ToonRank. All rights reserved.
-          </p>
         </div>
       </div>
     </footer>

@@ -27,6 +27,35 @@ type Props = {
   status?: "ONGOING" | "COMPLETE" | "HIATUS" | "UNKNOWN" | "SEASON_END" | null;
 };
 
+function statusClasses(status?: Props["status"]) {
+  switch (status) {
+    case "ONGOING":
+      return "bg-emerald-500 text-white";
+    case "COMPLETE":
+      return "bg-blue-600 text-white";
+    case "HIATUS":
+      return "bg-amber-500 text-white";
+    case "UNKNOWN":
+      return "bg-slate-400 text-white";
+    case "SEASON_END":
+      return "bg-violet-600 text-white";
+    default:
+      return "";
+  }
+}
+
+function scoreTone(score?: number) {
+  if (score == null) return "text-slate-500";
+  if (score >= 9) return "text-emerald-600";
+  if (score >= 7.5) return "text-blue-600";
+  if (score >= 5) return "text-amber-500";
+  if (score >= 3) return "text-orange-400";
+  return "text-rose-500";
+}
+
+const pillBase =
+  "inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold transition";
+
 const ManCard = ({
   id,
   rank,
@@ -42,9 +71,9 @@ const ManCard = ({
   artist,
   avgScore,
   onCompareToggle,
+  isCompared,
   onAddToReadingList,
   isInReadingList,
-  isCompared,
   status,
 }: Props) => {
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -52,31 +81,14 @@ const ManCard = ({
   const showListBtn = !!onAddToReadingList;
   const showCompareBtn = !!onCompareToggle;
 
-  const statusClass = (s?: Props["status"]) => {
-    switch (s) {
-      case "ONGOING":
-        return "bg-green-500 text-white";
-      case "COMPLETE":
-        return "bg-blue-600 text-white";
-      case "HIATUS":
-        return "bg-amber-500 text-white";
-      case "UNKNOWN":
-        return "bg-gray-400 text-white";
-      case "SEASON_END":
-        return "bg-purple-600 text-white";
-      default:
-        return ""; // render nothing when null/undefined
-    }
-  };
-  // console.log("status: ", status);
   const ListButton = () => (
     <button
       onClick={(e) => {
         e.preventDefault();
-        onAddToReadingList!();
+        onAddToReadingList?.();
       }}
-      title={isInReadingList ? "In your Reading List" : "Add to Reading List"}
-      className={`px-2 py-0.5 text-xs rounded-full font-semibold ${
+      title={isInReadingList ? "In your reading list" : "Add to reading list"}
+      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold sm:px-2 sm:text-xs ${
         isInReadingList
           ? "bg-blue-500 text-white hover:bg-blue-700"
           : "bg-green-200 text-green-800 hover:bg-green-300"
@@ -85,184 +97,137 @@ const ManCard = ({
       {isInReadingList ? "✓ List" : "+ List"}
     </button>
   );
-  return (
-    <article className="relative w-40">
-      {/* Rank badge */}
-      <div className="absolute top-2 left-2 text-[1.2rem] font-bold text-white bg-black/70 px-2 py-1 rounded-full z-10 shadow-md ring-2 ring-white">
-        {rank !== null && rank !== undefined && typeof rank === "number"
-          ? `#${rank}`
-          : "–"}
-      </div>
 
-      {/* Admin controls */}
+  return (
+    <article className="group relative h-full w-full min-w-0">
+      {rank !== null && rank !== undefined ? (
+        <div className="absolute left-3 top-3 z-10 rounded-full bg-slate-900/80 px-2.5 py-1 text-sm font-bold text-white ring-2 ring-white shadow-sm">
+          {typeof rank === "number" ? `#${rank}` : rank}
+        </div>
+      ) : null}
+
       {isAdmin && (
-        <div className="absolute top-2 right-2 flex gap-1 z-10">
+        <div className="absolute right-3 top-3 z-10 flex gap-1.5">
           <button
-            onClick={onEdit}
+            onClick={(e) => {
+              e.preventDefault();
+              onEdit?.();
+            }}
             title="Edit"
-            className="bg-white/80 rounded-full p-1 shadow hover:bg-blue-100"
+            className="rounded-full bg-white/90 p-1.5 shadow-sm transition hover:bg-blue-50"
           >
-            <PencilSquareIcon className="w-4 h-4 text-blue-500" />
+            <PencilSquareIcon className="h-4 w-4 text-blue-500" />
           </button>
           <button
-            onClick={() => onDelete(id)}
-            className="bg-white/80 rounded-full p-1 shadow hover:bg-red-100"
+            onClick={(e) => {
+              e.preventDefault();
+              onDelete(id);
+            }}
             title="Delete"
+            className="rounded-full bg-white/90 p-1.5 shadow-sm transition hover:bg-rose-50"
           >
-            <TrashIcon className="w-4 h-4 text-red-400" />
+            <TrashIcon className="h-4 w-4 text-rose-400" />
           </button>
         </div>
       )}
 
-      {/* Card image and content */}
       <Link
         to={`/series/${id}`}
         state={{ title, genre, type }}
-        className="block"
+        className="block h-full"
       >
-        {/* <div className="relative w-full">
-          {!imageLoaded && <ShimmerBox className="w-full h-60" />}
+        <div className="flex h-full flex-col overflow-hidden rounded-[20px] border border-slate-200 bg-white shadow-[0_18px_42px_-34px_rgba(15,23,42,0.45)] transition duration-300 group-hover:-translate-y-0.5 group-hover:border-slate-300 group-hover:shadow-[0_22px_50px_-34px_rgba(15,23,42,0.55)] sm:rounded-[22px]">
+          <div className="relative aspect-[2/3] w-full overflow-hidden bg-slate-100">
+            {!imageLoaded && <ShimmerBox className="h-full w-full" />}
+            <img
+              src={coverUrl}
+              alt={`Cover for ${title}`}
+              onLoad={() => setImageLoaded(true)}
+              className={`h-full w-full object-cover transition duration-500 ${
+                imageLoaded
+                  ? "opacity-100 group-hover:scale-[1.03]"
+                  : "absolute left-0 top-0 opacity-0"
+              }`}
+            />
 
-          <img
-            src={coverUrl}
-            alt={`Cover for ${title}`}
-            onLoad={() => setImageLoaded(true)}
-            className={`rounded-md shadow transition-opacity duration-500 w-full object-cover ${
-              imageLoaded ? "opacity-100" : "opacity-0 absolute top-0 left-0"
-            }`}
-          />
-        </div> */}
-        <div className="relative w-full group overflow-hidden rounded-md">
-          {!imageLoaded && <ShimmerBox className="w-full h-60" />}
-
-          <img
-            src={coverUrl}
-            alt={`Cover for ${title}`}
-            onLoad={() => setImageLoaded(true)}
-            className={`transition-all duration-300 ease-in-out w-full h-60 object-cover shadow rounded-md ${
-              imageLoaded
-                ? "opacity-100 group-hover:scale-105 group-hover:shadow-lg"
-                : "opacity-0 absolute top-0 left-0"
-            }`}
-          />
-
-          {status ? (
-            <div className="absolute bottom-2 right-2 z-10 pointer-events-none select-none">
-              <div
-                className={
-                  // keep your colors from statusClass
-                  "px-3 py-1 text-[11px] font-bold uppercase tracking-wide whitespace-nowrap shadow ring-1 ring-white/70 " +
-                  statusClass(status)
-                }
-                // corner ribbon shape that won't get clipped by overflow-hidden
-                style={{
-                  clipPath: "polygon(0 0, 100% 0, 86% 100%, 0% 100%)",
-                }}
-                title={status}
-                aria-label={`Status: ${status}`}
-              >
-                {status.replace("_", " ")}
+            {status ? (
+              <div className="absolute bottom-3 right-3 z-10">
+                <span
+                  className={`${pillBase} ${statusClasses(status)} px-2 py-0.5 text-[10px] shadow-sm ring-1 ring-white/70 sm:px-2.5 sm:py-1 sm:text-[11px]`}
+                  title={status}
+                  aria-label={`Status: ${status}`}
+                >
+                  {status.replace("_", " ")}
+                </span>
               </div>
-            </div>
-          ) : null}
-        </div>
-
-        {/* Content */}
-        <div className="mt-2 space-y-0.5">
-          <h2 className="text-base font-semibold truncate w-full" title={title}>
-            {title}
-          </h2>
-          <p className="text-xs text-gray-500 capitalize flex items-center gap-2.5">
-            {type}
-            {avgScore !== undefined && (
-              <span
-                className={`flex items-center gap-0.5 font-medium ${
-                  avgScore >= 9
-                    ? "text-green-600"
-                    : avgScore >= 7.5
-                    ? "text-blue-500"
-                    : avgScore >= 5
-                    ? "text-yellow-500"
-                    : avgScore >= 3
-                    ? "text-orange-400"
-                    : "text-red-500"
-                }`}
-              >
-                <StarIcon className="w-3.5 h-3.5" strokeWidth={2.5} />
-                {/* {avgScore.toFixed(3)} */}
-                {/* {cleanScore(avgScore)} */}
-                {formatScore(avgScore, 3)}
-              </span>
-            )}
-          </p>
-
-          {author && (
-            <p
-              className="text-sm text-gray-600 flex items-center gap-1"
-              title={author}
-            >
-              <Pencil className="w-4 h-4 text-gray-700 flex-shrink-0" />
-              <span
-                className="truncate"
-                style={{ maxWidth: "calc(100% - 1.25rem)" }}
-              >
-                {author}
-              </span>
-            </p>
-          )}
-          {artist && (
-            <p
-              className="text-sm text-gray-600 flex items-center gap-1"
-              title={artist}
-            >
-              <Palette className="w-4 h-4 text-gray-700 flex-shrink-0" />
-              <span
-                className="truncate"
-                style={{ maxWidth: "calc(100% - 1.25rem)" }}
-              >
-                {artist}
-              </span>
-            </p>
-          )}
-          <div className="flex items-center mt-1 text-sm text-gray-700">
-            {/* LEFT slot */}
-            {showVotes ? (
-              <div className="flex items-center space-x-1">
-                <UserIcon className="w-3.5 h-3.5 text-blue-400" />
-                <span className="text-xs">{votes.toLocaleString()}</span>
-              </div>
-            ) : showListBtn ? (
-              <ListButton />
-            ) : showCompareBtn ? (
-              // compare-left fallback (unchanged)
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  onCompareToggle!();
-                }}
-                title="Select to Compare"
-                className={`px-2 py-0.5 text-xs rounded-full font-semibold ${
-                  isCompared
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-700"
-                }`}
-              >
-                {isCompared ? "✓" : "+"} Compare
-              </button>
             ) : null}
+          </div>
 
-            {/* RIGHT slot */}
-            <div className="ml-auto flex items-center gap-2">
-              {showVotes && showListBtn && <ListButton />}
+          <div className="mt-3 flex flex-1 flex-col space-y-2 px-2 pb-2 sm:mt-4 sm:px-2.5">
+            <h2 className="line-clamp-2 min-h-[2.6rem] w-full text-[15px] font-semibold leading-5 sm:text-base sm:leading-normal" title={title}>
+              {title}
+            </h2>
 
-              {(showVotes || (showListBtn && !showVotes)) && showCompareBtn && (
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] capitalize text-gray-500 sm:gap-2.5 sm:text-xs">
+              {type}
+              {avgScore !== undefined && (
+                <span
+                  className={`flex items-center gap-0.5 font-medium ${scoreTone(
+                    avgScore
+                  )}`}
+                >
+                  <StarIcon className="h-3.5 w-3.5" strokeWidth={2.5} />
+                  {formatScore(avgScore, 3)}
+                </span>
+              )}
+            </p>
+
+            {author && (
+              <p
+                className="flex items-center gap-1 text-[13px] text-gray-600 sm:gap-1.5 sm:text-sm"
+                title={author}
+              >
+                <Pencil className="h-4 w-4 flex-shrink-0 text-gray-700" />
+                <span
+                  className="truncate"
+                  style={{ maxWidth: "calc(100% - 1.25rem)" }}
+                >
+                  {author}
+                </span>
+              </p>
+            )}
+
+            {artist && (
+              <p
+                className="flex items-center gap-1 text-[13px] text-gray-600 sm:gap-1.5 sm:text-sm"
+                title={artist}
+              >
+                <Palette className="h-4 w-4 flex-shrink-0 text-gray-700" />
+                <span
+                  className="truncate"
+                  style={{ maxWidth: "calc(100% - 1.25rem)" }}
+                >
+                  {artist}
+                </span>
+              </p>
+            )}
+
+            <div className="mt-3 flex flex-wrap items-center gap-y-2 text-sm text-gray-700">
+              {showVotes ? (
+                <div className="flex items-center space-x-1">
+                  <UserIcon className="h-3.5 w-3.5 text-blue-400" />
+                  <span className="text-xs">{votes.toLocaleString()}</span>
+                </div>
+              ) : showListBtn ? (
+                <ListButton />
+              ) : showCompareBtn ? (
                 <button
                   onClick={(e) => {
                     e.preventDefault();
-                    onCompareToggle!();
+                    onCompareToggle?.();
                   }}
                   title="Select to Compare"
-                  className={`px-2 py-0.5 text-xs rounded-full font-semibold ${
+                  className={`rounded-full px-2 py-0.5 text-[11px] font-semibold sm:text-xs ${
                     isCompared
                       ? "bg-blue-600 text-white"
                       : "bg-gray-200 text-gray-700"
@@ -270,98 +235,34 @@ const ManCard = ({
                 >
                   {isCompared ? "✓" : "+"} Compare
                 </button>
-              )}
+              ) : null}
+
+              <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+                {showVotes && showListBtn && <ListButton />}
+
+                {(showVotes || (showListBtn && !showVotes)) && showCompareBtn && (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onCompareToggle?.();
+                    }}
+                    title="Select to Compare"
+                    className={`rounded-full px-2 py-0.5 text-[11px] font-semibold sm:text-xs ${
+                      isCompared
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-200 text-gray-700"
+                    }`}
+                  >
+                    {isCompared ? "✓" : "+"} Compare
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-          {/* <div className="flex items-center mt-1 text-sm text-gray-700">
-          
-            {showVotes ? (
-              <div className="flex items-center space-x-1">
-                <UserIcon className="w-3.5 h-3.5 text-blue-400 " />
-                <span className="text-xs">{votes.toLocaleString()}</span>
-              </div>
-            ) : showListBtn ? (
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  onAddToReadingList!();
-                }}
-                title="Add to Reading List"
-                className="px-2 py-0.5 text-xs rounded-full font-semibold bg-green-200 text-green-800 hover:bg-green-300"
-              >
-                + List
-              </button>
-            ) : showCompareBtn ? (
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  onCompareToggle!();
-                }}
-                title="Select to Compare"
-                className={`px-2 py-0.5 text-xs rounded-full font-semibold ${
-                  isCompared
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-700"
-                }`}
-              >
-                {isCompared ? "✓" : "+"} Compare
-              </button>
-            ) : null}
-
-           
-            <div className="ml-auto flex items-center gap-2">
-              {!showVotes && showListBtn && (
-                // (only render on right if it wasn't used on the left)
-                <></>
-              )}
-              {showVotes && showListBtn && (
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onAddToReadingList!();
-                  }}
-                  title="Add to Reading List"
-                  className="px-2 py-0.5 text-xs rounded-full font-semibold bg-green-200 text-green-800 hover:bg-green-300"
-                >
-                  + List
-                </button>
-              )}
-
-             
-              {(showVotes || (showListBtn && !showVotes)) && showCompareBtn && (
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onCompareToggle!();
-                  }}
-                  title="Select to Compare"
-                  className={`px-2 py-0.5 text-xs rounded-full font-semibold ${
-                    isCompared
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-700"
-                  }`}
-                >
-                  {isCompared ? "✓" : "+"} Compare
-                </button>
-              )}
-            </div>
-          </div> */}
         </div>
       </Link>
     </article>
   );
 };
-
-// function cleanScore(value: number | string, sliceLength = 6): string {
-//   const str = String(value).slice(0, sliceLength);
-//   const num = Number(str);
-
-//   // Ensure at least one decimal place
-//   if (Number.isInteger(num)) {
-//     return `${num}.0`;
-//   }
-
-//   return num.toString();
-// }
 
 export default ManCard;
