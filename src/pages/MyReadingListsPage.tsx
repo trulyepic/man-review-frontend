@@ -337,9 +337,9 @@ function ListItems({
   ) : (
     <>
       {/* 🔽 NEW: Filter bar */}
-      <div className="border-b border-slate-200/80 bg-slate-50/80 px-5 py-4 backdrop-blur-sm">
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="flex min-w-[110px] flex-col gap-1">
+      <div className="border-b border-slate-200/80 bg-slate-50/80 px-4 py-4 backdrop-blur-sm sm:px-5">
+        <div className="grid grid-cols-1 gap-3 sm:flex sm:flex-wrap sm:items-end">
+          <div className="flex min-w-0 flex-col gap-1 sm:min-w-[110px]">
             <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
               Type
             </label>
@@ -355,7 +355,7 @@ function ListItems({
             </select>
           </div>
 
-          <div className="flex min-w-[130px] flex-col gap-1">
+          <div className="flex min-w-0 flex-col gap-1 sm:min-w-[130px]">
             <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
               Status
             </label>
@@ -374,7 +374,7 @@ function ListItems({
           </div>
 
           {/* Sort (from previous step) */}
-          <div className="flex min-w-[180px] flex-col gap-1">
+          <div className="flex min-w-0 flex-col gap-1 sm:min-w-[180px]">
             <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
               Sort
             </label>
@@ -395,10 +395,10 @@ function ListItems({
             </select>
           </div>
 
-          {/* Stars ≥ and Votes ≥ */}
-          <div className="flex items-end gap-2">
-            <div className="flex flex-col">
-              <label className="text-xs text-gray-500">Stars ≥</label>
+          {/* Minimum stars and votes */}
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:items-end">
+            <div className="flex min-w-0 flex-col">
+              <label className="text-xs text-gray-500">Stars min.</label>
               <input
                 type="number"
                 step="0.1"
@@ -406,11 +406,11 @@ function ListItems({
                 value={minStars}
                 onChange={(e) => setMinStars(e.target.value)}
                 placeholder="e.g. 7.5"
-                className="w-24 border rounded-md px-2 py-1 text-sm"
+                className="w-full rounded-md border px-2 py-2 text-sm sm:w-24 sm:py-1"
               />
             </div>
-            <div className="flex flex-col">
-              <label className="text-xs text-gray-500">Votes ≥</label>
+            <div className="flex min-w-0 flex-col">
+              <label className="text-xs text-gray-500">Votes min.</label>
               <input
                 type="number"
                 inputMode="numeric"
@@ -418,7 +418,7 @@ function ListItems({
                 value={minVotes}
                 onChange={(e) => setMinVotes(e.target.value)}
                 placeholder="e.g. 100"
-                className="w-28 border rounded-md px-2 py-1 text-sm"
+                className="w-full rounded-md border px-2 py-2 text-sm sm:w-28 sm:py-1"
               />
             </div>
           </div>
@@ -432,7 +432,7 @@ function ListItems({
               setMinVotes("");
               setSortBy("DEFAULT");
             }}
-            className="ml-auto text-xs px-3 py-1 rounded-md bg-gray-100 hover:bg-gray-200"
+            className="rounded-md bg-gray-100 px-3 py-2 text-xs hover:bg-gray-200 sm:ml-auto sm:py-1"
             title="Clear filters"
           >
             Reset
@@ -479,7 +479,7 @@ function ListItems({
 
               return (
                 <li key={it.series_id} className="px-4 py-4 sm:px-5">
-                  <div className="flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_12px_30px_-24px_rgba(15,23,42,0.55)] transition hover:border-slate-300/80 hover:shadow-[0_18px_40px_-28px_rgba(15,23,42,0.65)]">
+                  <div className="flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_12px_30px_-24px_rgba(15,23,42,0.55)] transition hover:border-slate-300/80 hover:shadow-[0_18px_40px_-28px_rgba(15,23,42,0.65)] sm:flex-row sm:items-center">
                   <div className="relative shrink-0">
                     {isThumbLoading ? (
                       <ShimmerBox className="h-24 w-16 rounded-2xl" />
@@ -513,21 +513,16 @@ function ListItems({
                     ) : null}
 
                     {stx ? (
-                      <div className="absolute bottom-0 right-0 z-10 pointer-events-none select-none md:hidden">
-                        <div
-                          className={
-                            "px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide whitespace-nowrap shadow ring-1 ring-white/70 " +
-                            statusClass(stx)
-                          }
-                          style={{
-                            clipPath: "polygon(0 0, 100% 0, 86% 100%, 0% 100%)",
-                          }}
-                          title={stx}
-                          aria-label={`Status: ${stx}`}
-                        >
-                          {stx}
-                        </div>
-                      </div>
+                      <span
+                        className={
+                          "absolute bottom-2 right-2 inline-flex items-center rounded-full px-2 py-1 text-[9px] font-bold uppercase tracking-[0.16em] shadow-sm ring-1 ring-white/80 md:hidden " +
+                          statusClass(stx)
+                        }
+                        title={stx}
+                        aria-label={`Status: ${stx}`}
+                      >
+                        {stx}
+                      </span>
                     ) : null}
                   </div>
 
@@ -548,12 +543,9 @@ function ListItems({
                       {stx ? (
                         <span
                           className={
-                            "hidden md:inline-block leading-none px-2 py-[2px] text-[10px] font-bold uppercase tracking-wide whitespace-nowrap rounded-sm shadow ring-1 ring-white/70 " +
+                            "hidden md:inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] shadow-sm ring-1 ring-white/80 " +
                             statusClass(stx)
                           }
-                          style={{
-                            clipPath: "polygon(0 0, 100% 0, 90% 100%, 0% 100%)",
-                          }}
                           title={stx}
                           aria-label={`Status: ${stx}`}
                         >
@@ -712,23 +704,9 @@ function ListItems({
                                   }`}
                                 >
                                   {hasSavedChapter
-                                    ? "Update chapter"
+                                    ? "Edit chapter"
                                     : "Add chapter"}
                                 </button>
-                                {hasSavedChapter && (
-                                  <button
-                                    onClick={() => {
-                                      setChapterDrafts((prev) => ({
-                                        ...prev,
-                                        [it.series_id]: it.left_off_chapter ?? "",
-                                      }));
-                                      setEditingSeriesId(it.series_id);
-                                    }}
-                                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-100"
-                                  >
-                                    Edit
-                                  </button>
-                                )}
                               </div>
                             )}
                           </div>
@@ -747,7 +725,7 @@ function ListItems({
                           prev.filter((x) => x.series_id !== it.series_id)
                         );
                       }}
-                      className="self-start rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700 sm:w-auto sm:self-start"
                     >
                       Remove
                     </button>
@@ -904,14 +882,14 @@ export default function MyReadingListsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-      <section className="mb-8 overflow-hidden rounded-[28px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.14),_transparent_34%),linear-gradient(135deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.95))] px-6 py-7 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.45)] sm:px-8">
+    <div className="mx-auto max-w-6xl px-3 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <section className="mb-6 overflow-hidden rounded-[28px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.14),_transparent_34%),linear-gradient(135deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.95))] px-4 py-5 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.45)] sm:mb-8 sm:px-8 sm:py-7">
         <div className="max-w-3xl">
           <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">
             Library dashboard
           </p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
-            Keep every reading list tidy, scannable, and easy to pick back up.
+            Your reading lists, organized and ready.
           </h1>
           <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">
             Review your collections, manage sharing, and jump back into each title.
@@ -958,7 +936,7 @@ export default function MyReadingListsPage() {
                     id={`list-${l.id}`}
                     className="overflow-hidden rounded-[28px] border border-slate-200 bg-white/90 shadow-[0_22px_55px_-40px_rgba(15,23,42,0.45)] backdrop-blur-sm"
                   >
-                    <header className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200/80 bg-[linear-gradient(180deg,_rgba(248,250,252,0.96),_rgba(255,255,255,0.98))] px-5 py-5">
+                    <header className="flex flex-col gap-4 border-b border-slate-200/80 bg-[linear-gradient(180deg,_rgba(248,250,252,0.96),_rgba(255,255,255,0.98))] px-4 py-4 sm:px-5 sm:py-5 lg:flex-row lg:items-start lg:justify-between">
                       <div className="min-w-0">
                         <button
                           className="text-left"
@@ -995,11 +973,11 @@ export default function MyReadingListsPage() {
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap items-center justify-end gap-2">
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-center lg:justify-end">
                         <button
                           onClick={() => toggleShare(l)}
                           disabled={busyId === l.id}
-                          className="rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 lg:w-auto"
                           title={
                             l.is_public ? "Make private" : "Share publicly"
                           }
@@ -1015,7 +993,7 @@ export default function MyReadingListsPage() {
                           <button
                             onClick={() => copyPublicUrl(l)}
                             disabled={copyId === l.id}
-                            className="rounded-xl bg-emerald-50 px-3.5 py-2 text-sm font-medium text-emerald-700 ring-1 ring-inset ring-emerald-100 transition hover:bg-emerald-100"
+                            className="w-full rounded-xl bg-emerald-50 px-3.5 py-2 text-sm font-medium text-emerald-700 ring-1 ring-inset ring-emerald-100 transition hover:bg-emerald-100 lg:w-auto"
                             title="Copy public URL"
                           >
                             {copyId === l.id ? "Copying…" : "Copy Public URL"}
@@ -1025,7 +1003,7 @@ export default function MyReadingListsPage() {
                         <button
                           onClick={() => copyPrivateAnchor(l)}
                           disabled={copyId === l.id}
-                          className="rounded-xl bg-slate-100 px-3.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-200"
+                          className="w-full rounded-xl bg-slate-100 px-3.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-200 lg:w-auto"
                           title="Copy private anchor link"
                         >
                           {copyId === l.id ? "Copying…" : "Copy Private Link"}
@@ -1033,7 +1011,7 @@ export default function MyReadingListsPage() {
 
                         <button
                           onClick={() => handleDeleteList(l.id)}
-                          className="rounded-xl bg-red-50 px-3.5 py-2 text-sm font-medium text-red-700 ring-1 ring-inset ring-red-100 transition hover:bg-red-100"
+                          className="w-full rounded-xl bg-red-50 px-3.5 py-2 text-sm font-medium text-red-700 ring-1 ring-inset ring-red-100 transition hover:bg-red-100 lg:w-auto"
                         >
                           Delete List
                         </button>

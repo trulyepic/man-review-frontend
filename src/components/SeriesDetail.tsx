@@ -11,30 +11,6 @@ type Category =
   | "Art"
   | "Drama / Fighting";
 
-// type Props = {
-//   series: {
-//     id: number;
-//     title: string;
-//     genre: string;
-//     type: string;
-//     description: string;
-//   };
-//   updateRating: (category: string, avg: number) => void;
-//   seriesDetail?: {
-//     story_total: number;
-//     story_count: number;
-//     characters_total: number;
-//     characters_count: number;
-//     worldbuilding_total: number;
-//     worldbuilding_count: number;
-//     art_total: number;
-//     art_count: number;
-//     drama_or_fight_total: number;
-//     drama_or_fight_count: number;
-//     voted_categories?: string[];
-//     vote_scores?: Record<string, number>;
-//   } | null;
-// };
 type Props = {
   series: {
     id: number;
@@ -62,7 +38,15 @@ const descriptions: Record<Category, string> = {
   "World Building": "Is the universe immersive, consistent, and imaginative?",
   Art: "Judge the quality of the artwork, paneling, and style.",
   "Drama / Fighting":
-    "For dramas: emotional depth. For action: excitement & choreography.",
+    "For dramas: emotional depth. For action: excitement and choreography.",
+};
+
+const categoryKeyMap: Record<Category, string> = {
+  Story: "story",
+  Characters: "characters",
+  "World Building": "worldbuilding",
+  Art: "art",
+  "Drama / Fighting": "drama_or_fight",
 };
 
 const SeriesDetail = ({ series, updateRating, seriesDetail }: Props) => {
@@ -76,14 +60,6 @@ const SeriesDetail = ({ series, updateRating, seriesDetail }: Props) => {
   const { user } = useUser();
   const isLoggedIn = !!user;
 
-  // const [totals, setTotals] = useState<
-  //   Record<Category, { total: number; count: number }>
-  // >(
-  //   () =>
-  //     Object.fromEntries(
-  //       categories.map((cat) => [cat, { total: 0, count: 0 }])
-  //     ) as Record<Category, { total: number; count: number }>
-  // );
   type TotalsRecord = Record<Category, { total: number; count: number }>;
 
   const [, setTotals] = useState<TotalsRecord>(
@@ -93,7 +69,6 @@ const SeriesDetail = ({ series, updateRating, seriesDetail }: Props) => {
       ) as TotalsRecord
   );
 
-  // Sync backend data after load
   useEffect(() => {
     if (!seriesDetail) return;
 
@@ -121,7 +96,11 @@ const SeriesDetail = ({ series, updateRating, seriesDetail }: Props) => {
     };
 
     const initVotes = categories.reduce((acc, cat) => {
-      const userScore = seriesDetail.vote_scores?.[cat] ?? null;
+      const normalizedKey = categoryKeyMap[cat];
+      const userScore =
+        seriesDetail.vote_scores?.[cat] ??
+        seriesDetail.vote_scores?.[normalizedKey] ??
+        null;
       acc[cat] = userScore;
       return acc;
     }, {} as Record<Category, number | null>);
@@ -129,11 +108,10 @@ const SeriesDetail = ({ series, updateRating, seriesDetail }: Props) => {
     setTotals(initTotals);
     setVotes(initVotes);
 
-    // Update average ratings
     categories.forEach((cat) => {
-      const t = initTotals[cat];
-      if (t.count > 0) {
-        updateRating(cat, t.total / t.count);
+      const totalSet = initTotals[cat];
+      if (totalSet.count > 0) {
+        updateRating(cat, totalSet.total / totalSet.count);
       }
     });
   }, [seriesDetail]);
@@ -156,86 +134,90 @@ const SeriesDetail = ({ series, updateRating, seriesDetail }: Props) => {
         return updated;
       });
     } catch (err) {
-      alert("You can only vote once on this series.");
+      alert("Your vote couldn't be submitted. If you've already voted, your original score is still locked in.");
       console.error("Voting failed:", err);
     }
   };
-  console.log("votes", votes);
-  console.log("vote_scores keys", Object.keys(seriesDetail?.vote_scores || {}));
 
-  //   console.log("sereiesDetail", seriesDetail);
   return (
-    <div className="space-y-6">
-      <p className="text-sm text-red-600 font-medium border border-red-300 bg-red-50 px-4 py-2 rounded-md shadow-sm">
-        ⚠️ You can only vote once per category. Your selections are final.
-      </p>
+    <div className="space-y-5">
+      <div className="rounded-[22px] border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm text-amber-800 shadow-sm">
+        Each category can be rated once. After you submit a score, that choice is locked in.
+      </div>
+
       {categories.map((category) => {
         const hasVoted = votes[category] !== null;
+
         return (
           <div
             key={category}
-            className={`mb-6 p-2 rounded ${
-              hasVoted ? "bg-gray-50 opacity-90" : ""
+            className={`rounded-[24px] border px-4 py-4 shadow-sm transition sm:px-5 ${
+              hasVoted
+                ? "border-blue-100 bg-blue-50/60"
+                : "border-slate-200 bg-slate-50/70"
             }`}
           >
-            <h4 className="font-semibold text-lg mb-2">{category}</h4>
-            <p className="text-sm text-gray-600 mb-2">
-              {descriptions[category]}
-            </p>
-            <div className="flex items-center gap-2 flex-wrap">
-              {[...Array(10)].map((_, i) => {
-                const score = i + 1;
-                const voted = votes[category] === score;
-                const alreadyVoted = votes[category] !== null;
-                const canVote = isLoggedIn && !alreadyVoted;
-                return (
-                  <div className="relative group" key={score}>
-                    <button
-                      onClick={() => handleVote(category, score)}
-                      disabled={!canVote}
-                      className={`relative w-8 h-8 rounded-full text-sm flex items-center justify-center transition duration-200 ${
-                        voted
-                          ? "bg-blue-300 text-white cursor-default"
-                          : !isLoggedIn
-                          ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                          : alreadyVoted
-                          ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                          : "bg-gray-200 hover:bg-blue-300 hover:text-white"
-                      }`}
-                      title={
-                        !isLoggedIn
-                          ? "Please log in or register to vote"
-                          : voted
-                          ? "You already voted"
-                          : `${score} out of 10`
-                      }
-                    >
-                      {voted ? (
-                        <Check
-                          className="text-white w-5 h-5 "
-                          strokeWidth={3}
-                        />
-                      ) : (
-                        score
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="min-w-0 lg:max-w-sm">
+                <h4 className="text-lg font-semibold text-slate-900">
+                  {category}
+                </h4>
+                <p className="mt-1 text-sm leading-6 text-slate-600">
+                  {descriptions[category]}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {[...Array(10)].map((_, i) => {
+                  const score = i + 1;
+                  const voted = votes[category] === score;
+                  const alreadyVoted = votes[category] !== null;
+                  const canVote = isLoggedIn && !alreadyVoted;
+
+                  return (
+                    <div className="relative group" key={score}>
+                      <button
+                        onClick={() => handleVote(category, score)}
+                        disabled={!canVote}
+                        className={`flex h-10 w-10 items-center justify-center rounded-2xl text-sm font-semibold transition ${
+                          voted
+                            ? "bg-blue-600 text-white shadow-sm"
+                            : !isLoggedIn
+                            ? "cursor-not-allowed bg-slate-200 text-slate-400"
+                            : alreadyVoted
+                            ? "cursor-not-allowed bg-slate-200 text-slate-500"
+                            : "bg-white text-slate-700 ring-1 ring-inset ring-slate-200 hover:bg-blue-50 hover:text-blue-700 hover:ring-blue-200"
+                        }`}
+                        title={
+                          !isLoggedIn
+                            ? "Please log in or register to vote"
+                            : voted
+                            ? "You already voted"
+                            : `${score} out of 10`
+                        }
+                      >
+                        {voted ? (
+                          <Check className="h-5 w-5 text-white" strokeWidth={3} />
+                        ) : (
+                          score
+                        )}
+                      </button>
+
+                      {!isLoggedIn && (
+                        <div className="absolute -top-10 left-1/2 z-10 w-max -translate-x-1/2 rounded-lg bg-slate-900 px-2 py-1 text-xs text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100">
+                          Please log in or register to vote
+                        </div>
                       )}
-                    </button>
 
-                    {/* Tooltip for unauthenticated users */}
-                    {!isLoggedIn && (
-                      <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 w-max px-2 py-1 bg-black text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-                        Please log in or register to vote
-                      </div>
-                    )}
-
-                    {/* Tooltip for already voted users (non-selected buttons) */}
-                    {isLoggedIn && alreadyVoted && !voted && (
-                      <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 w-max px-2 py-1 bg-black text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-                        You already voted on this category
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                      {isLoggedIn && alreadyVoted && !voted && (
+                        <div className="absolute -top-10 left-1/2 z-10 w-max -translate-x-1/2 rounded-lg bg-slate-900 px-2 py-1 text-xs text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100">
+                          You already voted on this category
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         );

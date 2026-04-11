@@ -44,13 +44,6 @@ const SeriesDetailPage = () => {
     artist: artist || dummyData.artist,
   });
 
-  // const [seriesDetail, setSeriesDetail] = useState<{
-  //   synopsis: string;
-  //   series_cover_url: string;
-  //   author?: string;
-  //   artist?: string;
-  //   [key: string]: any;
-  // } | null>(null);
   const [seriesDetail, setSeriesDetail] = useState<SeriesDetailData | null>(
     null
   );
@@ -81,17 +74,17 @@ const SeriesDetailPage = () => {
   } {
     if (!d) return {};
     const rec = d as unknown as Record<string, unknown>;
-    const title =
+    const nextTitle =
       typeof rec["title"] === "string"
         ? (rec["title"] as string)
         : typeof rec["series_title"] === "string"
         ? (rec["series_title"] as string)
         : undefined;
-    const type =
+    const nextType =
       typeof rec["type"] === "string" ? (rec["type"] as string) : undefined;
-    const genre =
+    const nextGenre =
       typeof rec["genre"] === "string" ? (rec["genre"] as string) : undefined;
-    return { title, type, genre };
+    return { title: nextTitle, type: nextType, genre: nextGenre };
   }
 
   const { title: fetchedTitle } = pickBasicFromDetail(seriesDetail);
@@ -145,12 +138,12 @@ const SeriesDetailPage = () => {
     let cancelled = false;
     (async () => {
       try {
-        const s = await getSeriesSummary(Number(id)); // RankedSeries
+        const s = await getSeriesSummary(Number(id));
         if (cancelled) return;
         setSeries((prev) => ({
           ...prev,
           id: s.id,
-          title: s.title, // <- authoritative
+          title: s.title,
           genre: s.genre,
           type: s.type,
           author: s.author ?? prev.author,
@@ -175,7 +168,6 @@ const SeriesDetailPage = () => {
   return (
     <>
       <Helmet>
-        {/* <title>{series.title} | Toon Ranks</title> */}
         <title>{displayTitle} | Toon Ranks</title>
         <meta
           name="description"
@@ -185,10 +177,7 @@ const SeriesDetailPage = () => {
           }
         />
         <link rel="canonical" href={`https://toonranks.com/series/${id}`} />
-
-        {/* Open Graph Meta Tags */}
         <meta property="og:type" content="article" />
-        {/* <meta property="og:title" content={`${series.title} | Toon Ranks`} /> */}
         <meta property="og:title" content={`${displayTitle} | Toon Ranks`} />
         <meta
           property="og:description"
@@ -208,10 +197,7 @@ const SeriesDetailPage = () => {
           property="og:url"
           content={`https://toonranks.com/series/${id}`}
         />
-
-        {/* Twitter Card Tags */}
         <meta name="twitter:card" content="summary_large_image" />
-        {/* <meta name="twitter:title" content={`${series.title} | Toon Ranks`} /> */}
         <meta name="twitter:title" content={`${displayTitle} | Toon Ranks`} />
         <meta
           name="twitter:description"
@@ -232,7 +218,7 @@ const SeriesDetailPage = () => {
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "CreativeWorkSeries",
-            name: series.title,
+            name: displayTitle,
             genre: series.genre,
             author: seriesDetail?.author
               ? { "@type": "Person", name: seriesDetail.author }
@@ -259,14 +245,14 @@ const SeriesDetailPage = () => {
         </script>
       </Helmet>
 
-      <div className="max-w-5xl mx-auto px-4 md:px-10 py-6">
+      <div className="mx-auto max-w-6xl px-4 py-6 md:px-8 lg:px-10">
         {isAdmin && (
-          <div className="flex justify-end mb-4">
+          <div className="mb-4 flex justify-end">
             <button
               onClick={() => setShowEditModal(true)}
-              className="px-5 py-2.5 rounded-md font-medium text-gray-800 bg-white/70 backdrop-blur-sm border border-gray-300 shadow-md hover:bg-white hover:shadow-lg hover:text-black transition-all duration-200"
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
             >
-              ✏️ Edit Series Detail
+              Edit Series Detail
             </button>
           </div>
         )}
@@ -275,92 +261,120 @@ const SeriesDetailPage = () => {
           <SeriesDetailShimmer />
         ) : (
           <>
-            <img
-              src={seriesDetail.series_cover_url}
-              // alt={series.title}
-              alt={displayTitle}
-              className="w-full rounded-lg shadow mb-6"
-            />
-
-            {/* Series title and metadata */}
-            <div className="flex flex-col sm:flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
-              <div className="flex-1 min-w-0">
-                <h1 className="text-3xl font-bold mb-1 break-words whitespace-normal">
-                  {/* {series.title} */} {displayTitle}
-                </h1>
-                <div className="flex flex-wrap gap-x-2 gap-y-1 text-sm text-gray-600 capitalize break-words">
-                  <span>{series.type}</span>
-                  <span>|</span>
-                  <span>{series.genre}</span>
-                  {seriesDetail?.author && (
-                    <>
-                      <span>|</span>
-                      <span className="text-gray-700 whitespace-normal break-words">
-                        <strong>Author:</strong> {seriesDetail.author}
-                      </span>
-                    </>
-                  )}
-                  {seriesDetail?.artist && (
-                    <>
-                      <span>|</span>
-                      <span className="text-gray-700 whitespace-normal break-words">
-                        <strong>Artist:</strong> {seriesDetail.artist}
-                      </span>
-                    </>
-                  )}
-                </div>
+            <section className="overflow-hidden rounded-[32px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.12),_transparent_28%),linear-gradient(135deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.96))] shadow-[0_28px_70px_-46px_rgba(15,23,42,0.55)]">
+              <div className="px-5 pt-5 sm:px-7 sm:pt-7 lg:px-8 lg:pt-8">
+                <img
+                  src={seriesDetail.series_cover_url}
+                  alt={displayTitle}
+                  className="w-full rounded-[26px] border border-slate-200 bg-white object-cover shadow-[0_24px_48px_-28px_rgba(15,23,42,0.45)]"
+                />
               </div>
 
-              {avgScore && (
-                <div className="shrink-0 self-start md:self-auto md:ml-6">
-                  <div className="rounded-3xl px-6 py-3 shadow-md text-center">
-                    <div className="text-xs text-gray-600 uppercase tracking-wider mb-1">
-                      Avg. Rating
-                      <RatingInfoTooltip />
+              <div className="px-5 py-5 sm:px-7 sm:py-7 lg:px-8 lg:py-8">
+                <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 ring-1 ring-inset ring-slate-200">
+                        {series.type}
+                      </span>
+                      <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-700 ring-1 ring-inset ring-blue-100">
+                        {series.genre}
+                      </span>
                     </div>
-                    <div
-                      className="text-5xl text-gray-900 leading-none tracking-tight"
-                      style={{
-                        textShadow: "2px 2px 4px rgba(0, 0, 0, 0.25)",
-                        fontWeight: 750,
-                      }}
-                    >
-                      {avgScore}/10
+
+                    <h1 className="mt-4 break-words text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
+                      {displayTitle}
+                    </h1>
+
+                    <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                      {seriesDetail.author ? (
+                        <div className="rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 shadow-sm">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                            Author
+                          </p>
+                          <p className="mt-1 text-sm font-medium text-slate-800">
+                            {seriesDetail.author}
+                          </p>
+                        </div>
+                      ) : null}
+
+                      {seriesDetail.artist ? (
+                        <div className="rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 shadow-sm">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                            Artist
+                          </p>
+                          <p className="mt-1 text-sm font-medium text-slate-800">
+                            {seriesDetail.artist}
+                          </p>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="w-full max-w-[220px] shrink-0">
+                    <div className="rounded-[28px] border border-slate-200 bg-white/95 px-6 py-5 text-center shadow-[0_20px_42px_-30px_rgba(15,23,42,0.45)]">
+                      <div className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                        Avg. Rating
+                        <RatingInfoTooltip />
+                      </div>
+                      <div className="mt-3 text-5xl font-semibold leading-none tracking-tight text-slate-950">
+                        {avgScore}
+                      </div>
+                      <p className="mt-2 text-sm text-slate-500">out of 10</p>
                     </div>
                   </div>
                 </div>
-              )}
-            </div>
 
-            <div className="bg-white shadow rounded p-4 mb-6">
-              <h2 className="text-xl font-semibold mb-2">Synopsis</h2>
-              <p className="text-gray-700">
-                {seriesDetail.synopsis || "No synopsis available yet."}
-              </p>
-            </div>
+                <div className="mt-6 rounded-[26px] border border-slate-200 bg-white/92 p-5 shadow-[0_18px_42px_-34px_rgba(15,23,42,0.45)]">
+                  <h2 className="text-lg font-semibold text-slate-900">
+                    Synopsis
+                  </h2>
+                  <p className="mt-3 text-sm leading-7 text-slate-600 sm:text-[15px]">
+                    {seriesDetail.synopsis || "Synopsis coming soon."}
+                  </p>
+                </div>
+              </div>
+            </section>
 
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              {Object.entries(ratings).map(([label, score]) => (
-                <RatingCard
-                  key={label}
-                  label={label}
-                  score={score}
-                  // count={counts[label]}
-                  count={displayCounts[label]}
+            <section className="mt-8">
+              <div className="mb-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Rating breakdown
+                </p>
+                <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">
+                  How readers rate this series
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+                {Object.entries(ratings).map(([label, score]) => (
+                  <RatingCard
+                    key={label}
+                    label={label}
+                    score={score}
+                    count={displayCounts[label]}
+                  />
+                ))}
+              </div>
+            </section>
+
+            <section className="mt-8 overflow-hidden rounded-[30px] border border-slate-200 bg-white/95 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.45)]">
+              <div className="border-b border-slate-200/80 px-5 py-5 sm:px-6">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Community voting
+                </p>
+                <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">
+                  Rate this series
+                </h2>
+              </div>
+              <div className="px-5 py-5 sm:px-6">
+                <SeriesDetail
+                  series={series}
+                  updateRating={updateRating}
+                  seriesDetail={seriesDetail}
                 />
-              ))}
-            </div>
-
-            <div className="bg-white p-4 shadow rounded">
-              <h2 className="text-xl font-semibold mb-4">
-                Determine Series Rank
-              </h2>
-              <SeriesDetail
-                series={series}
-                updateRating={updateRating}
-                seriesDetail={seriesDetail}
-              />
-            </div>
+              </div>
+            </section>
           </>
         )}
 
@@ -384,17 +398,18 @@ const RatingCard = ({
   score: number;
   count?: number;
 }) => (
-  <div className="bg-white shadow rounded p-4 relative">
-    <h3 className="font-medium text-gray-700 mb-1">{label}</h3>
-    <p className="text-lg font-bold text-blue-400">
-      {score === -1 ? "-/10" : `${score.toFixed(1)}/10`}
+  <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white/95 p-5 shadow-[0_18px_40px_-34px_rgba(15,23,42,0.4)]">
+    <h3 className="text-sm font-semibold text-slate-700">{label}</h3>
+    <p className="mt-3 text-3xl font-semibold tracking-tight text-blue-500">
+      {score === -1 ? "-" : score.toFixed(1)}
+      <span className="ml-1 text-base font-medium text-slate-400">/10</span>
     </p>
     {count !== undefined && (
-      <div className="absolute bottom-2 right-3 text-xs text-gray-500 flex items-center gap-1">
+      <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500 ring-1 ring-inset ring-slate-200">
         {count > 1 ? (
-          <UsersIcon className="w-5 h-5 text-blue-400" />
+          <UsersIcon className="h-4 w-4 text-blue-400" />
         ) : (
-          <UserIcon className="w-5 h-5 text-blue-400" />
+          <UserIcon className="h-4 w-4 text-blue-400" />
         )}
         {count}
       </div>

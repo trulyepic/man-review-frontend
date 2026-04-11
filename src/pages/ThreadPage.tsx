@@ -656,8 +656,16 @@ export default function ThreadPage() {
         </script>
       </Helmet>
 
-      {thread && (
-        <header className="mb-4">
+{thread && (
+        <header className="mb-4 space-y-3">
+          <Link
+            to="/forum"
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+          >
+            <span aria-hidden>←</span>
+            <span>Back to forum</span>
+          </Link>
+
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <h1 className="text-2xl font-bold">
               {stripMdHeading(thread!.title)}
@@ -790,85 +798,123 @@ export default function ThreadPage() {
 
       <section className="space-y-4">
         {posts[0] && (
-          <article className="border rounded-lg p-4 bg-white shadow-sm">
-            <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-semibold">
-                Original post
-              </span>
-              <span>• {posts[0].author_username || "Anonymous"}</span>
-              <span>• {new Date(posts[0].created_at).toLocaleString()}</span>
-            </div>
+          <article className="overflow-hidden rounded-[28px] border border-slate-200/80 bg-white shadow-[0_20px_50px_rgba(15,23,42,0.08)]">
+            <div className="border-b border-slate-200/70 bg-[linear-gradient(135deg,rgba(239,246,255,0.95),rgba(255,255,255,0.98)_58%,rgba(240,253,250,0.88))] px-5 py-4 sm:px-7 sm:py-6">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="min-w-0 space-y-3">
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 font-semibold">
+                      Original post
+                    </span>
+                    <span>{posts[0].author_username || "Anonymous"}</span>
+                    <span>{new Date(posts[0].created_at).toLocaleString()}</span>
+                  </div>
 
-            {/* If the original post is being edited, show editor; else markdown */}
-            {editPostId === posts[0].id ? (
-              <div className="mt-2">
-                <RichReplyEditor
-                  mode="edit"
-                  initial={editContent}
-                  threadId={threadId}
-                  editingPostId={posts[0].id}
-                  onSubmit={async (content, seriesIds) => {
-                    await handleSaveEdit(content, seriesIds);
-                  }}
-                  onCancel={handleCancelEdit}
-                />
-              </div>
-            ) : (
-              <MarkdownProse>{posts[0].content_markdown}</MarkdownProse>
-            )}
-
-            <div className="mt-2">
-              <HeartButton
-                initialOn={!!posts[0].viewer_has_hearted}
-                initialCount={posts[0].heart_count ?? 0}
-                ariaLabelBase="Heart this post"
-                onToggle={async () => {
-                  try {
-                    const r = await toggleHeart(threadId, posts[0].id);
-                    return { ok: true, count: r.count, hearted: r.hearted };
-                  } catch {
-                    return { ok: false };
-                  }
-                }}
-              />
-            </div>
-
-            {(() => {
-              const firstRefs: ForumSeriesRef[] =
-                posts[0].series_refs && posts[0].series_refs.length > 0
-                  ? posts[0].series_refs
-                  : thread?.series_refs ?? [];
-
-              return firstRefs.length ? (
-                <div className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] gap-3">
-                  {firstRefs.map((s) => (
-                    <SeriesMiniCard key={s.series_id} s={s} />
-                  ))}
+                  <div className="max-w-3xl space-y-2">
+                    <h2 className="text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">
+                      Opening discussion
+                    </h2>
+                    <p className="text-sm leading-6 text-slate-600 sm:text-[15px]">
+                      The first post sets the tone for this thread. Referenced
+                      series, reactions, and follow-up replies all build from
+                      here.
+                    </p>
+                  </div>
                 </div>
-              ) : null;
-            })()}
+
+                <div className="flex items-center justify-start lg:justify-end">
+                  <HeartButton
+                    initialOn={!!posts[0].viewer_has_hearted}
+                    initialCount={posts[0].heart_count ?? 0}
+                    ariaLabelBase="Heart this post"
+                    onToggle={async () => {
+                      try {
+                        const r = await toggleHeart(threadId, posts[0].id);
+                        return { ok: true, count: r.count, hearted: r.hearted };
+                      } catch {
+                        return { ok: false };
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-5 px-5 py-5 sm:px-7 sm:py-6">
+              <div className="rounded-3xl border border-slate-200/80 bg-white/90 p-4 sm:p-5">
+                {editPostId === posts[0].id ? (
+                  <div className="mt-1">
+                    <RichReplyEditor
+                      mode="edit"
+                      initial={editContent}
+                      threadId={threadId}
+                      editingPostId={posts[0].id}
+                      onSubmit={async (content, seriesIds) => {
+                        await handleSaveEdit(content, seriesIds);
+                      }}
+                      onCancel={handleCancelEdit}
+                    />
+                  </div>
+                ) : (
+                  <MarkdownProse className="text-slate-700">
+                    {posts[0].content_markdown}
+                  </MarkdownProse>
+                )}
+              </div>
+
+              {(() => {
+                const firstRefs: ForumSeriesRef[] =
+                  posts[0].series_refs && posts[0].series_refs.length > 0
+                    ? posts[0].series_refs
+                    : thread?.series_refs ?? [];
+
+                return firstRefs.length ? (
+                  <div className="space-y-3">
+                    <div>
+                      <h3 className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
+                        Referenced series
+                      </h3>
+                      <p className="mt-1 text-sm text-slate-600">
+                        Quick links tied to the opening post.
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] gap-3">
+                      {firstRefs.map((s) => (
+                        <SeriesMiniCard key={s.series_id} s={s} />
+                      ))}
+                    </div>
+                  </div>
+                ) : null;
+              })()}
+            </div>
           </article>
         )}
 
         {/* TOP controls (pager) */}
         {totalPages > 1 && (
-          <div className="mt-4 flex items-center justify-between text-sm text-gray-600">
-            <div>
-              Page <strong>{page}</strong> of <strong>{totalPages}</strong> •{" "}
-              Top-level replies: <strong>{totalTopLevel}</strong>
+          <div className="mt-4 rounded-[24px] border border-slate-200/80 bg-white/95 px-4 py-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] sm:px-5">
+            <div className="flex flex-col gap-3 text-sm text-slate-600 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span>
+                  Page <strong>{page}</strong> of <strong>{totalPages}</strong>
+                </span>
+                <span className="hidden text-slate-300 sm:inline">/</span>
+                <span>
+                  Top-level replies: <strong>{totalTopLevel}</strong>
+                </span>
+              </div>
+              <Pager
+                page={page}
+                totalPages={totalPages}
+                hasPrev={hasPrev}
+                hasNext={hasNext}
+                onGo={goToPage}
+              />
             </div>
-            {/* <Pager page={page} totalPages={totalPages} onGo={goToPage} /> */}
-            <Pager
-              page={page}
-              totalPages={totalPages}
-              hasPrev={hasPrev}
-              hasNext={hasNext}
-              onGo={goToPage}
-            />
           </div>
         )}
 
-        {(() => {
+                {(() => {
           const byParent: Record<number, ForumPost[]> = {};
           posts.slice(1).forEach((p) => {
             const pid = p.parent_id && p.parent_id > 0 ? p.parent_id : 0;
@@ -929,60 +975,68 @@ export default function ThreadPage() {
         </div>
       )}
 
-      <div className="mt-6 border rounded-lg p-4">
-        <h3 className="font-semibold mb-2">
-          {thread?.latest_first ? "Add Update" : "Reply"}
-        </h3>
-
-        {!thread?.locked || isAdmin ? (
-          <RichReplyEditor
-            compact={false}
-            threadId={threadId}
-            onSubmit={async (content, seriesIds) => {
-              if (!user) {
-                // alert("You need to be logged in to post a reply.");
-                notice.show({
-                  message: "You need to be logged in to post a reply.",
-                  title: "Sign in required",
-                  variant: "warning",
-                });
-
-                return;
-              }
-              const trimmed = content.trim();
-              if (!trimmed) {
-                // alert("Reply cannot be empty.");
-                notice.show({
-                  message: "Reply cannot be empty.",
-                  title: "Can’t post",
-                  variant: "warning",
-                });
-
-                return;
-              }
-              try {
-                const p = await createForumPost(threadId, {
-                  content_markdown: trimmed,
-                  series_ids: seriesIds,
-                });
-                setPosts((prev) => [...prev, p]);
-              } catch (err: unknown) {
-                // alert(getErrorMessage(err) || "Failed to post reply.");
-                notice.show({
-                  message: getErrorMessage(err) || "Failed to post reply.",
-                  title: "Post failed",
-                  variant: "error",
-                });
-              }
-            }}
-          />
-        ) : (
-          <div className="text-sm text-amber-700 bg-amber-50 px-3 py-2 rounded">
-            🔒 This thread is locked. Only admins can add new replies.
+      <div className="mt-6 overflow-hidden rounded-[28px] border border-slate-200/80 bg-white shadow-[0_18px_40px_rgba(15,23,42,0.07)]">
+        <div className="border-b border-slate-200/70 bg-[linear-gradient(135deg,rgba(248,250,252,0.94),rgba(255,255,255,0.98)_62%,rgba(239,246,255,0.8))] px-5 py-4 sm:px-6">
+          <div className="space-y-1">
+            <h3 className="text-lg font-semibold tracking-tight text-slate-900">
+              {thread?.latest_first ? "Add Update" : "Join the conversation"}
+            </h3>
+            <p className="text-sm text-slate-600">
+              {thread?.latest_first
+                ? "Share the next major development in this thread."
+                : "Post a reply, reference a series, or add context for the next reader."}
+            </p>
           </div>
-        )}
+        </div>
+
+        <div className="px-5 py-5 sm:px-6 sm:py-6">
+          {!thread?.locked || isAdmin ? (
+            <RichReplyEditor
+              compact={false}
+              threadId={threadId}
+              onSubmit={async (content, seriesIds) => {
+                if (!user) {
+                  notice.show({
+                    message: "You need to be logged in to post a reply.",
+                    title: "Sign in required",
+                    variant: "warning",
+                  });
+
+                  return;
+                }
+                const trimmed = content.trim();
+                if (!trimmed) {
+                  notice.show({
+                    message: "Reply cannot be empty.",
+                    title: "Cannot post",
+                    variant: "warning",
+                  });
+
+                  return;
+                }
+                try {
+                  const p = await createForumPost(threadId, {
+                    content_markdown: trimmed,
+                    series_ids: seriesIds,
+                  });
+                  setPosts((prev) => [...prev, p]);
+                } catch (err: unknown) {
+                  notice.show({
+                    message: getErrorMessage(err) || "Failed to post reply.",
+                    title: "Post failed",
+                    variant: "error",
+                  });
+                }
+              }}
+            />
+          ) : (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              This thread is locked. Only admins can add new replies.
+            </div>
+          )}
+        </div>
       </div>
-      <NoticeModal
+            <NoticeModal
         open={notice.open}
         title={notice.title}
         message={notice.message}
@@ -1081,13 +1135,11 @@ function ReplyBranch({
 
   const labelText = isTopLevel
     ? isUpdatesMode
-      ? `Update # ${idxRoman}`
-      : `Reply # ${idxRoman}`
+      ? `Update ${idxRoman}`
+      : `Reply ${idxRoman}`
     : isUpdatesMode
-    ? `↳ Comment on Update # ${idxRoman}`
-    : `↳ Reply to ${
-        post.author_username ? `@${post.author_username} ` : ""
-      }# ${idxRoman}`;
+    ? `Comment on update ${idxRoman}`
+    : `Reply to ${post.author_username ? `@${post.author_username}` : "thread"}`;
 
   const children = (byParent[post.id] || []).sort(
     (a, b) =>
@@ -1134,17 +1186,16 @@ function ReplyBranch({
   const isEditingThis = editingPostId === post.id;
 
   return (
-    <div>
+    <div className="space-y-2">
       <article
         className={
           (isTopLevel
-            ? "rounded-lg p-4 border border-gray-200 shadow-sm bg-gray-50"
-            : "rounded-lg p-3 border border-gray-200 shadow-sm bg-white") + ""
+            ? "rounded-[24px] border border-slate-200/80 bg-white px-4 py-4 shadow-[0_14px_30px_rgba(15,23,42,0.06)] sm:px-5 sm:py-5"
+            : "rounded-[20px] border border-slate-200/80 bg-white px-3.5 py-3.5 shadow-[0_10px_24px_rgba(15,23,42,0.05)] sm:px-4 sm:py-4") + ""
         }
         style={{
-          // marginLeft: Math.min(depth, 6) * 16,
           marginLeft: indentPx,
-          marginTop: 6,
+          marginTop: 8,
           borderLeftWidth: 4,
           borderLeftStyle: "solid",
           borderLeftColor: rail,
@@ -1153,22 +1204,47 @@ function ReplyBranch({
         <div
           className={
             isTopLevel
-              ? "flex flex-wrap items-center gap-2 text-xs text-gray-600 mb-2"
-              : "flex flex-wrap items-center gap-2 text-[11px] text-gray-600 mb-1"
+              ? "mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between"
+              : "mb-2.5 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between"
           }
         >
-          <span
-            className={
-              isTopLevel
-                ? "inline-flex items-center px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-semibold"
-                : "inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-semibold"
-            }
-            style={labelStyle}
-          >
-            {labelText}
-          </span>
-          <span>• {post.author_username || "Anonymous"}</span>
-          <span>• {new Date(post.created_at).toLocaleString()}</span>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+            <span
+              className={
+                isTopLevel
+                  ? "inline-flex items-center px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold"
+                  : "inline-flex items-center px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 font-semibold"
+              }
+              style={labelStyle}
+            >
+              {labelText}
+            </span>
+            <span className="font-medium text-slate-700">
+              {post.author_username || "Anonymous"}
+            </span>
+            <span>{new Date(post.created_at).toLocaleString()}</span>
+          </div>
+
+          <div className="flex items-center gap-2 self-start">
+            {canModify && !isEditingThis && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => onBeginEdit(post.id, post.content_markdown)}
+                  className="inline-flex items-center rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+                  title="Edit your post"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="inline-flex items-center rounded-full border border-rose-200 px-3 py-1 text-xs font-medium text-rose-600 transition hover:bg-rose-50"
+                  title={isAdmin ? "Admin delete" : "Delete your post"}
+                >
+                  Delete
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Content OR Editor */}
@@ -1187,7 +1263,10 @@ function ReplyBranch({
             />
           </div>
         ) : (
-          <MarkdownProse size={isTopLevel ? "base" : "sm"}>
+          <MarkdownProse
+            size={isTopLevel ? "base" : "sm"}
+            className="text-slate-700"
+          >
             {post.content_markdown}
           </MarkdownProse>
         )}
@@ -1200,14 +1279,14 @@ function ReplyBranch({
           </div>
         ) : null}
 
-        <div className="mt-3 flex items-center gap-3">
+        <div className="mt-4 flex flex-wrap items-center gap-3">
           {!isUpdatesMode ? (
             !locked || isAdmin ? (
-              <details>
-                <summary className="cursor-pointer text-xs text-blue-600 hover:underline">
-                  Reply to this reply
+              <details className="group rounded-2xl border border-slate-200 bg-slate-50/70 px-3 py-2">
+                <summary className="cursor-pointer list-none text-xs font-medium text-blue-700 marker:hidden">
+                  Reply in thread
                 </summary>
-                <div className="mt-2">
+                <div className="mt-3">
                   <RichReplyEditor
                     compact
                     threadId={threadId}
@@ -1231,30 +1310,12 @@ function ReplyBranch({
                 </div>
               </details>
             ) : (
-              <span className="text-xs text-amber-700 bg-amber-50 px-2 py-1 rounded">
-                🔒 Thread is locked — replies are disabled.
+              <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800">
+                Replies are locked.
               </span>
             )
           ) : null}
 
-          {canModify && !isEditingThis && (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => onBeginEdit(post.id, post.content_markdown)}
-                className="text-xs text-blue-600 hover:underline"
-                title="Edit your post"
-              >
-                Edit
-              </button>
-              <button
-                onClick={handleDelete}
-                className="text-xs text-red-600 hover:underline"
-                title={isAdmin ? "Admin delete" : "Delete your post"}
-              >
-                Delete
-              </button>
-            </div>
-          )}
           <HeartButton
             initialOn={!!post.viewer_has_hearted}
             initialCount={post.heart_count ?? 0}
@@ -1282,11 +1343,11 @@ function ReplyBranch({
         title="Delete this post?"
         message={
           <div>
-            <div className="mb-2">This action can’t be undone.</div>
+            <div className="mb-2">This action cannot be undone.</div>
             <div className="rounded bg-gray-50 p-2 text-sm text-gray-700">
               {/* Small preview of the content */}
               {post.content_markdown.length > 140
-                ? post.content_markdown.slice(0, 140) + "…"
+                ? post.content_markdown.slice(0, 140) + "..."
                 : post.content_markdown || "(no content)"}
             </div>
           </div>

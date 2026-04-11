@@ -1,30 +1,48 @@
 import {
-  MagnifyingGlassIcon,
   Bars3Icon,
+  ChevronDownIcon,
+  MagnifyingGlassIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
-import { useSearch } from "./SearchContext";
-import myHomeLogo from "../images/logo/myHomeLogo.png";
-import SocialLinks from "./SocialLinks";
-import { useEffect, useRef } from "react";
-import { useUser } from "../login/useUser";
+import { useEffect, useRef, useState } from "react";
 import { BookmarkIcon } from "lucide-react";
+import { useSearch } from "./SearchContext";
+import { useUser } from "../login/useUser";
+import SocialLinks from "./SocialLinks";
+import myHomeLogo from "../images/logo/myHomeLogo.png";
 
 const DEFAULT_LABEL = "ALL";
+
+const desktopNavLink = ({ isActive }: { isActive: boolean }) =>
+  [
+    "rounded-full px-3 py-2 text-sm font-semibold tracking-wide transition",
+    isActive
+      ? "bg-slate-900 text-white shadow-sm"
+      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+  ].join(" ");
+
+const authLink = ({ isActive }: { isActive: boolean }) =>
+  [
+    "rounded-full px-3 py-2 text-sm font-semibold transition",
+    isActive
+      ? "bg-slate-900 text-white shadow-sm"
+      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+  ].join(" ");
 
 const Header = () => {
   const { user, setUser } = useUser();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { searchTerm, setSearchTerm } = useSearch();
+
   const [showSearch, setShowSearch] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { searchTerm, setSearchTerm } = useSearch();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] =
     useState<string>(DEFAULT_LABEL);
 
-  const location = useLocation();
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -37,6 +55,13 @@ const Header = () => {
     setShowSearch((prev) => !prev);
   };
 
+  const handleHomeClick = () => {
+    setSearchTerm("");
+    setMobileMenuOpen(false);
+    setIsDropdownOpen(false);
+    setSelectedCategory(DEFAULT_LABEL);
+  };
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchTerm.trim()) {
@@ -45,9 +70,6 @@ const Header = () => {
     }
   };
 
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Close dropdown if clicked outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -79,286 +101,105 @@ const Header = () => {
       setSelectedCategory(map[key] ?? DEFAULT_LABEL);
       return;
     }
-    // Any other route → show default
     setSelectedCategory(DEFAULT_LABEL);
   }, [location.pathname]);
 
-  const pillLink =
-    "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold " +
-    "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 ring-1 ring-blue-200 " +
-    "hover:from-blue-100 hover:to-blue-200 hover:ring-blue-300 " +
-    "transition-colors shadow-sm";
-
-  const pillLinkActive =
-    "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold " +
-    "bg-blue-600 text-white ring-1 ring-blue-600 shadow";
+  const readingListLink =
+    "inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold transition shadow-sm";
+  const readingListIdle =
+    "bg-gradient-to-r from-blue-50 to-sky-100 text-blue-700 ring-1 ring-inset ring-blue-200 hover:from-blue-100 hover:to-sky-100";
+  const readingListActive =
+    "bg-slate-900 text-white ring-1 ring-inset ring-slate-900";
 
   return (
-    <header className="border-b shadow-md">
-      <div className="flex flex-wrap justify-between items-center px-6 md:px-10 max-w-7xl mx-auto py-4">
-        {/* Mobile menu button - inline, visible only on mobile */}
-        <button
-          className="sm:hidden mr-2"
-          onClick={() => setMobileMenuOpen((prev) => !prev)}
-        >
-          {mobileMenuOpen ? (
-            <XMarkIcon className="w-6 h-6 text-gray-700" />
-          ) : (
-            <Bars3Icon className="w-6 h-6 text-gray-700" />
-          )}
-        </button>
+    <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+        <div className="flex min-w-0 items-center gap-3 sm:gap-5">
+          <button
+            className="rounded-full border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100 sm:hidden"
+            onClick={() => setMobileMenuOpen((prev) => !prev)}
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+          >
+            {mobileMenuOpen ? (
+              <XMarkIcon className="h-5 w-5" />
+            ) : (
+              <Bars3Icon className="h-5 w-5" />
+            )}
+          </button>
 
-        {/* Left side */}
-        <div className="flex items-center space-x-6  font-semibold min-w-0">
-          {/* <NavLink to="/" className="text-blue-400 text-xl font-bold md:-ml-12">
-            Toon Ranks
-          </NavLink> */}
-          <NavLink to="/" className="flex items-center md:-ml-13">
+          <a
+            href="/"
+            onClick={handleHomeClick}
+            className="flex items-center gap-3 rounded-full pr-1 transition hover:opacity-90"
+            aria-label="Go to homepage"
+          >
             <img
               src={myHomeLogo}
               alt="Toon Ranks Logo"
-              // className="w-8 h-8 md:w-10 md:h-10 object-contain"
-              className="w-12 h-12 object-contain"
+              className="h-11 w-11 object-contain"
             />
-          </NavLink>
+          </a>
 
-          {/* Desktop nav only */}
-          <div className="hidden sm:flex items-center gap-6 text-gray-700">
-            {/* Dropdown for Categories */}
+          <nav className="hidden items-center gap-2 sm:flex">
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsDropdownOpen((prev) => !prev)}
-                className="hover:text-blue-500 font-bold focus:outline-none"
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 hover:text-slate-900"
               >
-                {selectedCategory} ▾
+                {selectedCategory}
+                <ChevronDownIcon className="h-4 w-4" />
               </button>
 
               {isDropdownOpen && (
-                <div className="absolute left-0 top-full mt-2 bg-white border rounded shadow-md w-40 z-50">
-                  <div className="flex flex-col">
+                <div className="absolute left-0 top-full mt-2 w-44 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.55)]">
+                  {[
+                    { to: "/", label: "ALL" },
+                    { to: "/type/MANHWA", label: "MANHWA" },
+                    { to: "/type/MANGA", label: "MANGA" },
+                    { to: "/type/MANHUA", label: "MANHUA" },
+                  ].map((item) => (
                     <NavLink
-                      to="/"
+                      key={item.label}
+                      to={item.to}
                       onClick={() => {
                         setIsDropdownOpen(false);
-                        setSelectedCategory("ALL");
+                        setSelectedCategory(item.label);
                       }}
-                      className="block px-4 py-2 hover:bg-blue-50"
+                      className="block rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
                     >
-                      ALL
+                      {item.label}
                     </NavLink>
-                    <NavLink
-                      to="/type/MANHWA"
-                      onClick={() => {
-                        setIsDropdownOpen(false);
-                        setSelectedCategory("MANHWA");
-                      }}
-                      className="block px-4 py-2 hover:bg-blue-50"
-                    >
-                      MANHWA
-                    </NavLink>
-                    <NavLink
-                      to="/type/MANGA"
-                      onClick={() => {
-                        setIsDropdownOpen(false);
-                        setSelectedCategory("MANGA");
-                      }}
-                      className="block px-4 py-2 hover:bg-blue-50"
-                    >
-                      MANGA
-                    </NavLink>
-                    <NavLink
-                      to="/type/MANHUA"
-                      onClick={() => {
-                        setIsDropdownOpen(false);
-                        setSelectedCategory("MANHUA");
-                      }}
-                      className="block px-4 py-2 hover:bg-blue-50"
-                    >
-                      MANHUA
-                    </NavLink>
-                  </div>
+                  ))}
                 </div>
               )}
             </div>
 
-            <NavLink to="/forum" className="hover:text-blue-500 font-bold px-1">
-              FORUM
+            <NavLink to="/forum" className={desktopNavLink}>
+              Forum
             </NavLink>
-
-            {/* <NavLink
-              to="/how-rankings-work"
-              className="hover:text-blue-500 font-medium"
-            >
-              How Rankings Work
-            </NavLink> */}
-
-            {/* <NavLink to="/issues" className="hover:text-blue-500 font-medium">
-              Report
-            </NavLink> */}
-
-            {/* Spacer */}
-            {/* <div className="flex-1" /> */}
-
-            {/* Socials and Ex-hibt Link */}
-            {/* deactivated website */}
-            {/* <div className="flex items-center gap-4">
-              
-              <a
-                href="https://ex-hibt.com/collection-homepage/59"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-sm hover:text-blue-500"
-                title="Visit img collections"
-              >
-                <img
-                  src={myLogo}
-                  alt="img collections"
-                  className="w-5 h-5 object-contain"
-                />
-                Ex-hibt
-              </a>
-            </div> */}
-          </div>
+          </nav>
         </div>
 
-        {/* Right side (desktop only) */}
-        <div className="hidden sm:flex items-center space-x-4">
-          <form onSubmit={handleSearchSubmit} className="relative w-40 md:w-48">
+        <div className="hidden items-center gap-3 sm:flex">
+          <form onSubmit={handleSearchSubmit} className="relative">
             <input
               type="text"
-              className={`transition-all duration-300 px-2 py-1 rounded border border-gray-300 text-sm focus:outline-none w-full ${
-                showSearch ? "opacity-100" : "opacity-0 pointer-events-none"
+              className={`h-10 rounded-full border border-slate-200 bg-slate-50 pl-4 pr-11 text-sm text-slate-700 shadow-sm outline-none transition-all duration-300 focus:border-slate-300 focus:bg-white focus:ring-2 focus:ring-slate-200 ${
+                showSearch
+                  ? "w-56 opacity-100"
+                  : "pointer-events-none w-0 border-transparent px-0 opacity-0"
               }`}
-              placeholder="Search..."
+              placeholder="Search titles..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <MagnifyingGlassIcon
-              className="w-6 h-6 text-gray-700 cursor-pointer absolute right-0 top-1/2 -translate-y-1/2"
-              onClick={handleSearchClick}
-            />
-          </form>
-
-          {user ? (
-            <>
-              <NavLink
-                to="/my-lists"
-                className={({ isActive }) =>
-                  isActive ? pillLinkActive : pillLink
-                }
-              >
-                <BookmarkIcon className="w-4 h-4" />
-                My Lists
-              </NavLink>
-              <span className="bg-gray-200 px-3 py-1 rounded-full font-bold text-black text-sm">
-                {user.username}
-              </span>
-              <button
-                onClick={handleLogout}
-                className="text-sm font-medium text-red-400 hover:underline"
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <>
-              <NavLink
-                to="/login"
-                className="text-sm font-bold text-gray-600 hover:underline"
-              >
-                Login
-              </NavLink>
-              <NavLink
-                to="/signup"
-                className="text-sm font-bold text-gray-600 hover:underline"
-              >
-                Sign Up
-              </NavLink>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Mobile dropdown menu */}
-      {mobileMenuOpen && (
-        <div className="sm:hidden flex flex-col space-y-3 px-6 pb-4 text-sm font-medium">
-          <NavLink
-            to="/"
-            onClick={() => setMobileMenuOpen(false)}
-            className="text-gray-800 hover:text-blue-400 "
-          >
-            ALL
-          </NavLink>
-          <NavLink
-            to="/type/MANHWA"
-            onClick={() => setMobileMenuOpen(false)}
-            className="text-gray-800 hover:text-blue-400"
-          >
-            MANHWA
-          </NavLink>
-          <NavLink
-            to="/type/MANGA"
-            onClick={() => setMobileMenuOpen(false)}
-            className="text-gray-800 hover:text-blue-400"
-          >
-            MANGA
-          </NavLink>
-          <NavLink
-            to="/type/MANHUA"
-            onClick={() => setMobileMenuOpen(false)}
-            className="text-gray-800 hover:text-blue-400"
-          >
-            MANHUA
-          </NavLink>
-          <NavLink to="/forum" className="text-gray-800 hover:text-blue-400">
-            FORUM
-          </NavLink>
-
-          {/* <NavLink
-            to="/issues"
-            onClick={() => setMobileMenuOpen(false)}
-            className="text-gray-800 hover:text-blue-400"
-          >
-            Report an Issue
-          </NavLink> */}
-
-          {/* <NavLink
-            to="/how-rankings-work"
-            className={({ isActive }) =>
-              isActive ? "text-blue-400" : "hover:text-blue-300"
-            }
-          >
-            How Rankings Work
-          </NavLink> */}
-
-          <SocialLinks variant="header" />
-          {/* deactivated website */}
-          {/* <a
-            href="https://ex-hibt.com/collection-homepage/59"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 text-gray-800 hover:text-blue-400"
-          >
-            <img
-              src={myLogo}
-              alt="img collections"
-              className="w-5 h-5 object-contain"
-            />
-            Ex-hibt Collections
-          </a> */}
-
-          {/* Search form for mobile */}
-
-          <form onSubmit={handleSearchSubmit} className="flex gap-2">
-            <input
-              type="text"
-              className="w-full border border-gray-300 px-2 py-1 rounded text-sm"
-              placeholder="Search..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <button type="submit" className="text-blue-500 font-semibold">
-              Go
+            <button
+              type={showSearch ? "submit" : "button"}
+              onClick={!showSearch ? handleSearchClick : undefined}
+              className="absolute right-1 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+              aria-label="Search"
+            >
+              <MagnifyingGlassIcon className="h-5 w-5" />
             </button>
           </form>
 
@@ -366,42 +207,128 @@ const Header = () => {
             <>
               <NavLink
                 to="/my-lists"
-                onClick={() => setMobileMenuOpen(false)}
                 className={({ isActive }) =>
-                  (isActive ? pillLinkActive : pillLink) + " w-max"
+                  [
+                    readingListLink,
+                    isActive ? readingListActive : readingListIdle,
+                  ].join(" ")
                 }
               >
-                <BookmarkIcon className="w-4 h-4" />
+                <BookmarkIcon className="h-4 w-4" />
                 My Lists
               </NavLink>
-              <span className="bg-gray-200 px-3 py-1 w-max rounded-full font-bold text-black text-sm">
+              <span className="inline-flex items-center rounded-full bg-slate-100 px-3.5 py-2 text-sm font-semibold text-slate-700 ring-1 ring-inset ring-slate-200">
                 {user.username}
               </span>
               <button
                 onClick={handleLogout}
-                className="text-red-400 hover:underline"
+                className="rounded-full px-3 py-2 text-sm font-semibold text-rose-500 transition hover:bg-rose-50 hover:text-rose-600"
               >
                 Logout
               </button>
             </>
           ) : (
             <>
-              <NavLink
-                to="/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-gray-600 hover:underline"
-              >
+              <NavLink to="/login" className={authLink}>
                 Login
               </NavLink>
-              <NavLink
-                to="/signup"
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-gray-600 hover:underline"
-              >
+              <NavLink to="/signup" className={authLink}>
                 Sign Up
               </NavLink>
             </>
           )}
+        </div>
+      </div>
+
+      {mobileMenuOpen && (
+        <div className="border-t border-slate-200/80 bg-white/95 px-4 py-4 shadow-[0_18px_35px_-30px_rgba(15,23,42,0.45)] sm:hidden">
+          <div className="mx-auto flex max-w-7xl flex-col gap-3">
+            {[
+              { to: "/", label: "ALL" },
+              { to: "/type/MANHWA", label: "MANHWA" },
+              { to: "/type/MANGA", label: "MANGA" },
+              { to: "/type/MANHUA", label: "MANHUA" },
+              { to: "/forum", label: "FORUM" },
+            ].map((item) => (
+              <NavLink
+                key={item.label}
+                to={item.to}
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-2xl px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+              >
+                {item.label}
+              </NavLink>
+            ))}
+
+            <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-3">
+              <form onSubmit={handleSearchSubmit} className="flex gap-2">
+                <input
+                  type="text"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-200"
+                  placeholder="Search titles..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <button
+                  type="submit"
+                  className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white"
+                >
+                  Go
+                </button>
+              </form>
+            </div>
+
+            <div className="flex items-center justify-between rounded-[24px] border border-slate-200 bg-white px-4 py-3">
+              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                Follow
+              </span>
+              <SocialLinks variant="header" />
+            </div>
+
+            {user ? (
+              <div className="flex flex-col gap-2">
+                <NavLink
+                  to="/my-lists"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={({ isActive }) =>
+                    [
+                      "inline-flex w-max items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold transition shadow-sm",
+                      isActive ? readingListActive : readingListIdle,
+                    ].join(" ")
+                  }
+                >
+                  <BookmarkIcon className="h-4 w-4" />
+                  My Lists
+                </NavLink>
+                <span className="inline-flex w-max items-center rounded-full bg-slate-100 px-3.5 py-2 text-sm font-semibold text-slate-700 ring-1 ring-inset ring-slate-200">
+                  {user.username}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="w-max rounded-full px-3 py-2 text-sm font-semibold text-rose-500 transition hover:bg-rose-50"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                <NavLink
+                  to="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={authLink}
+                >
+                  Login
+                </NavLink>
+                <NavLink
+                  to="/signup"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={authLink}
+                >
+                  Sign Up
+                </NavLink>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </header>
