@@ -1,32 +1,41 @@
 import { useState } from "react";
-import { signup } from "../api/manApi";
-import { useNavigate } from "react-router-dom";
-// import { useUser } from "../login/UserContext";
-import GoogleOAuthButton from "../components/GoogleOAuthButton";
+import { Link, useNavigate } from "react-router-dom";
 import ReCAPTCHA from "react-google-recaptcha";
+import { signup } from "../api/manApi";
+import GoogleOAuthButton from "../components/GoogleOAuthButton";
+import AuthShell from "../components/AuthShell";
+
+const fieldClass =
+  "mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-emerald-300 focus:bg-white focus:ring-4 focus:ring-emerald-100";
 
 const SignupPage = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
-  // const { setUser } = useUser();
   const navigate = useNavigate();
   const [captchaToken, setCaptchaToken] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSignup = async () => {
     const u = username.trim();
     const p = password.trim();
     const e = email.trim().toLowerCase();
 
+    setError(null);
+    setInfo(null);
+
     if (!u || !p || !e) {
-      alert("All fields are required.");
+      setError("All fields are required.");
       return;
     }
     if (!captchaToken) {
-      alert("Please complete the CAPTCHA.");
+      setError("Please complete the CAPTCHA.");
       return;
     }
 
+    setSubmitting(true);
     try {
       await signup({
         username: u,
@@ -35,7 +44,7 @@ const SignupPage = () => {
         captcha_token: captchaToken,
       });
 
-      alert("Signup successful! Please verify your email.");
+      setInfo("Signup successful. Please verify your email.");
       navigate("/check-your-email");
     } catch (err) {
       const raw = err instanceof Error ? err.message : "0:Signup failed";
@@ -44,69 +53,147 @@ const SignupPage = () => {
 
       if (status === "409") {
         if (detail.includes("email")) {
-          alert(
+          setError(
             "Email already exists. Please log in or use a different email."
           );
         } else if (detail.includes("username")) {
-          alert("Username already exists. Try a different one.");
+          setError("Username already exists. Try a different one.");
         } else {
-          alert("Account already exists.");
+          setError("Account already exists.");
         }
       } else if (status === "422") {
-        alert("Invalid email. Only Gmail or Yahoo addresses are allowed.");
+        setError("Invalid email. Only Gmail or Yahoo addresses are allowed.");
       } else if (status === "400") {
-        alert("Please complete the CAPTCHA.");
+        setError("Please complete the CAPTCHA.");
       } else {
-        alert("Signup failed");
+        setError("Signup failed. Please try again.");
       }
 
       console.error("Signup error:", err);
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">Sign Up</h2>
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="w-full p-2 mb-4 border rounded"
-        />
-        <input
-          type="email"
-          placeholder="Email (Gmail or Yahoo only)"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full p-2 mb-4 border rounded"
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-2 mb-6 border rounded"
-        />
+    <AuthShell
+      eyebrow="Create Account"
+      title="Start tracking everything in one place."
+      description="Create your Toon Ranks account to save series, rate categories once, and join the forum with a consistent identity."
+      accentLabel="What you unlock"
+      accentTitle="A cleaner reading flow from ranking to discussion."
+      accentBody="Keep your saved lists, ratings, and forum activity tied to one account so your progress is easy to return to later."
+      highlights={["Saved lists", "Locked-in ratings", "Forum identity"]}
+      footerPrompt="Already have an account?"
+      footerLinkLabel="Log in"
+      footerLinkTo="/login"
+    >
+      <div>
+        <div className="mb-6">
+          <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
+            Sign Up
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Create your account and verify your email to get started.
+          </p>
+        </div>
 
-        <ReCAPTCHA
-          sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
-          onChange={(token) => setCaptchaToken(token || "")}
-          className="mb-6"
-        />
+        {error && (
+          <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {error}
+          </div>
+        )}
+
+        {info && (
+          <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {info}
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <label className="block">
+            <span className="text-sm font-medium text-slate-700">Username</span>
+            <input
+              type="text"
+              placeholder="Choose a username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className={fieldClass}
+            />
+          </label>
+
+          <label className="block">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm font-medium text-slate-700">Email</span>
+              <span className="text-xs text-slate-500">
+                Gmail or Yahoo only
+              </span>
+            </div>
+            <input
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={fieldClass}
+            />
+          </label>
+
+          <label className="block">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm font-medium text-slate-700">
+                Password
+              </span>
+              <Link
+                to="/login"
+                className="text-xs font-medium text-slate-500 transition hover:text-slate-700"
+              >
+                Already registered?
+              </Link>
+            </div>
+            <input
+              type="password"
+              placeholder="Create a password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={fieldClass}
+            />
+          </label>
+        </div>
+
+        <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200 bg-slate-50/70 px-3 py-3">
+          <ReCAPTCHA
+            sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+            onChange={(token) => setCaptchaToken(token || "")}
+            onExpired={() => setError("CAPTCHA expired. Please try again.")}
+            onError={() => setError("CAPTCHA failed to load. Please retry.")}
+          />
+        </div>
 
         <button
           onClick={handleSignup}
-          className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
+          disabled={submitting}
+          className={`mt-5 w-full rounded-2xl px-4 py-3 text-sm font-semibold text-white transition ${
+            submitting
+              ? "cursor-not-allowed bg-emerald-400"
+              : "bg-emerald-600 hover:bg-emerald-700"
+          }`}
         >
-          Sign Up
+          {submitting ? "Creating account..." : "Sign Up"}
         </button>
-        <div className="my-4 text-center text-sm text-gray-500"></div>
 
-        <GoogleOAuthButton />
+        <div className="my-6 flex items-center gap-3">
+          <div className="h-px flex-1 bg-slate-200" />
+          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+            Or continue with
+          </span>
+          <div className="h-px flex-1 bg-slate-200" />
+        </div>
+
+        <div className="rounded-[24px] border border-slate-200 bg-slate-50/70 px-4 py-4">
+          <GoogleOAuthButton />
+        </div>
       </div>
-    </div>
+    </AuthShell>
   );
 };
 

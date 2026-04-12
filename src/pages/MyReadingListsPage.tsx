@@ -479,71 +479,49 @@ function ListItems({
 
               return (
                 <li key={it.series_id} className="px-4 py-4 sm:px-5">
-                  <div className="flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_12px_30px_-24px_rgba(15,23,42,0.55)] transition hover:border-slate-300/80 hover:shadow-[0_18px_40px_-28px_rgba(15,23,42,0.65)] sm:flex-row sm:items-center">
-                  <div className="relative shrink-0">
-                    {isThumbLoading ? (
-                      <ShimmerBox className="h-24 w-16 rounded-2xl" />
-                    ) : s?.cover_url ? (
-                      <img
-                        src={s.cover_url}
-                        alt={s?.title || `Series ${it.series_id}`}
-                        className="h-24 w-16 rounded-2xl bg-slate-100 object-cover shadow-sm"
-                        loading="lazy"
-                        decoding="async"
-                        width={80}
-                        height={120}
-                      />
-                    ) : (
-                      <div
-                        className="flex h-24 w-16 items-center justify-center rounded-2xl bg-slate-100 text-[10px] text-slate-400"
-                        aria-label={
-                          s?.title
-                            ? `${s.title} (no cover)`
-                            : `Series ${it.series_id} (no cover)`
-                        }
-                      >
-                        —
-                      </div>
-                    )}
-
-                    {s?.rank ? (
-                      <span className="absolute -left-2 -top-2 rounded-full bg-slate-900/80 px-2 py-1 text-[10px] font-bold text-white ring-2 ring-white">
-                        #{s.rank}
-                      </span>
-                    ) : null}
-
-                    {stx ? (
-                      <span
-                        className={
-                          "absolute bottom-2 right-2 inline-flex items-center rounded-full px-2 py-1 text-[9px] font-bold uppercase tracking-[0.16em] shadow-sm ring-1 ring-white/80 md:hidden " +
-                          statusClass(stx)
-                        }
-                        title={stx}
-                        aria-label={`Status: ${stx}`}
-                      >
-                        {stx}
-                      </span>
-                    ) : null}
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-start gap-2">
-                      {summariesLoading && !s ? (
-                        <ShimmerBox className="h-4 w-40 rounded" />
+                  <div className="grid gap-4 rounded-[28px] border border-slate-200/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(248,250,252,0.96))] p-4 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.55)] transition hover:border-slate-300/80 hover:shadow-[0_24px_48px_-30px_rgba(15,23,42,0.62)] sm:p-5 lg:grid-cols-[minmax(0,11rem)_minmax(0,1fr)] lg:gap-5">
+                    <Link
+                      to={`/series/${it.series_id}`}
+                      className="relative block overflow-hidden rounded-[26px] bg-slate-100 transition hover:scale-[1.01]"
+                      title={s?.title || `Series #${it.series_id}`}
+                    >
+                      {isThumbLoading ? (
+                        <ShimmerBox className="h-48 w-full rounded-[26px] sm:h-56" />
+                      ) : s?.cover_url ? (
+                        <img
+                          src={s.cover_url}
+                          alt={s?.title || `Series ${it.series_id}`}
+                        className="h-48 w-full rounded-[26px] bg-slate-100 object-cover object-[center_18%] sm:h-56 sm:object-center lg:h-full lg:min-h-[17rem]"
+                          loading="lazy"
+                          decoding="async"
+                          width={176}
+                          height={272}
+                        />
                       ) : (
-                        <Link
-                          to={`/series/${it.series_id}`}
-                          className="block truncate text-base font-semibold text-slate-900 transition hover:text-slate-700 hover:underline"
-                          title={s?.title || `Series #${it.series_id}`}
+                        <div
+                          className="flex h-48 w-full items-center justify-center rounded-[26px] bg-slate-100 text-[10px] text-slate-400 sm:h-56 lg:h-full lg:min-h-[17rem]"
+                          aria-label={
+                            s?.title
+                              ? `${s.title} (no cover)`
+                              : `Series ${it.series_id} (no cover)`
+                          }
                         >
-                          {s?.title || `Series #${it.series_id}`}
-                        </Link>
+                          —
+                        </div>
                       )}
+
+                      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-transparent" />
+
+                      {s?.rank ? (
+                        <span className="absolute left-3 top-3 inline-flex items-center rounded-full bg-slate-950/80 px-2.5 py-1 text-[10px] font-bold text-white ring-1 ring-white/80 backdrop-blur-sm">
+                          #{s.rank}
+                        </span>
+                      ) : null}
 
                       {stx ? (
                         <span
                           className={
-                            "hidden md:inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] shadow-sm ring-1 ring-white/80 " +
+                            "absolute bottom-3 left-3 inline-flex items-center rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.16em] shadow-sm ring-1 ring-white/80 " +
                             statusClass(stx)
                           }
                           title={stx}
@@ -551,185 +529,215 @@ function ListItems({
                         >
                           {stx}
                         </span>
-                      ) : summariesLoading && !s ? (
-                        <ShimmerBox className="h-4 w-14 rounded hidden md:inline-block" />
                       ) : null}
-                    </div>
+                    </Link>
 
-                    <div className="mt-3 flex flex-wrap items-center gap-2.5 text-sm text-slate-600">
-                      {summariesLoading && !s ? (
-                        <>
-                          <ShimmerBox className="h-7 w-20 rounded-full" />
-                          <ShimmerBox className="h-7 w-20 rounded-full" />
-                          <ShimmerBox className="h-7 w-24 rounded-full" />
-                        </>
-                      ) : (
-                        <>
-                          <span className={statChipClass("muted")}>
-                            {s?.type || "—"}
-                          </span>
-                          <span
-                            className={`${statChipClass("accent")} ${
-                              (s?.final_score ?? 0) >= 9
-                                ? "text-emerald-700 bg-emerald-50 ring-emerald-100"
-                                : (s?.final_score ?? 0) >= 7.5
-                                ? "text-blue-700 bg-blue-50 ring-blue-100"
-                                : (s?.final_score ?? 0) >= 5
-                                ? "text-amber-700 bg-amber-50 ring-amber-100"
-                                : "text-slate-500 bg-slate-100 ring-slate-200"
-                            }`}
-                          >
-                            {s?.final_score != null
-                              ? `★ ${Number(s.final_score).toFixed(3)}`
-                              : "★ —"}
-                          </span>
-                          <span className={statChipClass()}>
-                            {displayVoteCount
-                              ? `${displayVoteCount} votes`
-                              : "No votes"}
-                          </span>
-                        </>
-                      )}
-                    </div>
-
-                    <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50/90 p-3">
-                      {(() => {
-                        const draftValue =
-                          chapterDrafts[it.series_id] ?? it.left_off_chapter ?? "";
-                        const normalizedDraft = normalizeChapter(draftValue);
-                        const hasSavedChapter = normalizeChapter(it.left_off_chapter) !== "";
-                        const isDirty = isChapterDirty(it);
-                        const isSaving = savingSeriesId === it.series_id;
-                        const isEditing = editingSeriesId === it.series_id;
-
-                        return (
-                          <div className="flex flex-col gap-3">
-                            <div className="flex flex-wrap items-center justify-between gap-3">
-                              <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                                Reading progress
-                              </span>
-                              {!isEditing && hasSavedChapter ? (
-                                <span className="inline-flex items-center rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-200">
-                                  Ch. {it.left_off_chapter}
-                                </span>
-                              ) : null}
-                            </div>
-                            {isEditing ? (
-                              <div className="flex flex-wrap items-center gap-2.5">
-                                <input
-                                  id={`chapter-${listId}-${it.series_id}`}
-                                  type="text"
-                                  value={draftValue}
-                                  onChange={(e) => {
-                                    const nextValue = e.target.value;
-                                    setChapterDrafts((prev) => ({
-                                      ...prev,
-                                      [it.series_id]: nextValue,
-                                    }));
-                                  }}
-                                  onKeyDown={(e) => {
-                                    if (e.key === "Enter" && !isSaving && isDirty) {
-                                      e.preventDefault();
-                                      handleChapterSave(
-                                        it.series_id,
-                                        normalizedDraft || null
-                                      );
-                                    }
-                                    if (e.key === "Escape" && !isSaving) {
-                                      setChapterDrafts((prev) => ({
-                                        ...prev,
-                                        [it.series_id]: it.left_off_chapter ?? "",
-                                      }));
-                                      setEditingSeriesId(null);
-                                    }
-                                  }}
-                                  placeholder="Optional"
-                                  maxLength={50}
-                                  autoFocus
-                                  className={`w-36 rounded-xl border px-3 py-2 text-xs shadow-sm outline-none transition ${
-                                    isDirty
-                                      ? "border-amber-300 bg-amber-50"
-                                      : "border-slate-200 bg-white"
-                                  }`}
-                                />
-                                <button
-                                  onClick={() =>
-                                    handleChapterSave(
-                                      it.series_id,
-                                      normalizedDraft || null
-                                    )
-                                  }
-                                  disabled={isSaving || !isDirty}
-                                  className="rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                  {isSaving ? "Saving..." : "Save"}
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setChapterDrafts((prev) => ({
-                                      ...prev,
-                                      [it.series_id]: it.left_off_chapter ?? "",
-                                    }));
-                                    setEditingSeriesId(null);
-                                  }}
-                                  disabled={isSaving}
-                                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                  Cancel
-                                </button>
-                                {hasSavedChapter && (
-                                  <button
-                                    onClick={() => handleChapterSave(it.series_id, null)}
-                                    disabled={isSaving}
-                                    className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
-                                  >
-                                    Clear
-                                  </button>
-                                )}
-                              </div>
+                    <div className="min-w-0">
+                      <div className="flex flex-col gap-4">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="min-w-0">
+                            {summariesLoading && !s ? (
+                              <ShimmerBox className="h-5 w-48 rounded" />
                             ) : (
-                              <div className="flex flex-wrap items-center gap-2.5">
-                                <button
-                                  onClick={() => {
-                                    setChapterDrafts((prev) => ({
-                                      ...prev,
-                                      [it.series_id]: it.left_off_chapter ?? "",
-                                    }));
-                                    setEditingSeriesId(it.series_id);
-                                  }}
-                                  className={`rounded-xl px-3 py-2 text-xs font-semibold transition ${
-                                    hasSavedChapter
-                                      ? "border border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
-                                      : "border border-dashed border-slate-300 bg-transparent text-slate-500 hover:bg-white"
-                                  }`}
-                                >
-                                  {hasSavedChapter
-                                    ? "Edit chapter"
-                                    : "Add chapter"}
-                                </button>
-                              </div>
+                              <Link
+                                to={`/series/${it.series_id}`}
+                                className="block text-xl font-semibold tracking-tight text-slate-950 transition hover:text-slate-700 hover:underline sm:text-2xl"
+                                title={s?.title || `Series #${it.series_id}`}
+                              >
+                                {s?.title || `Series #${it.series_id}`}
+                              </Link>
+                            )}
+
+                            <div className="mt-3 flex flex-wrap items-center gap-2.5 text-sm text-slate-600">
+                              {summariesLoading && !s ? (
+                                <>
+                                  <ShimmerBox className="h-7 w-20 rounded-full" />
+                                  <ShimmerBox className="h-7 w-20 rounded-full" />
+                                  <ShimmerBox className="h-7 w-24 rounded-full" />
+                                </>
+                              ) : (
+                                <>
+                                  <span className={statChipClass("muted")}>
+                                    {s?.type || "—"}
+                                  </span>
+                                  <span
+                                    className={`${statChipClass("accent")} ${
+                                      (s?.final_score ?? 0) >= 9
+                                        ? "text-emerald-700 bg-emerald-50 ring-emerald-100"
+                                        : (s?.final_score ?? 0) >= 7.5
+                                        ? "text-blue-700 bg-blue-50 ring-blue-100"
+                                        : (s?.final_score ?? 0) >= 5
+                                        ? "text-amber-700 bg-amber-50 ring-amber-100"
+                                        : "text-slate-500 bg-slate-100 ring-slate-200"
+                                    }`}
+                                  >
+                                    {s?.final_score != null
+                                      ? `★ ${Number(s.final_score).toFixed(3)}`
+                                      : "★ —"}
+                                  </span>
+                                  <span className={statChipClass()}>
+                                    {displayVoteCount
+                                      ? `${displayVoteCount} votes`
+                                      : "No votes"}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-start justify-end">
+                            {summariesLoading && !s ? (
+                              <ShimmerBox className="h-10 w-24 rounded-xl" />
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  onRemove(it.series_id);
+                                  setItems((prev) =>
+                                    prev.filter((x) => x.series_id !== it.series_id)
+                                  );
+                                }}
+                                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700 sm:w-auto"
+                              >
+                                Remove
+                              </button>
                             )}
                           </div>
-                        );
-                      })()}
-                    </div>
-                  </div>
+                        </div>
 
-                  {summariesLoading && !s ? (
-                    <ShimmerBox className="h-10 w-20 rounded-xl" />
-                  ) : (
-                    <button
-                      onClick={() => {
-                        onRemove(it.series_id);
-                        setItems((prev) =>
-                          prev.filter((x) => x.series_id !== it.series_id)
-                        );
-                      }}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-700 sm:w-auto sm:self-start"
-                    >
-                      Remove
-                    </button>
-                  )}
+                        <div className="rounded-[24px] border border-slate-200 bg-white/90 p-4 shadow-[0_16px_34px_-32px_rgba(15,23,42,0.7)]">
+                          {(() => {
+                            const draftValue =
+                              chapterDrafts[it.series_id] ?? it.left_off_chapter ?? "";
+                            const normalizedDraft = normalizeChapter(draftValue);
+                            const hasSavedChapter =
+                              normalizeChapter(it.left_off_chapter) !== "";
+                            const isDirty = isChapterDirty(it);
+                            const isSaving = savingSeriesId === it.series_id;
+                            const isEditing = editingSeriesId === it.series_id;
+
+                            return (
+                              <div className="flex flex-col gap-3">
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                  <div>
+                                    <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                                      Reading progress
+                                    </span>
+                                    <p className="mt-1 text-sm text-slate-600">
+                                      Track the chapter you last reached for this title.
+                                    </p>
+                                  </div>
+                                  {!isEditing && hasSavedChapter ? (
+                                    <span className="inline-flex items-center rounded-full bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700 ring-1 ring-inset ring-slate-200">
+                                      Ch. {it.left_off_chapter}
+                                    </span>
+                                  ) : null}
+                                </div>
+                                {isEditing ? (
+                                  <div className="flex flex-wrap items-center gap-2.5">
+                                    <input
+                                      id={`chapter-${listId}-${it.series_id}`}
+                                      type="text"
+                                      value={draftValue}
+                                      onChange={(e) => {
+                                        const nextValue = e.target.value;
+                                        setChapterDrafts((prev) => ({
+                                          ...prev,
+                                          [it.series_id]: nextValue,
+                                        }));
+                                      }}
+                                      onKeyDown={(e) => {
+                                        if (e.key === "Enter" && !isSaving && isDirty) {
+                                          e.preventDefault();
+                                          handleChapterSave(
+                                            it.series_id,
+                                            normalizedDraft || null
+                                          );
+                                        }
+                                        if (e.key === "Escape" && !isSaving) {
+                                          setChapterDrafts((prev) => ({
+                                            ...prev,
+                                            [it.series_id]:
+                                              it.left_off_chapter ?? "",
+                                          }));
+                                          setEditingSeriesId(null);
+                                        }
+                                      }}
+                                      placeholder="Optional"
+                                      maxLength={50}
+                                      autoFocus
+                                      className={`w-40 rounded-xl border px-3 py-2 text-xs shadow-sm outline-none transition ${
+                                        isDirty
+                                          ? "border-amber-300 bg-amber-50"
+                                          : "border-slate-200 bg-white"
+                                      }`}
+                                    />
+                                    <button
+                                      onClick={() =>
+                                        handleChapterSave(
+                                          it.series_id,
+                                          normalizedDraft || null
+                                        )
+                                      }
+                                      disabled={isSaving || !isDirty}
+                                      className="rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                      {isSaving ? "Saving..." : "Save"}
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setChapterDrafts((prev) => ({
+                                          ...prev,
+                                          [it.series_id]:
+                                            it.left_off_chapter ?? "",
+                                        }));
+                                        setEditingSeriesId(null);
+                                      }}
+                                      disabled={isSaving}
+                                      className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                      Cancel
+                                    </button>
+                                    {hasSavedChapter && (
+                                      <button
+                                        onClick={() =>
+                                          handleChapterSave(it.series_id, null)
+                                        }
+                                        disabled={isSaving}
+                                        className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                      >
+                                        Clear
+                                      </button>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div className="flex flex-wrap items-center gap-2.5">
+                                    <button
+                                      onClick={() => {
+                                        setChapterDrafts((prev) => ({
+                                          ...prev,
+                                          [it.series_id]:
+                                            it.left_off_chapter ?? "",
+                                        }));
+                                        setEditingSeriesId(it.series_id);
+                                      }}
+                                      className={`rounded-xl px-3 py-2 text-xs font-semibold transition ${
+                                        hasSavedChapter
+                                          ? "border border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
+                                          : "border border-dashed border-slate-300 bg-transparent text-slate-500 hover:bg-white"
+                                      }`}
+                                    >
+                                      {hasSavedChapter
+                                        ? "Edit chapter"
+                                        : "Add chapter"}
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </li>
               );
