@@ -1,11 +1,14 @@
 import { useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { login, resendVerificationEmail } from "../api/manApi";
-
-import GoogleOAuthButton from "../components/GoogleOAuthButton";
+import { Link, useNavigate } from "react-router-dom";
 import ReCAPTCHA from "react-google-recaptcha";
+import { login, resendVerificationEmail } from "../api/manApi";
+import GoogleOAuthButton from "../components/GoogleOAuthButton";
+import AuthShell from "../components/AuthShell";
 import { scheduleLogoutAtJwtExp } from "../util/authUtils";
 import { useUser } from "../login/useUser";
+
+const fieldClass =
+  "mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-100";
 
 const LoginPage = () => {
   const [username, setUsername] = useState("");
@@ -22,7 +25,6 @@ const LoginPage = () => {
   const [resendEmail, setResendEmail] = useState("");
   const [resendMsg, setResendMsg] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
-
   const [resendCaptcha, setResendCaptcha] = useState("");
 
   const handleLogin = async () => {
@@ -65,7 +67,6 @@ const LoginPage = () => {
       } else if (statusCode === "401" && detail === "Invalid credentials") {
         setError("Invalid username or password.");
       } else if (
-        // common server phrases; adjust to your backend’s wording if needed
         /captcha/i.test(detail) ||
         /token/i.test(detail) ||
         statusCode === "400"
@@ -86,7 +87,6 @@ const LoginPage = () => {
     setResending(true);
     try {
       const { message } = await resendVerificationEmail({
-        // Prefer email; fallback to username if you want
         email: resendEmail || undefined,
         username: !resendEmail ? username : undefined,
         captcha_token: resendCaptcha || undefined,
@@ -103,94 +103,160 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex-grow bg-gray-100 flex items-center justify-center min-h-[calc(100vh-100px)] px-4">
-      <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
-        {error && <p className="text-red-600 mb-4 text-center">{error}</p>}
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="w-full p-2 mb-4 border rounded bg-blue-50"
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-2 mb-6 border rounded bg-blue-50"
-        />
-        <ReCAPTCHA
-          ref={recaptchaRef}
-          sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
-          onChange={(token) => setCaptchaToken(token || "")}
-          onExpired={() => {
-            setCaptchaToken("");
-            setError("CAPTCHA expired. Please try again.");
-          }}
-          onError={() => {
-            setCaptchaToken("");
-            setError("CAPTCHA failed to load. Please retry.");
-          }}
-          className="mb-4"
-        />
+    <AuthShell
+      eyebrow="Welcome Back"
+      title="Pick up where you left off."
+      description="Sign in to manage reading lists, rate titles, and keep your forum activity tied to one account."
+      accentLabel="Your account"
+      accentTitle="One place for rankings, lists, and discussion."
+      accentBody="Your votes, saved chapters, and community activity stay together so you can jump back in without friction."
+      highlights={["Reading lists", "Series ratings", "Forum replies"]}
+      footerPrompt="Need an account?"
+      footerLinkLabel="Create one"
+      footerLinkTo="/signup"
+    >
+      <div>
+        <div className="mb-6">
+          <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
+            Login
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Use your Toon Ranks credentials to continue.
+          </p>
+        </div>
+
+        {error && (
+          <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {error}
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <label className="block">
+            <span className="text-sm font-medium text-slate-700">Username</span>
+            <input
+              type="text"
+              placeholder="Enter your username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className={fieldClass}
+            />
+          </label>
+
+          <label className="block">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm font-medium text-slate-700">
+                Password
+              </span>
+              <Link
+                to="/signup"
+                className="text-xs font-medium text-slate-500 transition hover:text-slate-700"
+              >
+                Need an account?
+              </Link>
+            </div>
+            <input
+              type="password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={fieldClass}
+            />
+          </label>
+        </div>
+
+        <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200 bg-slate-50/70 px-3 py-3">
+          <ReCAPTCHA
+            ref={recaptchaRef}
+            sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+            onChange={(token) => setCaptchaToken(token || "")}
+            onExpired={() => {
+              setCaptchaToken("");
+              setError("CAPTCHA expired. Please try again.");
+            }}
+            onError={() => {
+              setCaptchaToken("");
+              setError("CAPTCHA failed to load. Please retry.");
+            }}
+          />
+        </div>
 
         <button
           onClick={handleLogin}
-          disabled={submitting} // ⬅️ remove `|| !captchaToken`
-          className={`w-full text-white py-2 rounded ${
+          disabled={submitting}
+          className={`mt-5 w-full rounded-2xl px-4 py-3 text-sm font-semibold text-white transition ${
             submitting
-              ? "bg-blue-400 cursor-not-allowed"
-              : "bg-blue-600/70 hover:bg-blue-600"
+              ? "cursor-not-allowed bg-blue-400"
+              : "bg-blue-600 hover:bg-blue-700"
           }`}
         >
           {submitting ? "Signing in..." : "Login"}
         </button>
 
         {showResend && (
-          <div className="mt-6 p-4 border rounded bg-yellow-50">
-            <p className="text-sm mb-2 font-medium">
-              Your verification link may have expired. Enter your email to
-              resend:
-            </p>
-            <input
-              type="email"
-              placeholder="Email used at signup (preferred)"
-              value={resendEmail}
-              onChange={(e) => setResendEmail(e.target.value)}
-              className="w-full p-2 mb-3 border rounded bg-white"
-            />
-            <ReCAPTCHA
-              ref={recaptchaRef}
-              sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
-              onChange={(t) => setResendCaptcha(t || "")}
-              className="mb-3"
-            />
+          <div className="mt-6 rounded-[26px] border border-amber-200 bg-amber-50/80 p-4 sm:p-5">
+            <div className="space-y-2">
+              <h3 className="text-base font-semibold text-slate-900">
+                Resend verification email
+              </h3>
+              <p className="text-sm leading-6 text-slate-600">
+                If your verification link expired, enter the email used for
+                signup and we’ll send another one.
+              </p>
+            </div>
+
+            <label className="mt-4 block">
+              <span className="text-sm font-medium text-slate-700">Email</span>
+              <input
+                type="email"
+                placeholder="Email used at signup"
+                value={resendEmail}
+                onChange={(e) => setResendEmail(e.target.value)}
+                className={fieldClass}
+              />
+            </label>
+
+            <div className="mt-4 overflow-x-auto rounded-2xl border border-amber-200 bg-white/80 px-3 py-3">
+              <ReCAPTCHA
+                ref={recaptchaRef}
+                sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+                onChange={(t) => setResendCaptcha(t || "")}
+              />
+            </div>
+
             <button
               onClick={triggerResend}
               disabled={resending}
-              className={`w-full text-white py-2 rounded ${
+              className={`mt-4 w-full rounded-2xl px-4 py-3 text-sm font-semibold text-white transition ${
                 resending
-                  ? "bg-blue-400 cursor-not-allowed"
-                  : "bg-blue-600/70 hover:bg-blue-600"
+                  ? "cursor-not-allowed bg-blue-400"
+                  : "bg-blue-600 hover:bg-blue-700"
               }`}
             >
               {resending ? "Resending..." : "Resend verification email"}
             </button>
+
             {resendMsg && (
-              <p className="mt-3 text-center text-sm text-gray-700">
+              <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
                 {resendMsg}
-              </p>
+              </div>
             )}
           </div>
         )}
 
-        <div className="my-4">
+        <div className="my-6 flex items-center gap-3">
+          <div className="h-px flex-1 bg-slate-200" />
+          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+            Or continue with
+          </span>
+          <div className="h-px flex-1 bg-slate-200" />
+        </div>
+
+        <div className="rounded-[24px] border border-slate-200 bg-slate-50/70 px-4 py-4">
           <GoogleOAuthButton />
         </div>
       </div>
-    </div>
+    </AuthShell>
   );
 };
 

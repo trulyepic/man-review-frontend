@@ -283,7 +283,7 @@ export default function PublicReadingListPage() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-end gap-3">
           <div className="flex min-w-[180px] flex-col gap-1">
             <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
               Sort
@@ -358,24 +358,28 @@ export default function PublicReadingListPage() {
                 );
 
                 return (
-                  <li key={it.series_id} className="px-4 py-4 sm:px-5">
-                    <div className="flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_12px_30px_-24px_rgba(15,23,42,0.55)] transition hover:border-slate-300/80 hover:shadow-[0_18px_40px_-28px_rgba(15,23,42,0.65)]">
-                    <div className="relative shrink-0">
+                <li key={it.series_id} className="px-4 py-4 sm:px-5">
+                  <div className="grid gap-4 rounded-[28px] border border-slate-200/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(248,250,252,0.96))] p-4 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.55)] transition hover:border-slate-300/80 hover:shadow-[0_24px_48px_-30px_rgba(15,23,42,0.62)] sm:p-5 lg:grid-cols-[minmax(0,11rem)_minmax(0,1fr)] lg:gap-5">
+                    <Link
+                      to={`/series/${it.series_id}`}
+                      className="relative block overflow-hidden rounded-[26px] bg-slate-100 transition hover:scale-[1.01]"
+                      title={s?.title || `Series #${it.series_id}`}
+                    >
                       {isLoading ? (
-                        <ShimmerBox className="h-24 w-16 rounded-2xl" />
+                        <ShimmerBox className="h-48 w-full rounded-[26px] sm:h-56" />
                       ) : s?.cover_url ? (
                         <img
                           src={s.cover_url}
                           alt={s?.title || `Series ${it.series_id}`}
-                          className="h-24 w-16 rounded-2xl bg-slate-100 object-cover shadow-sm"
+                          className="h-48 w-full rounded-[26px] bg-slate-100 object-cover object-[center_18%] sm:h-56 sm:object-center lg:h-full lg:min-h-[17rem]"
                           loading="lazy"
                           decoding="async"
-                          width={80}
-                          height={120}
+                          width={176}
+                          height={272}
                         />
                       ) : (
                         <div
-                          className="flex h-24 w-16 items-center justify-center rounded-2xl bg-slate-100 text-[10px] text-slate-400"
+                          className="flex h-48 w-full items-center justify-center rounded-[26px] bg-slate-100 text-[10px] text-slate-400 sm:h-56 lg:h-full lg:min-h-[17rem]"
                           aria-label={
                             s?.title
                               ? `${s.title} (no cover)`
@@ -386,8 +390,10 @@ export default function PublicReadingListPage() {
                         </div>
                       )}
 
+                      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-transparent" />
+
                       {s?.rank ? (
-                        <span className="absolute -left-2 -top-2 rounded-full bg-slate-900/80 px-2 py-1 text-[10px] font-bold text-white ring-2 ring-white">
+                        <span className="absolute left-3 top-3 inline-flex items-center rounded-full bg-slate-950/80 px-2.5 py-1 text-[10px] font-bold text-white ring-1 ring-white/80 backdrop-blur-sm">
                           #{s.rank}
                         </span>
                       ) : null}
@@ -395,7 +401,7 @@ export default function PublicReadingListPage() {
                       {st ? (
                         <span
                           className={
-                            "absolute bottom-2 right-2 inline-flex items-center rounded-full px-2 py-1 text-[9px] font-bold uppercase tracking-[0.16em] shadow-sm ring-1 ring-white/80 md:hidden " +
+                            "absolute bottom-3 left-3 inline-flex items-center rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.16em] shadow-sm ring-1 ring-white/80 " +
                             statusClass(st)
                           }
                           title={st}
@@ -404,86 +410,73 @@ export default function PublicReadingListPage() {
                           {st}
                         </span>
                       ) : null}
-                    </div>
+                    </Link>
 
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-start gap-2">
-                        {isLoading ? (
-                          <ShimmerBox className="h-4 w-40 rounded" />
-                        ) : (
-                          <Link
-                            to={`/series/${it.series_id}`}
-                            className="block truncate text-base font-semibold text-slate-900 transition hover:text-slate-700 hover:underline"
-                            title={s?.title || `Series #${it.series_id}`}
-                          >
-                            {s?.title || `Series #${it.series_id}`}
-                          </Link>
-                        )}
+                    <div className="min-w-0">
+                      <div className="flex flex-col gap-4">
+                        <div className="min-w-0">
+                          {isLoading ? (
+                            <ShimmerBox className="h-5 w-48 rounded" />
+                          ) : (
+                            <Link
+                              to={`/series/${it.series_id}`}
+                              className="block text-xl font-semibold tracking-tight text-slate-950 transition hover:text-slate-700 hover:underline sm:text-2xl"
+                              title={s?.title || `Series #${it.series_id}`}
+                            >
+                              {s?.title || `Series #${it.series_id}`}
+                            </Link>
+                          )}
 
-                        {st ? (
-                          <span
-                            className={
-                              "hidden md:inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] shadow-sm ring-1 ring-white/80 " +
-                              statusClass(st)
-                            }
-                            title={st}
-                            aria-label={`Status: ${st}`}
-                          >
-                            {st}
-                          </span>
-                        ) : isLoading ? (
-                          <ShimmerBox className="h-4 w-14 rounded hidden md:inline-block" />
+                          <div className="mt-3 flex flex-wrap items-center gap-2.5 text-sm text-slate-600">
+                            {isLoading ? (
+                              <>
+                                <ShimmerBox className="h-7 w-20 rounded-full" />
+                                <ShimmerBox className="h-7 w-20 rounded-full" />
+                                <ShimmerBox className="h-7 w-24 rounded-full" />
+                              </>
+                            ) : (
+                              <>
+                                <span className={statChipClass("muted")}>
+                                  {s?.type || "—"}
+                                </span>
+                                <span
+                                  className={`${statChipClass("accent")} ${(s?.final_score ?? 0) >= 9 ? "text-emerald-700 bg-emerald-50 ring-emerald-100" : (s?.final_score ?? 0) >= 7.5 ? "text-blue-700 bg-blue-50 ring-blue-100" : (s?.final_score ?? 0) >= 5 ? "text-amber-700 bg-amber-50 ring-amber-100" : "text-slate-500 bg-slate-100 ring-slate-200"}`}
+                                >
+                                  {s?.final_score != null
+                                    ? `★ ${Number(s.final_score).toFixed(3)}`
+                                    : "★ —"}
+                                </span>
+                                <span className={statChipClass()}>
+                                  {displayVoteCount
+                                    ? `${displayVoteCount} votes`
+                                    : "No votes"}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        {it.left_off_chapter ? (
+                          <div className="rounded-[24px] border border-slate-200 bg-white/90 p-4 shadow-[0_16px_34px_-32px_rgba(15,23,42,0.7)]">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                              <div>
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                                  Reading progress
+                                </p>
+                                <p className="mt-1 text-sm text-slate-600">
+                                  Shared reading position for this title.
+                                </p>
+                              </div>
+                              <span className="inline-flex items-center rounded-full bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700 ring-1 ring-inset ring-slate-200">
+                                Ch. {it.left_off_chapter}
+                              </span>
+                            </div>
+                          </div>
                         ) : null}
                       </div>
-
-                      <div className="mt-3 flex flex-wrap items-center gap-2.5 text-sm text-slate-600">
-                        {isLoading ? (
-                          <>
-                            <ShimmerBox className="h-7 w-20 rounded-full" />
-                            <ShimmerBox className="h-7 w-20 rounded-full" />
-                            <ShimmerBox className="h-7 w-24 rounded-full" />
-                          </>
-                        ) : (
-                          <>
-                            <span className={statChipClass("muted")}>
-                              {s?.type || "—"}
-                            </span>
-                            <span
-                              className={`${statChipClass("accent")} ${
-                                (s?.final_score ?? 0) >= 9
-                                  ? "text-emerald-700 bg-emerald-50 ring-emerald-100"
-                                  : (s?.final_score ?? 0) >= 7.5
-                                  ? "text-blue-700 bg-blue-50 ring-blue-100"
-                                  : (s?.final_score ?? 0) >= 5
-                                  ? "text-amber-700 bg-amber-50 ring-amber-100"
-                                  : "text-slate-500 bg-slate-100 ring-slate-200"
-                              }`}
-                            >
-                              {s?.final_score != null
-                                ? `★ ${Number(s.final_score).toFixed(3)}`
-                                : "★ —"}
-                            </span>
-                            <span className={statChipClass()}>
-                              {displayVoteCount
-                                ? `${displayVoteCount} votes`
-                                : "No votes"}
-                            </span>
-                          </>
-                        )}
-                      </div>
-                      {it.left_off_chapter ? (
-                        <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50/90 px-3 py-3">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                            Reading progress
-                          </p>
-                          <p className="mt-2 text-sm font-medium text-slate-700">
-                            Left off at Ch. {it.left_off_chapter}
-                          </p>
-                        </div>
-                      ) : null}
                     </div>
-                    </div>
-                  </li>
+                  </div>
+                </li>
                 );
               })}
             </ul>
