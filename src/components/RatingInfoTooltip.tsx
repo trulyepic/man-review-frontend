@@ -3,15 +3,13 @@ import { Info } from "lucide-react";
 
 const RatingInfoTooltip = () => {
   return (
-    <>
-      <div className="inline-block ml-1 relative group">
-        <Info className="w-4 h-4 text-gray-500 cursor-pointer" />
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 bg-white text-sm text-gray-700 border border-gray-300 rounded shadow-lg px-3 py-2 opacity-0 group-hover:opacity-100 transition-opacity z-50">
-          Based on user votes across 5 categories: Story, Characters, World
-          Building, Art, and Drama/Fighting.
-        </div>
+    <div className="group relative ml-1 inline-block">
+      <Info className="h-4 w-4 cursor-pointer text-gray-500" />
+      <div className="pointer-events-none absolute bottom-full right-0 z-[80] mb-2 w-64 rounded-lg bg-slate-900 px-3 py-2 text-left text-xs font-normal normal-case tracking-normal leading-5 text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 sm:left-1/2 sm:right-auto sm:-translate-x-1/2">
+        Based on user votes across five categories: story, characters, world
+        building, art, and drama or fighting.
       </div>
-    </>
+    </div>
   );
 };
 

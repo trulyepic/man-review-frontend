@@ -261,7 +261,7 @@ const SeriesDetailPage = () => {
           <SeriesDetailShimmer />
         ) : (
           <>
-            <section className="overflow-hidden rounded-[32px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.12),_transparent_28%),linear-gradient(135deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.96))] shadow-[0_28px_70px_-46px_rgba(15,23,42,0.55)]">
+            <section className="overflow-visible rounded-[32px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.12),_transparent_28%),linear-gradient(135deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.96))] shadow-[0_28px_70px_-46px_rgba(15,23,42,0.55)]">
               <div className="px-5 pt-5 sm:px-7 sm:pt-7 lg:px-8 lg:pt-8">
                 <img
                   src={seriesDetail.series_cover_url}
@@ -358,7 +358,7 @@ const SeriesDetailPage = () => {
               </div>
             </section>
 
-            <section className="mt-8 overflow-hidden rounded-[30px] border border-slate-200 bg-white/95 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.45)]">
+            <section className="mt-8 overflow-visible rounded-[30px] border border-slate-200 bg-white/95 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.45)]">
               <div className="border-b border-slate-200/80 px-5 py-5 sm:px-6">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                   Community voting

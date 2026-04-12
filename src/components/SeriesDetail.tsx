@@ -204,13 +204,29 @@ const SeriesDetail = ({ series, updateRating, seriesDetail }: Props) => {
                       </button>
 
                       {!isLoggedIn && (
-                        <div className="absolute -top-10 left-1/2 z-10 w-max -translate-x-1/2 rounded-lg bg-slate-900 px-2 py-1 text-xs text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100">
+                        <div
+                          className={`pointer-events-none absolute -top-10 z-10 w-max rounded-lg bg-slate-900 px-2 py-1 text-xs text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100 ${
+                            score >= 9
+                              ? "right-0"
+                              : score <= 2
+                              ? "left-0"
+                              : "left-1/2 -translate-x-1/2"
+                          }`}
+                        >
                           Please log in or register to vote
                         </div>
                       )}
 
                       {isLoggedIn && alreadyVoted && !voted && (
-                        <div className="absolute -top-10 left-1/2 z-10 w-max -translate-x-1/2 rounded-lg bg-slate-900 px-2 py-1 text-xs text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100">
+                        <div
+                          className={`pointer-events-none absolute -top-10 z-10 w-max rounded-lg bg-slate-900 px-2 py-1 text-xs text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100 ${
+                            score >= 9
+                              ? "right-0"
+                              : score <= 2
+                              ? "left-0"
+                              : "left-1/2 -translate-x-1/2"
+                          }`}
+                        >
                           You already voted on this category
                         </div>
                       )}
