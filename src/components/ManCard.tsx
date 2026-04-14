@@ -46,7 +46,7 @@ function statusClasses(status?: Props["status"]) {
 
 function scoreTone(score?: number) {
   if (score == null) return "text-slate-500";
-  if (score >= 9) return "text-emerald-600";
+  if (score >= 8) return "text-emerald-600";
   if (score >= 7.5) return "text-blue-600";
   if (score >= 5) return "text-amber-500";
   if (score >= 3) return "text-orange-400";
