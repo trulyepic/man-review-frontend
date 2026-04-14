@@ -100,8 +100,9 @@ export default function GenreStrip({ genres, active, onSelect }: Props) {
   const tabBase =
     "whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] transition-colors sm:px-3.5 sm:py-2 sm:text-sm sm:tracking-[0.14em]";
   const tabActive =
-    "bg-slate-900 text-white shadow-[0_10px_24px_-18px_rgba(15,23,42,0.9)]";
-  const tabIdle = "text-slate-500 hover:bg-slate-100 hover:text-slate-900";
+    "bg-slate-900 text-white shadow-[0_10px_24px_-18px_rgba(15,23,42,0.9)] dark:bg-[radial-gradient(circle_at_top_left,_rgba(45,212,191,0.16),_transparent_40%),linear-gradient(145deg,_rgba(34,63,124,0.96),_rgba(23,44,96,0.96))] dark:text-white";
+  const tabIdle =
+    "text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-[linear-gradient(145deg,_rgba(35,28,24,0.95),_rgba(24,19,16,0.95))] dark:hover:text-white";
 
   return (
     <div className="relative">
@@ -162,7 +163,7 @@ export default function GenreStrip({ genres, active, onSelect }: Props) {
           {/* Desktop-only arrows */}
           <button
             onClick={() => scrollByX(-240)}
-            className={`hidden sm:flex items-center justify-center absolute left-0 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full border border-slate-200 bg-white shadow-sm hover:bg-slate-50 transition-opacity duration-200 z-30 ${
+            className={`hidden sm:flex items-center justify-center absolute left-0 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full border border-slate-200 bg-white shadow-sm hover:bg-slate-50 transition-opacity duration-200 z-30 dark-theme-card-soft dark:text-slate-200 dark:hover:bg-[#241d19] ${
               canScrollLeft ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
             aria-label="Scroll left"
@@ -174,7 +175,7 @@ export default function GenreStrip({ genres, active, onSelect }: Props) {
 
           <button
             onClick={() => scrollByX(240)}
-            className={`hidden sm:flex items-center justify-center absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full border border-slate-200 bg-white shadow-sm hover:bg-slate-50 transition-opacity duration-200 z-30 ${
+            className={`hidden sm:flex items-center justify-center absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full border border-slate-200 bg-white shadow-sm hover:bg-slate-50 transition-opacity duration-200 z-30 dark-theme-card-soft dark:text-slate-200 dark:hover:bg-[#241d19] ${
               canScrollRight ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
             aria-label="Scroll right"

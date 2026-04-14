@@ -49,16 +49,13 @@ const ReportIssuePage = () => {
       setDescription("");
       setEmail("");
       setScreenshot(undefined);
-      // Optionally scroll to top to show the success message
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err: unknown) {
       let detail = "Failed to submit the report.";
 
-      if (typeof err === "string") {
-        detail = err;
-      } else if (err instanceof Error) {
-        detail = err.message;
-      } else if (typeof err === "object" && err !== null) {
+      if (typeof err === "string") detail = err;
+      else if (err instanceof Error) detail = err.message;
+      else if (typeof err === "object" && err !== null) {
         const maybe = err as {
           message?: string;
           response?: { data?: { detail?: string } };
@@ -73,28 +70,32 @@ const ReportIssuePage = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10">
-      <h1 className="text-2xl md:text-3xl font-bold mb-2">Report an Issue</h1>
-      <p className="text-gray-600 mb-6">
+    <div className="dark-theme-shell mx-auto max-w-3xl px-4 py-10">
+      <h1 className="mb-2 text-2xl font-bold text-slate-900 dark:text-stone-50 md:text-3xl">
+        Report an Issue
+      </h1>
+      <p className="mb-6 text-slate-600 dark:text-stone-300">
         Spotted a bug or something off? Let us know so we can fix it.
       </p>
 
       {successMsg && (
-        <div className="mb-4 rounded-md border border-green-300 bg-green-50 p-3 text-green-800">
+        <div className="mb-4 rounded-md border border-green-300 bg-green-50 p-3 text-green-800 dark:border-green-800/70 dark:bg-green-950/30 dark:text-green-200">
           {successMsg}
         </div>
       )}
       {errorMsg && (
-        <div className="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-red-800">
+        <div className="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-red-800 dark:border-red-800/70 dark:bg-red-950/30 dark:text-red-200">
           {errorMsg}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-semibold mb-1">Issue Type</label>
+          <label className="mb-1 block text-sm font-semibold text-slate-800 dark:text-stone-200">
+            Issue Type
+          </label>
           <select
-            className="w-full rounded border border-gray-300 px-3 py-2"
+            className="dark-theme-field w-full rounded border border-gray-300 px-3 py-2 text-slate-900 dark:border-[#3a3028] dark:text-stone-100"
             value={type}
             onChange={(e) => setType(e.target.value as IssueType)}
           >
@@ -107,9 +108,11 @@ const ReportIssuePage = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold mb-1">Title</label>
+          <label className="mb-1 block text-sm font-semibold text-slate-800 dark:text-stone-200">
+            Title
+          </label>
           <input
-            className="w-full rounded border border-gray-300 px-3 py-2"
+            className="dark-theme-field w-full rounded border border-gray-300 px-3 py-2 text-slate-900 dark:border-[#3a3028] dark:text-stone-100 dark:placeholder:text-stone-500"
             placeholder="Short summary (e.g., 'Category page throws error')"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -119,28 +122,28 @@ const ReportIssuePage = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold mb-1">
+          <label className="mb-1 block text-sm font-semibold text-slate-800 dark:text-stone-200">
             Description
           </label>
           <textarea
-            className="w-full rounded border border-gray-300 px-3 py-2 min-h-[120px]"
+            className="dark-theme-field min-h-[120px] w-full rounded border border-gray-300 px-3 py-2 text-slate-900 dark:border-[#3a3028] dark:text-stone-100 dark:placeholder:text-stone-500"
             placeholder="What happened? Steps to reproduce? What did you expect to happen?"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             required
           />
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="mt-1 text-xs text-gray-500 dark:text-stone-400">
             Tip: Include steps, the page you were on, and any error messages.
           </p>
         </div>
 
         <div>
-          <label className="block text-sm font-semibold mb-1">
+          <label className="mb-1 block text-sm font-semibold text-slate-800 dark:text-stone-200">
             Email (optional)
           </label>
           <input
             type="email"
-            className="w-full rounded border border-gray-300 px-3 py-2"
+            className="dark-theme-field w-full rounded border border-gray-300 px-3 py-2 text-slate-900 dark:border-[#3a3028] dark:text-stone-100 dark:placeholder:text-stone-500"
             placeholder="you@example.com (only if you want follow-up)"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -148,16 +151,16 @@ const ReportIssuePage = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold mb-1">
+          <label className="mb-1 block text-sm font-semibold text-slate-800 dark:text-stone-200">
             Screenshot (optional)
           </label>
           <input
             type="file"
             accept="image/*"
             onChange={(e) => setScreenshot(e.target.files?.[0])}
-            className="block w-full text-sm text-gray-700 file:mr-4 file:rounded-md file:border file:border-gray-300 file:bg-white file:px-4 file:py-2 file:text-sm file:font-semibold hover:file:bg-gray-50"
+            className="block w-full text-sm text-gray-700 dark:text-stone-300 file:mr-4 file:rounded-md file:border file:border-gray-300 file:bg-white file:px-4 file:py-2 file:text-sm file:font-semibold hover:file:bg-gray-50 dark:file:border-[#3a3028] dark:file:bg-[#18120f] dark:hover:file:bg-[#241d19]"
           />
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="mt-1 text-xs text-gray-500 dark:text-stone-400">
             A screenshot often helps us fix things faster.
           </p>
         </div>

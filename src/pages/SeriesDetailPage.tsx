@@ -250,7 +250,7 @@ const SeriesDetailPage = () => {
           <div className="mb-4 flex justify-end">
             <button
               onClick={() => setShowEditModal(true)}
-              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 dark-theme-card-soft dark:text-slate-200 dark:hover:bg-[#241d19]"
             >
               Edit Series Detail
             </button>
@@ -261,12 +261,12 @@ const SeriesDetailPage = () => {
           <SeriesDetailShimmer />
         ) : (
           <>
-            <section className="overflow-visible rounded-[32px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.12),_transparent_28%),linear-gradient(135deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.96))] shadow-[0_28px_70px_-46px_rgba(15,23,42,0.55)]">
+            <section className="overflow-visible rounded-[32px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.12),_transparent_28%),linear-gradient(135deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.96))] shadow-[0_28px_70px_-46px_rgba(15,23,42,0.55)] dark-theme-shell">
               <div className="px-5 pt-5 sm:px-7 sm:pt-7 lg:px-8 lg:pt-8">
                 <img
                   src={seriesDetail.series_cover_url}
                   alt={displayTitle}
-                  className="w-full rounded-[26px] border border-slate-200 bg-white object-cover shadow-[0_24px_48px_-28px_rgba(15,23,42,0.45)]"
+                  className="w-full rounded-[26px] border border-slate-200 bg-white object-cover shadow-[0_24px_48px_-28px_rgba(15,23,42,0.45)] dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(25,21,18,0.96),_rgba(20,17,14,0.96))] dark:shadow-[0_24px_48px_-28px_rgba(0,0,0,0.85)]"
                 />
               </div>
 
@@ -274,36 +274,36 @@ const SeriesDetailPage = () => {
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 ring-1 ring-inset ring-slate-200">
+                      <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 ring-1 ring-inset ring-slate-200 dark-theme-chip dark:text-slate-300">
                         {series.type}
                       </span>
-                      <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-700 ring-1 ring-inset ring-blue-100">
+                      <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-700 ring-1 ring-inset ring-blue-100 dark:bg-blue-950/50 dark:text-blue-300 dark:ring-blue-900">
                         {series.genre}
                       </span>
                     </div>
 
-                    <h1 className="mt-4 break-words text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
+                    <h1 className="mt-4 break-words text-3xl font-semibold tracking-tight text-slate-950 dark:text-white sm:text-4xl">
                       {displayTitle}
                     </h1>
 
                     <div className="mt-5 grid gap-3 sm:grid-cols-2">
                       {seriesDetail.author ? (
-                        <div className="rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 shadow-sm">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                        <div className="rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 shadow-sm dark-theme-card-soft">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                             Author
                           </p>
-                          <p className="mt-1 text-sm font-medium text-slate-800">
+                          <p className="mt-1 text-sm font-medium text-slate-800 dark:text-slate-100">
                             {seriesDetail.author}
                           </p>
                         </div>
                       ) : null}
 
                       {seriesDetail.artist ? (
-                        <div className="rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 shadow-sm">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                        <div className="rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 shadow-sm dark-theme-card-soft">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                             Artist
                           </p>
-                          <p className="mt-1 text-sm font-medium text-slate-800">
+                          <p className="mt-1 text-sm font-medium text-slate-800 dark:text-slate-100">
                             {seriesDetail.artist}
                           </p>
                         </div>
@@ -312,24 +312,24 @@ const SeriesDetailPage = () => {
                   </div>
 
                   <div className="w-full max-w-[220px] shrink-0">
-                    <div className="rounded-[28px] border border-slate-200 bg-white/95 px-6 py-5 text-center shadow-[0_20px_42px_-30px_rgba(15,23,42,0.45)]">
-                      <div className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    <div className="rounded-[28px] border border-slate-200 bg-white/95 px-6 py-5 text-center shadow-[0_20px_42px_-30px_rgba(15,23,42,0.45)] dark-theme-card dark:shadow-[0_20px_42px_-30px_rgba(0,0,0,0.85)]">
+                      <div className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                         Avg. Rating
                         <RatingInfoTooltip />
                       </div>
-                      <div className="mt-3 text-5xl font-semibold leading-none tracking-tight text-slate-950">
+                      <div className="mt-3 text-5xl font-semibold leading-none tracking-tight text-slate-950 dark:text-white">
                         {avgScore}
                       </div>
-                      <p className="mt-2 text-sm text-slate-500">out of 10</p>
+                      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">out of 10</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-6 rounded-[26px] border border-slate-200 bg-white/92 p-5 shadow-[0_18px_42px_-34px_rgba(15,23,42,0.45)]">
-                  <h2 className="text-lg font-semibold text-slate-900">
+                <div className="mt-6 rounded-[26px] border border-slate-200 bg-white/92 p-5 shadow-[0_18px_42px_-34px_rgba(15,23,42,0.45)] dark-theme-card-soft dark:shadow-[0_18px_42px_-34px_rgba(0,0,0,0.85)]">
+                  <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
                     Synopsis
                   </h2>
-                  <p className="mt-3 text-sm leading-7 text-slate-600 sm:text-[15px]">
+                  <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300 sm:text-[15px]">
                     {seriesDetail.synopsis || "Synopsis coming soon."}
                   </p>
                 </div>
@@ -338,10 +338,10 @@ const SeriesDetailPage = () => {
 
             <section className="mt-8">
               <div className="mb-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                   Rating breakdown
                 </p>
-                <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">
+                <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">
                   How readers rate this series
                 </h2>
               </div>
@@ -358,12 +358,12 @@ const SeriesDetailPage = () => {
               </div>
             </section>
 
-            <section className="mt-8 overflow-visible rounded-[30px] border border-slate-200 bg-white/95 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.45)]">
-              <div className="border-b border-slate-200/80 px-5 py-5 sm:px-6">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <section className="mt-8 overflow-visible rounded-[30px] border border-slate-200 bg-white/95 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.45)] dark-theme-shell">
+              <div className="border-b border-slate-200/80 px-5 py-5 dark:border-[#342a23] sm:px-6">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                   Community voting
                 </p>
-                <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">
+                <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">
                   Rate this series
                 </h2>
               </div>
@@ -398,14 +398,14 @@ const RatingCard = ({
   score: number;
   count?: number;
 }) => (
-  <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white/95 p-5 shadow-[0_18px_40px_-34px_rgba(15,23,42,0.4)]">
-    <h3 className="text-sm font-semibold text-slate-700">{label}</h3>
+  <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white/95 p-5 shadow-[0_18px_40px_-34px_rgba(15,23,42,0.4)] dark-theme-card dark:shadow-[0_18px_40px_-34px_rgba(0,0,0,0.82)]">
+    <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">{label}</h3>
     <p className="mt-3 text-3xl font-semibold tracking-tight text-blue-500">
       {score === -1 ? "-" : score.toFixed(1)}
-      <span className="ml-1 text-base font-medium text-slate-400">/10</span>
+      <span className="ml-1 text-base font-medium text-slate-400 dark:text-slate-500">/10</span>
     </p>
     {count !== undefined && (
-      <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500 ring-1 ring-inset ring-slate-200">
+      <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500 ring-1 ring-inset ring-slate-200 dark-theme-chip dark:text-slate-300">
         {count > 1 ? (
           <UsersIcon className="h-4 w-4 text-blue-400" />
         ) : (

@@ -1,4 +1,3 @@
-// src/pages/IssuesPage.tsx
 import { useEffect, useMemo, useState } from "react";
 import {
   listIssues,
@@ -10,6 +9,7 @@ import {
 } from "../api/manApi";
 import { useUser } from "../login/useUser";
 import { Link } from "react-router-dom";
+import { ConfirmModal } from "../components/ConfirmModal";
 
 const typeOptions: IssueType[] = ["BUG", "FEATURE", "CONTENT", "OTHER"];
 const statusOptions: IssueStatus[] = [
@@ -23,14 +23,17 @@ const statusLabels: Record<IssueStatus, string> = {
   OPEN: "Open",
   IN_PROGRESS: "In Progress",
   FIXED: "Resolved",
-  WONT_FIX: "Won’t Fix",
+  WONT_FIX: "Won't Fix",
 };
 
 const badgeClasses: Record<IssueStatus, string> = {
-  OPEN: "bg-yellow-100 text-yellow-800 border-yellow-300",
-  IN_PROGRESS: "bg-blue-100 text-blue-800 border-blue-300",
-  FIXED: "bg-green-100 text-green-800 border-green-300",
-  WONT_FIX: "bg-gray-100 text-gray-700 border-gray-300",
+  OPEN: "bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-950/30 dark:text-yellow-200 dark:border-yellow-800/70",
+  IN_PROGRESS:
+    "bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-950/30 dark:text-blue-200 dark:border-blue-800/70",
+  FIXED:
+    "bg-green-100 text-green-800 border-green-300 dark:bg-green-950/30 dark:text-green-200 dark:border-green-800/70",
+  WONT_FIX:
+    "bg-gray-100 text-gray-700 border-gray-300 dark:bg-[#241d19] dark:text-stone-300 dark:border-[#3a3028]",
 };
 
 function StatusBadge({ status }: { status: IssueStatus }) {
@@ -50,14 +53,11 @@ export default function IssuesPage() {
   const [items, setItems] = useState<Issue[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
-  // filters
   const [q, setQ] = useState("");
   const [type, setType] = useState<IssueType | "">("");
   const [status, setStatus] = useState<IssueStatus | "">("");
-
-  // UI tab (quick filter by status)
   const [activeTab, setActiveTab] = useState<IssueStatus | "ALL">("ALL");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
   const params = useMemo(
     () => ({
@@ -90,7 +90,6 @@ export default function IssuesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.q, params.type, params.status]);
 
-  // derived counts
   const counts = useMemo(() => {
     const c: Record<IssueStatus, number> = {
       OPEN: 0,
@@ -109,7 +108,6 @@ export default function IssuesPage() {
 
   const onChangeStatus = async (id: number, next: IssueStatus) => {
     if (!isAdmin) return;
-    // optimistic update
     setItems((prev) =>
       prev.map((it) => (it.id === id ? { ...it, status: next } : it))
     );
@@ -119,22 +117,22 @@ export default function IssuesPage() {
       setErrorMsg(
         e?.response?.data?.detail || e?.message || "Failed to update status"
       );
-      // revert on error
       await fetchData();
     }
   };
 
   const onDelete = async (id: number) => {
     if (!isAdmin) return;
-    const yes = confirm(
-      "Delete this report? This will also delete its screenshot (if any)."
-    );
-    if (!yes) return;
-    // optimistic remove
+    setConfirmDeleteId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (confirmDeleteId == null) return;
     const snapshot = items;
-    setItems((prev) => prev.filter((it) => it.id !== id));
+    setItems((prev) => prev.filter((it) => it.id !== confirmDeleteId));
     try {
-      await adminDeleteIssue(id);
+      await adminDeleteIssue(confirmDeleteId);
+      setConfirmDeleteId(null);
     } catch (e: any) {
       setErrorMsg(
         e?.response?.data?.detail || e?.message || "Failed to delete report"
@@ -143,62 +141,33 @@ export default function IssuesPage() {
     }
   };
 
-  // function isUsefulPageUrl(raw?: string | null): boolean {
-  //   if (!raw) return false;
-  //   try {
-  //     const u = new URL(raw);
-  //     // hide links that point to the report page itself
-  //     return !u.pathname.startsWith("/report-issue");
-  //   } catch {
-  //     // not a valid absolute URL; treat as not useful
-  //     return false;
-  //   }
-  // }
-
-  // function prettyPageUrl(raw: string): string {
-  //   try {
-  //     const u = new URL(raw);
-  //     // show a concise label: path + query (omit domain)
-  //     return u.pathname + (u.search ? u.search : "");
-  //   } catch {
-  //     return raw;
-  //   }
-  // }
-
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-1">
-        <h1 className="text-2xl md:text-3xl font-bold">
+    <div className="dark-theme-shell mx-auto max-w-6xl px-4 py-8">
+      <div className="mb-1 flex items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-stone-50 md:text-3xl">
           Site Updates & Known Issues
         </h1>
         <Link
           to="/report-issue"
-          className="rounded-md bg-blue-600 px-4 py-2 text-white font-semibold shadow hover:bg-blue-700"
+          className="rounded-md bg-blue-600 px-4 py-2 font-semibold text-white shadow hover:bg-blue-700"
         >
           Report an Issue
         </Link>
       </div>
-      <p className="text-gray-600 mb-6">
-        Track what we’re working on and what’s been fixed.{" "}
+      <p className="mb-6 text-slate-600 dark:text-stone-300">
+        Track what we're working on and what's been fixed.{" "}
         {isAdmin ? "Admins can update status or delete items below." : ""}
       </p>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
         <SummaryCard label="Open" value={counts.OPEN} />
         <SummaryCard label="In Progress" value={counts.IN_PROGRESS} />
         <SummaryCard label="Resolved" value={counts.FIXED} />
-        <SummaryCard label="Won’t Fix" value={counts.WONT_FIX} />
+        <SummaryCard label="Won't Fix" value={counts.WONT_FIX} />
       </div>
 
-      {/* Tabs */}
       <div className="mb-4 flex flex-wrap gap-2">
-        <Tab
-          label="All"
-          active={activeTab === "ALL"}
-          onClick={() => setActiveTab("ALL")}
-        />
+        <Tab label="All" active={activeTab === "ALL"} onClick={() => setActiveTab("ALL")} />
         {statusOptions.map((s) => (
           <Tab
             key={s}
@@ -209,16 +178,15 @@ export default function IssuesPage() {
         ))}
       </div>
 
-      {/* Filters */}
-      <div className="mb-5 grid grid-cols-1 sm:grid-cols-4 gap-3">
+      <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-4">
         <input
-          className="rounded border border-gray-300 px-3 py-2"
-          placeholder="Search title/description…"
+          className="dark-theme-field rounded border border-gray-300 px-3 py-2 text-slate-900 dark:border-[#3a3028] dark:text-stone-100 dark:placeholder:text-stone-500"
+          placeholder="Search title/description..."
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
         <select
-          className="rounded border border-gray-300 px-3 py-2"
+          className="dark-theme-field rounded border border-gray-300 px-3 py-2 text-slate-900 dark:border-[#3a3028] dark:text-stone-100"
           value={type}
           onChange={(e) => setType((e.target.value || "") as IssueType | "")}
         >
@@ -230,11 +198,9 @@ export default function IssuesPage() {
           ))}
         </select>
         <select
-          className="rounded border border-gray-300 px-3 py-2"
+          className="dark-theme-field rounded border border-gray-300 px-3 py-2 text-slate-900 dark:border-[#3a3028] dark:text-stone-100"
           value={status}
-          onChange={(e) =>
-            setStatus((e.target.value || "") as IssueStatus | "")
-          }
+          onChange={(e) => setStatus((e.target.value || "") as IssueStatus | "")}
         >
           <option value="">All statuses</option>
           {statusOptions.map((s) => (
@@ -245,72 +211,55 @@ export default function IssuesPage() {
         </select>
         <button
           onClick={fetchData}
-          className="rounded-md border border-gray-300 px-3 py-2 font-medium hover:bg-gray-50"
+          className="rounded-md border border-gray-300 px-3 py-2 font-medium hover:bg-gray-50 dark:border-[#3a3028] dark:text-stone-200 dark:hover:bg-[#241d19]"
         >
           Refresh
         </button>
       </div>
 
       {errorMsg && (
-        <div className="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-red-800">
+        <div className="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-red-800 dark:border-red-800/70 dark:bg-red-950/30 dark:text-red-200">
           {errorMsg}
         </div>
       )}
 
       {loading ? (
-        <div className="py-16 text-center text-gray-600">Loading…</div>
+        <div className="py-16 text-center text-slate-600 dark:text-stone-400">Loading...</div>
       ) : filteredByTab.length === 0 ? (
         <EmptyState />
       ) : (
-        <div className="overflow-x-auto rounded-lg border">
+        <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-[#3a3028]">
           <table className="min-w-full text-sm">
-            <thead className="bg-gray-50 text-gray-600">
+            <thead className="bg-gray-50 text-gray-600 dark:bg-[#18120f] dark:text-stone-300">
               <tr>
                 <th className="px-3 py-2 text-left">Title</th>
                 <th className="px-3 py-2 text-left">Type</th>
                 <th className="px-3 py-2 text-left">Status</th>
                 <th className="px-3 py-2 text-left">Reported</th>
-                {/* <th className="px-3 py-2 text-left">Page</th> */}
                 <th className="px-3 py-2 text-left">Screenshot</th>
                 {isAdmin && <th className="px-3 py-2 text-right">Actions</th>}
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-slate-200 dark:divide-[#3a3028]">
               {filteredByTab.map((it) => (
-                <tr key={it.id} className="hover:bg-gray-50">
+                <tr key={it.id} className="hover:bg-gray-50 dark:hover:bg-[#201915]">
                   <td className="px-3 py-2">
-                    <div className="font-semibold">{it.title}</div>
-                    <div className="text-gray-600 line-clamp-2">
+                    <div className="font-semibold text-slate-900 dark:text-stone-100">{it.title}</div>
+                    <div className="line-clamp-2 text-slate-600 dark:text-stone-400">
                       {it.description}
                     </div>
                   </td>
-                  <td className="px-3 py-2">{it.type}</td>
+                  <td className="px-3 py-2 text-slate-700 dark:text-stone-300">{it.type}</td>
                   <td className="px-3 py-2">
                     <StatusBadge status={it.status} />
                   </td>
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-2 text-slate-700 dark:text-stone-300">
                     {new Date(it.created_at).toLocaleString()}
                   </td>
-                  {/* <td className="px-3 py-2 max-w-[260px]">
-                    {isUsefulPageUrl(it.page_url) ? (
-                      <a
-                        className="text-blue-600 hover:underline break-all"
-                        href={it.page_url as string}
-                        target="_blank"
-                        rel="noreferrer"
-                        title={it.page_url as string}
-                      >
-                        {prettyPageUrl(it.page_url as string)}
-                      </a>
-                    ) : (
-                      <span className="text-gray-400">—</span>
-                    )}
-                  </td> */}
-
                   <td className="px-3 py-2">
                     {it.screenshot_url ? (
                       <a
-                        className="text-blue-600 hover:underline"
+                        className="text-blue-600 hover:underline dark:text-blue-300"
                         href={it.screenshot_url}
                         target="_blank"
                         rel="noreferrer"
@@ -318,19 +267,16 @@ export default function IssuesPage() {
                         View
                       </a>
                     ) : (
-                      <span className="text-gray-400">—</span>
+                      <span className="text-gray-400 dark:text-stone-500">-</span>
                     )}
                   </td>
-
                   {isAdmin && (
                     <td className="px-3 py-2 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <select
-                          className="rounded border border-gray-300 px-2 py-1"
+                          className="dark-theme-field rounded border border-gray-300 px-2 py-1 text-slate-900 dark:border-[#3a3028] dark:text-stone-100"
                           value={it.status}
-                          onChange={(e) =>
-                            onChangeStatus(it.id, e.target.value as IssueStatus)
-                          }
+                          onChange={(e) => onChangeStatus(it.id, e.target.value as IssueStatus)}
                         >
                           {statusOptions.map((s) => (
                             <option key={s} value={s}>
@@ -340,7 +286,7 @@ export default function IssuesPage() {
                         </select>
                         <button
                           onClick={() => onDelete(it.id)}
-                          className="rounded-md border border-red-300 bg-red-50 px-3 py-1.5 text-red-700 hover:bg-red-100"
+                          className="rounded-md border border-red-300 bg-red-50 px-3 py-1.5 text-red-700 hover:bg-red-100 dark:border-red-800/70 dark:bg-red-950/20 dark:text-red-200 dark:hover:bg-red-950/35"
                         >
                           Delete
                         </button>
@@ -353,15 +299,26 @@ export default function IssuesPage() {
           </table>
         </div>
       )}
+
+      <ConfirmModal
+        open={confirmDeleteId !== null}
+        title="Delete issue?"
+        message="This will permanently remove the report and any associated screenshot."
+        confirmText="Delete"
+        cancelText="Cancel"
+        destructive
+        onCancel={() => setConfirmDeleteId(null)}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }
 
 function SummaryCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-lg border bg-white p-4 shadow-sm">
-      <div className="text-sm text-gray-500">{label}</div>
-      <div className="mt-1 text-2xl font-bold">{value}</div>
+    <div className="dark-theme-card rounded-lg border border-slate-200 p-4 shadow-sm dark:border-[#3a3028]">
+      <div className="text-sm text-gray-500 dark:text-stone-400">{label}</div>
+      <div className="mt-1 text-2xl font-bold text-slate-900 dark:text-stone-50">{value}</div>
     </div>
   );
 }
@@ -377,10 +334,10 @@ function Tab({
 }) {
   return (
     <button
-      className={`rounded-full px-3 py-1.5 text-sm font-semibold border transition ${
+      className={`rounded-full border px-3 py-1.5 text-sm font-semibold transition ${
         active
-          ? "bg-blue-600 text-white border-blue-600 shadow"
-          : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+          ? "border-blue-600 bg-blue-600 text-white shadow"
+          : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-[#3a3028] dark:bg-[#18120f] dark:text-stone-200 dark:hover:bg-[#241d19]"
       }`}
       onClick={onClick}
     >
@@ -392,15 +349,17 @@ function Tab({
 function EmptyState() {
   return (
     <div className="py-16 text-center">
-      <div className="text-lg font-semibold mb-1">No matching reports</div>
-      <div className="text-gray-600 mb-4">
+      <div className="mb-1 text-lg font-semibold text-slate-900 dark:text-stone-50">
+        No matching reports
+      </div>
+      <div className="mb-4 text-slate-600 dark:text-stone-400">
         Try adjusting the filters or{" "}
-        <Link to="/report-issue" className="text-blue-600 hover:underline">
+        <Link to="/report-issue" className="text-blue-600 hover:underline dark:text-blue-300">
           report a new issue
         </Link>
         .
       </div>
-      <div className="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm text-gray-700">
+      <div className="inline-flex items-center gap-2 rounded-md border border-slate-200 px-4 py-2 text-sm text-slate-700 dark:border-[#3a3028] dark:text-stone-300">
         Tip: You can filter by type, status, or search the description/title.
       </div>
     </div>

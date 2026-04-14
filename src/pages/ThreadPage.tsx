@@ -63,16 +63,16 @@ const sanitizeSchema = {
 
 const pillBase =
   "inline-flex items-center gap-1 h-7 px-3 rounded-full border text-xs font-medium shadow-sm";
-const pillAmber = "border-amber-200 bg-amber-50 text-amber-800";
-const pillIndigo = "border-indigo-200 bg-indigo-50 text-indigo-800";
-const pillRose = "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100";
+const pillAmber = "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300";
+const pillIndigo = "border-indigo-200 bg-indigo-50 text-indigo-800 dark:border-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-300";
+const pillRose = "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-300 dark:hover:bg-rose-950/50";
 
 const ctrlGroup =
-  "flex items-center gap-1 rounded-full border border-gray-200 bg-white p-1 shadow-sm";
+  "flex items-center gap-1 rounded-full border border-gray-200 bg-white p-1 shadow-sm dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(27,22,19,0.96),_rgba(21,17,14,0.96))]";
 const ctrlBtn =
-  "inline-flex items-center gap-1 h-7 px-3 rounded-full text-xs border border-transparent hover:bg-gray-50 text-gray-700";
-const ctrlActiveAmber = "bg-amber-50 border-amber-300 text-amber-800";
-const ctrlActiveIndigo = "bg-indigo-50 border-indigo-300 text-indigo-800";
+  "inline-flex items-center gap-1 h-7 px-3 rounded-full text-xs border border-transparent hover:bg-gray-50 text-gray-700 dark:text-slate-200 dark:hover:bg-[#241d19]";
+const ctrlActiveAmber = "bg-amber-50 border-amber-300 text-amber-800 dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-300";
+const ctrlActiveIndigo = "bg-indigo-50 border-indigo-300 text-indigo-800 dark:bg-indigo-950/40 dark:border-indigo-800 dark:text-indigo-300";
 
 type AxiosLike = {
   message?: string;
@@ -163,16 +163,16 @@ function ListPillMaybeActive({
   const base =
     "inline-flex items-center gap-1 h-7 px-3 rounded-full border text-xs font-medium shadow-sm";
   const activeClass =
-    "bg-emerald-50 text-emerald-700 ring-emerald-200 hover:bg-emerald-100";
+    "bg-emerald-50 text-emerald-700 ring-emerald-200 hover:bg-emerald-100 dark:border-emerald-800/70 dark:bg-emerald-950/30 dark:text-emerald-200 dark:ring-emerald-900/60 dark:hover:bg-emerald-950/45";
 
   // Unknown: show active styling while we check (optional)
   if (isPublic === null) {
     return (
       <span
-        className={`${base} bg-emerald-50 text-emerald-700 ring-emerald-200`}
+        className={`${base} bg-emerald-50 text-emerald-700 ring-emerald-200 dark:border-emerald-800/70 dark:bg-emerald-950/30 dark:text-emerald-200 dark:ring-emerald-900/60`}
       >
         <span aria-hidden className="text-[11px]">
-          📃
+          L
         </span>
         <span className="truncate">{children}</span>
       </span>
@@ -183,11 +183,11 @@ function ListPillMaybeActive({
     // ⛔ Unshared now → gray pill, no link
     return (
       <span
-        className={`${base} bg-gray-100 text-gray-500 ring-gray-200`}
+        className={`${base} bg-gray-100 text-gray-500 ring-gray-200 dark:bg-[#241d19] dark:text-slate-400 dark:ring-[#3a3028]`}
         title="This list is no longer public"
       >
         <span aria-hidden className="text-[11px]">
-          📃
+          L
         </span>
         <span className="truncate">{children}</span>
       </span>
@@ -202,7 +202,7 @@ function ListPillMaybeActive({
       title="Open reading list"
     >
       <span aria-hidden className="text-[11px]">
-        📃
+        L
       </span>
       <span className="truncate">{children}</span>
     </Link>
@@ -227,7 +227,9 @@ function MarkdownProse({
 
   return (
     <div
-      className={`${size === "sm" ? "prose prose-sm" : "prose"} max-w-none ${
+      className={`${
+        size === "sm" ? "prose prose-sm" : "prose"
+      } max-w-none prose-slate dark:prose-invert dark:prose-headings:text-stone-50 dark:prose-p:text-stone-200 dark:prose-strong:text-stone-50 dark:prose-li:text-stone-200 dark:prose-a:text-emerald-300 dark:prose-a:no-underline hover:dark:prose-a:text-emerald-200 dark:prose-hr:border-[#3a3028] dark:prose-blockquote:border-l-[#5b4b3e] dark:prose-blockquote:text-stone-300 dark:prose-code:text-emerald-200 dark:prose-pre:bg-[#18120f] dark:prose-pre:text-stone-100 ${
         className || ""
       }`}
     >
@@ -274,7 +276,7 @@ function MarkdownProse({
 
             if (isSeriesLink) {
               return (
-                <span className="font-medium text-gray-900">
+                <span className="font-medium text-slate-900 dark:text-stone-100">
                   {linkChildren}
                 </span>
               );
@@ -320,7 +322,7 @@ function MarkdownProse({
               return (
                 <Link
                   to={toURL}
-                  className="underline decoration-emerald-600/40 hover:decoration-emerald-600"
+                  className="font-medium text-emerald-700 underline decoration-emerald-600/40 underline-offset-4 hover:text-emerald-600 hover:decoration-emerald-500 dark:text-emerald-300 dark:decoration-emerald-300/40 dark:hover:text-emerald-200 dark:hover:decoration-emerald-200"
                 >
                   {linkChildren}
                 </Link>
@@ -334,6 +336,7 @@ function MarkdownProse({
                 href={url}
                 target={isExternal ? "_blank" : undefined}
                 rel={isExternal ? "noreferrer" : undefined}
+                className="font-medium text-emerald-700 underline decoration-emerald-600/40 underline-offset-4 hover:text-emerald-600 hover:decoration-emerald-500 dark:text-emerald-300 dark:decoration-emerald-300/40 dark:hover:text-emerald-200 dark:hover:decoration-emerald-200"
               >
                 {linkChildren}
               </a>
@@ -347,7 +350,7 @@ function MarkdownProse({
   );
 }
 
-function Pager({
+function LegacyThreadPager({
   page,
   totalPages,
   hasPrev,
@@ -411,6 +414,76 @@ function Pager({
   );
 }
 
+function Pager({
+  page,
+  totalPages,
+  hasPrev,
+  hasNext,
+  onGo,
+}: {
+  page: number;
+  totalPages: number;
+  hasPrev?: boolean;
+  hasNext?: boolean;
+  onGo: (p: number) => void;
+}) {
+  const nums: number[] = [];
+  const add = (n: number) => {
+    if (n >= 1 && n <= totalPages) nums.push(n);
+  };
+  add(1);
+  add(2);
+  for (let n = page - 2; n <= page + 2; n++) add(n);
+  add(totalPages - 1);
+  add(totalPages);
+  const unique = Array.from(new Set(nums)).sort((a, b) => a - b);
+
+  return (
+    <nav className="flex items-center gap-2 text-sm" aria-label="Pagination">
+      <button
+        className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(27,22,19,0.96),_rgba(21,17,14,0.96))] dark:text-stone-200 dark:hover:bg-[#241d19]"
+        onClick={() => onGo(page - 1)}
+        disabled={hasPrev === undefined ? page <= 1 : !hasPrev}
+      >
+        Prev
+      </button>
+      {unique.map((n, i) => {
+        const prev = unique[i - 1];
+        const gap = prev != null && n - prev > 1;
+        return (
+          <span key={n} className="flex items-center">
+            {gap && (
+              <span className="px-1 text-slate-400 dark:text-stone-500">
+                ...
+              </span>
+            )}
+            <button
+              className={`rounded-full border px-3 py-1.5 transition ${
+                n === page
+                  ? "border-emerald-500 bg-emerald-50 font-semibold text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(27,22,19,0.96),_rgba(21,17,14,0.96))] dark:text-stone-200 dark:hover:bg-[#241d19]"
+              }`}
+              onClick={() => onGo(n)}
+              aria-current={n === page ? "page" : undefined}
+            >
+              {n}
+            </button>
+          </span>
+        );
+      })}
+      <button
+        className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(27,22,19,0.96),_rgba(21,17,14,0.96))] dark:text-stone-200 dark:hover:bg-[#241d19]"
+        onClick={() => onGo(page + 1)}
+        disabled={hasNext === undefined ? page >= totalPages : !hasNext}
+      >
+        Next
+      </button>
+    </nav>
+  );
+}
+
+void LegacyThreadPager;
+
 export default function ThreadPage() {
   const { id } = useParams();
   const threadId = Number(id);
@@ -443,8 +516,8 @@ export default function ThreadPage() {
   }, [searchParams]);
 
   const threadTitle = thread?.title
-    ? `${thread.title} — Forum — Toon Ranks`
-    : "Forum thread — Toon Ranks";
+    ? `${thread.title} - Forum - Toon Ranks`
+    : "Forum thread - Toon Ranks";
 
   const canonical = `${siteUrl}${loc.pathname.replace(/\/+$/, "")}`;
 
@@ -607,7 +680,7 @@ export default function ThreadPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="mx-auto max-w-4xl p-6">
       <Helmet>
         {/* Basic SEO */}
         <title>{threadTitle}</title>
@@ -660,14 +733,14 @@ export default function ThreadPage() {
         <header className="mb-4 space-y-3">
           <Link
             to="/forum"
-            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(27,22,19,0.96),_rgba(21,17,14,0.96))] dark:text-slate-200 dark:hover:bg-[#241d19]"
           >
             <span aria-hidden>←</span>
             <span>Back to forum</span>
           </Link>
 
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-            <h1 className="text-2xl font-bold">
+            <h1 className="text-2xl font-bold text-slate-950 dark:text-white">
               {stripMdHeading(thread!.title)}
             </h1>
 
@@ -784,9 +857,9 @@ export default function ThreadPage() {
                       decoding="async"
                     />
                   ) : (
-                    <div className="w-16 h-24 bg-gray-200 rounded" />
+                    <div className="w-16 h-24 rounded bg-gray-200 dark:bg-[#241d19]" />
                   )}
-                  <div className="text-[10px] mt-1 truncate">
+                  <div className="mt-1 truncate text-[10px] text-slate-700 dark:text-slate-300">
                     {s.title || `#${s.series_id}`}
                   </div>
                 </Link>
@@ -798,12 +871,12 @@ export default function ThreadPage() {
 
       <section className="space-y-4">
         {posts[0] && (
-          <article className="overflow-hidden rounded-[28px] border border-slate-200/80 bg-white shadow-[0_20px_50px_rgba(15,23,42,0.08)]">
-            <div className="border-b border-slate-200/70 bg-[linear-gradient(135deg,rgba(239,246,255,0.95),rgba(255,255,255,0.98)_58%,rgba(240,253,250,0.88))] px-5 py-4 sm:px-7 sm:py-6">
+          <article className="overflow-hidden rounded-[28px] border border-slate-200/80 bg-white shadow-[0_20px_50px_rgba(15,23,42,0.08)] dark:border-[#322922] dark:bg-[#1b1613] dark:shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
+            <div className="border-b border-slate-200/70 bg-[linear-gradient(135deg,rgba(239,246,255,0.95),rgba(255,255,255,0.98)_58%,rgba(240,253,250,0.88))] px-5 py-4 dark:border-[#322922] dark:bg-[linear-gradient(135deg,rgba(34,27,23,0.98),rgba(24,19,16,0.98)_58%,rgba(29,22,18,0.9))] sm:px-7 sm:py-6">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0 space-y-3">
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 font-semibold">
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                    <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 font-semibold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
                       Original post
                     </span>
                     <span>{posts[0].author_username || "Anonymous"}</span>
@@ -811,10 +884,10 @@ export default function ThreadPage() {
                   </div>
 
                   <div className="max-w-3xl space-y-2">
-                    <h2 className="text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">
+                    <h2 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-white sm:text-xl">
                       Opening discussion
                     </h2>
-                    <p className="text-sm leading-6 text-slate-600 sm:text-[15px]">
+                    <p className="text-sm leading-6 text-slate-600 dark:text-slate-300 sm:text-[15px]">
                       The first post sets the tone for this thread. Referenced
                       series, reactions, and follow-up replies all build from
                       here.
@@ -841,7 +914,7 @@ export default function ThreadPage() {
             </div>
 
             <div className="space-y-5 px-5 py-5 sm:px-7 sm:py-6">
-              <div className="rounded-3xl border border-slate-200/80 bg-white/90 p-4 sm:p-5">
+              <div className="rounded-3xl border border-slate-200/80 bg-white/90 p-4 dark-theme-card-soft sm:p-5">
                 {editPostId === posts[0].id ? (
                   <div className="mt-1">
                     <RichReplyEditor
@@ -856,7 +929,7 @@ export default function ThreadPage() {
                     />
                   </div>
                 ) : (
-                  <MarkdownProse className="text-slate-700">
+                  <MarkdownProse className="text-slate-700 dark:text-slate-200">
                     {posts[0].content_markdown}
                   </MarkdownProse>
                 )}
@@ -871,10 +944,10 @@ export default function ThreadPage() {
                 return firstRefs.length ? (
                   <div className="space-y-3">
                     <div>
-                      <h3 className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
+                      <h3 className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
                         Referenced series
                       </h3>
-                      <p className="mt-1 text-sm text-slate-600">
+                      <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
                         Quick links tied to the opening post.
                       </p>
                     </div>
@@ -892,8 +965,8 @@ export default function ThreadPage() {
 
         {/* TOP controls (pager) */}
         {totalPages > 1 && (
-          <div className="mt-4 rounded-[24px] border border-slate-200/80 bg-white/95 px-4 py-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] sm:px-5">
-            <div className="flex flex-col gap-3 text-sm text-slate-600 lg:flex-row lg:items-center lg:justify-between">
+          <div className="mt-4 rounded-[24px] border border-slate-200/80 bg-white/95 px-4 py-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:border-[#322922] dark:bg-[#1b1613]/95 dark:shadow-[0_12px_30px_rgba(0,0,0,0.5)] sm:px-5">
+            <div className="flex flex-col gap-3 text-sm text-slate-600 dark:text-slate-300 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span>
                   Page <strong>{page}</strong> of <strong>{totalPages}</strong>
@@ -975,13 +1048,13 @@ export default function ThreadPage() {
         </div>
       )}
 
-      <div className="mt-6 overflow-hidden rounded-[28px] border border-slate-200/80 bg-white shadow-[0_18px_40px_rgba(15,23,42,0.07)]">
-        <div className="border-b border-slate-200/70 bg-[linear-gradient(135deg,rgba(248,250,252,0.94),rgba(255,255,255,0.98)_62%,rgba(239,246,255,0.8))] px-5 py-4 sm:px-6">
+      <div className="mt-6 overflow-hidden rounded-[28px] border border-slate-200/80 bg-white shadow-[0_18px_40px_rgba(15,23,42,0.07)] dark:border-[#322922] dark:bg-[#1b1613] dark:shadow-[0_18px_40px_rgba(0,0,0,0.55)]">
+        <div className="border-b border-slate-200/70 bg-[linear-gradient(135deg,rgba(248,250,252,0.94),rgba(255,255,255,0.98)_62%,rgba(239,246,255,0.8))] px-5 py-4 dark:border-[#322922] dark:bg-[linear-gradient(135deg,rgba(34,27,23,0.98),rgba(24,19,16,0.98)_62%,rgba(29,22,18,0.9))] sm:px-6">
           <div className="space-y-1">
-            <h3 className="text-lg font-semibold tracking-tight text-slate-900">
+            <h3 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">
               {thread?.latest_first ? "Add Update" : "Join the conversation"}
             </h3>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-slate-600 dark:text-slate-300">
               {thread?.latest_first
                 ? "Share the next major development in this thread."
                 : "Post a reply, reference a series, or add context for the next reader."}
@@ -1030,7 +1103,7 @@ export default function ThreadPage() {
               }}
             />
           ) : (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700/60 dark:bg-amber-950/30 dark:text-amber-200">
               This thread is locked. Only admins can add new replies.
             </div>
           )}
@@ -1190,8 +1263,8 @@ function ReplyBranch({
       <article
         className={
           (isTopLevel
-            ? "rounded-[24px] border border-slate-200/80 bg-white px-4 py-4 shadow-[0_14px_30px_rgba(15,23,42,0.06)] sm:px-5 sm:py-5"
-            : "rounded-[20px] border border-slate-200/80 bg-white px-3.5 py-3.5 shadow-[0_10px_24px_rgba(15,23,42,0.05)] sm:px-4 sm:py-4") + ""
+            ? "rounded-[24px] border border-slate-200/80 bg-white px-4 py-4 shadow-[0_14px_30px_rgba(15,23,42,0.06)] dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(27,22,19,0.96),_rgba(21,17,14,0.96))] dark:shadow-[0_14px_30px_rgba(0,0,0,0.5)] sm:px-5 sm:py-5"
+            : "rounded-[20px] border border-slate-200/80 bg-white px-3.5 py-3.5 shadow-[0_10px_24px_rgba(15,23,42,0.05)] dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(25,21,18,0.96),_rgba(20,17,14,0.96))] dark:shadow-[0_10px_24px_rgba(0,0,0,0.45)] sm:px-4 sm:py-4") + ""
         }
         style={{
           marginLeft: indentPx,
@@ -1208,18 +1281,18 @@ function ReplyBranch({
               : "mb-2.5 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between"
           }
         >
-          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
             <span
               className={
-                isTopLevel
-                  ? "inline-flex items-center px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold"
-                  : "inline-flex items-center px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 font-semibold"
+              isTopLevel
+                  ? "inline-flex items-center px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold dark:bg-blue-950/35 dark:text-blue-200"
+                  : "inline-flex items-center px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 font-semibold dark:bg-blue-950/25 dark:text-blue-200"
               }
               style={labelStyle}
             >
               {labelText}
             </span>
-            <span className="font-medium text-slate-700">
+            <span className="font-medium text-slate-700 dark:text-slate-200">
               {post.author_username || "Anonymous"}
             </span>
             <span>{new Date(post.created_at).toLocaleString()}</span>
@@ -1230,7 +1303,7 @@ function ReplyBranch({
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => onBeginEdit(post.id, post.content_markdown)}
-                  className="inline-flex items-center rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+                  className="inline-flex items-center rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 dark:border-[#3a3028] dark:text-slate-200 dark:hover:bg-[#241d19]"
                   title="Edit your post"
                 >
                   Edit
@@ -1265,7 +1338,7 @@ function ReplyBranch({
         ) : (
           <MarkdownProse
             size={isTopLevel ? "base" : "sm"}
-            className="text-slate-700"
+            className="text-slate-700 dark:text-slate-200"
           >
             {post.content_markdown}
           </MarkdownProse>
@@ -1282,8 +1355,8 @@ function ReplyBranch({
         <div className="mt-4 flex flex-wrap items-center gap-3">
           {!isUpdatesMode ? (
             !locked || isAdmin ? (
-              <details className="group rounded-2xl border border-slate-200 bg-slate-50/70 px-3 py-2">
-                <summary className="cursor-pointer list-none text-xs font-medium text-blue-700 marker:hidden">
+              <details className="group rounded-2xl border border-slate-200 bg-slate-50/70 px-3 py-2 dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(22,18,15,0.96),_rgba(18,15,12,0.96))]">
+                <summary className="cursor-pointer list-none text-xs font-medium text-blue-700 marker:hidden dark:text-blue-300">
                   Reply in thread
                 </summary>
                 <div className="mt-3">
@@ -1292,7 +1365,11 @@ function ReplyBranch({
                     threadId={threadId}
                     onSubmit={async (content, seriesIds) => {
                       if (!content.trim()) {
-                        alert("Reply cannot be empty.");
+                        notify({
+                          message: "Reply cannot be empty.",
+                          title: "Cannot post",
+                          variant: "warning",
+                        });
                         return;
                       }
                       try {
@@ -1303,14 +1380,18 @@ function ReplyBranch({
                         });
                         await reload();
                       } catch (err: unknown) {
-                        alert(getErrorMessage(err) || "Failed to post reply.");
+                        notify({
+                          message: getErrorMessage(err) || "Failed to post reply.",
+                          title: "Post failed",
+                          variant: "error",
+                        });
                       }
                     }}
                   />
                 </div>
               </details>
             ) : (
-              <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800">
+              <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800 dark:border-amber-700/60 dark:bg-amber-950/30 dark:text-amber-200">
                 Replies are locked.
               </span>
             )
@@ -1344,7 +1425,7 @@ function ReplyBranch({
         message={
           <div>
             <div className="mb-2">This action cannot be undone.</div>
-            <div className="rounded bg-gray-50 p-2 text-sm text-gray-700">
+            <div className="rounded-2xl border border-slate-200/70 bg-slate-50 px-3 py-2 text-sm text-slate-700 dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(22,18,15,0.96),_rgba(18,15,12,0.96))] dark:text-stone-300">
               {/* Small preview of the content */}
               {post.content_markdown.length > 140
                 ? post.content_markdown.slice(0, 140) + "..."
@@ -1388,40 +1469,46 @@ function ReplyBranch({
 
 function SeriesMiniCard({ s }: { s: ForumSeriesRef }) {
   const statusClasses: Record<string, string> = {
-    ONGOING: "bg-emerald-100 text-emerald-700",
-    COMPLETE: "bg-slate-200 text-slate-800",
-    HIATUS: "bg-amber-100 text-amber-800",
-    UNKNOWN: "bg-gray-100 text-gray-700",
+    ONGOING:
+      "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200",
+    COMPLETE:
+      "bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-100",
+    HIATUS:
+      "bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-200",
+    UNKNOWN:
+      "bg-gray-100 text-gray-700 dark:bg-[#241d19] dark:text-stone-300",
   };
   const statusKey = (s.status || "").toUpperCase();
-  const statusClass = statusClasses[statusKey] || "bg-gray-100 text-gray-700";
+  const statusClass =
+    statusClasses[statusKey] ||
+    "bg-gray-100 text-gray-700 dark:bg-[#241d19] dark:text-stone-300";
 
   return (
     <Link
       to={`/series/${s.series_id}`}
-      className="group border rounded-lg p-2 flex items-start gap-3 bg-white hover:shadow w-full"
+      className="group flex w-full items-start gap-3 rounded-lg border bg-white p-2 hover:shadow dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(27,22,19,0.96),_rgba(21,17,14,0.96))]"
       title={s.title || `#${s.series_id}`}
     >
       {s.cover_url ? (
         <img
           src={s.cover_url}
           alt={s.title || `Series #${s.series_id}`}
-          className="w-12 h-16 object-cover rounded bg-gray-200 shrink-0"
+          className="h-16 w-12 shrink-0 rounded bg-gray-200 object-cover dark:bg-[#241d19]"
           loading="lazy"
           decoding="async"
         />
       ) : (
-        <div className="w-12 h-16 rounded bg-gray-200 shrink-0" />
+        <div className="h-16 w-12 shrink-0 rounded bg-gray-200 dark:bg-[#241d19]" />
       )}
 
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium truncate">
+        <div className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
           {s.title || `#${s.series_id}`}
         </div>
 
         <div className="mt-1 flex flex-wrap gap-1">
           {s.type && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-700">
+            <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-700 dark:bg-[#241d19] dark:text-slate-300">
               {s.type}
             </span>
           )}
