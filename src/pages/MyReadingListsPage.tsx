@@ -562,7 +562,7 @@ function ListItems({
                                   </span>
                                   <span
                                     className={`${statChipClass("accent")} ${
-                                      (s?.final_score ?? 0) >= 9
+                                      (s?.final_score ?? 0) >= 8
                                         ? "text-emerald-700 bg-emerald-50 ring-emerald-100"
                                         : (s?.final_score ?? 0) >= 7.5
                                         ? "text-blue-700 bg-blue-50 ring-blue-100"

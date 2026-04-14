@@ -440,7 +440,7 @@ export default function PublicReadingListPage() {
                                   {s?.type || "—"}
                                 </span>
                                 <span
-                                  className={`${statChipClass("accent")} ${(s?.final_score ?? 0) >= 9 ? "text-emerald-700 bg-emerald-50 ring-emerald-100" : (s?.final_score ?? 0) >= 7.5 ? "text-blue-700 bg-blue-50 ring-blue-100" : (s?.final_score ?? 0) >= 5 ? "text-amber-700 bg-amber-50 ring-amber-100" : "text-slate-500 bg-slate-100 ring-slate-200"}`}
+                                  className={`${statChipClass("accent")} ${(s?.final_score ?? 0) >= 8 ? "text-emerald-700 bg-emerald-50 ring-emerald-100" : (s?.final_score ?? 0) >= 7.5 ? "text-blue-700 bg-blue-50 ring-blue-100" : (s?.final_score ?? 0) >= 5 ? "text-amber-700 bg-amber-50 ring-amber-100" : "text-slate-500 bg-slate-100 ring-slate-200"}`}
                                 >
                                   {s?.final_score != null
                                     ? `★ ${Number(s.final_score).toFixed(3)}`
