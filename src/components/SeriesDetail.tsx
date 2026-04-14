@@ -141,7 +141,7 @@ const SeriesDetail = ({ series, updateRating, seriesDetail }: Props) => {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-[22px] border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm text-amber-800 shadow-sm">
+      <div className="rounded-[22px] border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm text-amber-800 shadow-sm dark:border-amber-700/60 dark:bg-amber-950/30 dark:text-amber-200">
         Each category can be rated once. After you submit a score, that choice is locked in.
       </div>
 
@@ -153,16 +153,16 @@ const SeriesDetail = ({ series, updateRating, seriesDetail }: Props) => {
             key={category}
             className={`rounded-[24px] border px-4 py-4 shadow-sm transition sm:px-5 ${
               hasVoted
-                ? "border-blue-100 bg-blue-50/60"
-                : "border-slate-200 bg-slate-50/70"
+                ? "border-blue-100 bg-blue-50/60 dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(33,42,76,0.42),_rgba(22,28,51,0.42))]"
+                : "border-slate-200 bg-slate-50/70 dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(24,20,17,0.94),_rgba(19,16,13,0.94))]"
             }`}
           >
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="min-w-0 lg:max-w-sm">
-                <h4 className="text-lg font-semibold text-slate-900">
+                <h4 className="text-lg font-semibold text-slate-900 dark:text-white">
                   {category}
                 </h4>
-                <p className="mt-1 text-sm leading-6 text-slate-600">
+                <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
                   {descriptions[category]}
                 </p>
               </div>
@@ -183,10 +183,10 @@ const SeriesDetail = ({ series, updateRating, seriesDetail }: Props) => {
                           voted
                             ? "bg-blue-600 text-white shadow-sm"
                             : !isLoggedIn
-                            ? "cursor-not-allowed bg-slate-200 text-slate-400"
+                            ? "cursor-not-allowed bg-slate-200 text-slate-400 dark:bg-[#241d19] dark:text-slate-500"
                             : alreadyVoted
-                            ? "cursor-not-allowed bg-slate-200 text-slate-500"
-                            : "bg-white text-slate-700 ring-1 ring-inset ring-slate-200 hover:bg-blue-50 hover:text-blue-700 hover:ring-blue-200"
+                            ? "cursor-not-allowed bg-slate-200 text-slate-500 dark:bg-[#241d19] dark:text-slate-400"
+                            : "bg-white text-slate-700 ring-1 ring-inset ring-slate-200 hover:bg-blue-50 hover:text-blue-700 hover:ring-blue-200 dark:bg-[linear-gradient(145deg,_rgba(27,22,19,0.96),_rgba(21,17,14,0.96))] dark:text-slate-200 dark:ring-[#3a3028] dark:hover:bg-[linear-gradient(145deg,_rgba(34,47,83,0.78),_rgba(24,31,55,0.78))] dark:hover:text-blue-200 dark:hover:ring-[#475276]"
                         }`}
                         title={
                           !isLoggedIn

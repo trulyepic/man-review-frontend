@@ -58,60 +58,64 @@ const VerifyEmailPage = () => {
           setMessage("Invalid or already-used token.");
         }
       });
-  }, []);
+  }, [navigate, searchParams]);
 
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-100 px-4">
-      <div className="bg-white p-6 rounded shadow-md max-w-md w-full text-center">
-        {status === "verifying" && (
-          <p className="text-blue-600 text-lg">Verifying your email...</p>
-        )}
-        {status === "success" && (
-          <p className="text-green-600 text-lg">
-            ✅ {message} <br /> Redirecting to login...
-          </p>
-        )}
-        {status === "error" && (
-          <p className="text-red-600 text-lg">❌ {message}</p>
-        )}
-      </div>
-
-      {status === "error" && /expired/i.test(message) && (
-        <div className="mt-4 text-left">
-          <label className="block text-sm mb-2">
-            Enter your email to resend:
-          </label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-2 mb-3 border rounded"
-            placeholder="you@example.com"
-          />
-          <ReCAPTCHA
-            ref={recaptchaRef}
-            sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
-            onChange={(t) => setResendCaptcha(t || "")}
-            className="mb-3"
-          />
-          <button
-            onClick={handleResend}
-            disabled={resending}
-            className={`w-full text-white py-2 rounded ${
-              resending
-                ? "bg-blue-400 cursor-not-allowed"
-                : "bg-blue-600/70 hover:bg-blue-600"
-            }`}
-          >
-            {resending ? "Resending..." : "Resend verification email"}
-          </button>
-          {resendMsg && (
-            <p className="mt-3 text-center text-sm text-gray-700">
-              {resendMsg}
+    <div className="dark-theme-shell flex min-h-screen items-center justify-center px-4 py-10">
+      <div className="w-full max-w-md rounded-[1.75rem] border border-slate-200 bg-white/92 p-6 shadow-[0_24px_70px_rgba(15,23,42,0.14)] dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(30,24,20,0.98),_rgba(21,17,14,0.98))]">
+        <div className="text-center">
+          {status === "verifying" && (
+            <p className="text-lg text-blue-600 dark:text-blue-300">
+              Verifying your email...
             </p>
           )}
+          {status === "success" && (
+            <p className="text-lg text-emerald-600 dark:text-emerald-300">
+              {message} <br /> Redirecting to login...
+            </p>
+          )}
+          {status === "error" && (
+            <p className="text-lg text-red-600 dark:text-red-300">{message}</p>
+          )}
         </div>
-      )}
+
+        {status === "error" && /expired/i.test(message) && (
+          <div className="mt-6 text-left">
+            <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-stone-200">
+              Enter your email to resend:
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="dark-theme-field mb-3 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-slate-900 dark:border-[#3a3028] dark:text-stone-100 dark:placeholder:text-stone-500"
+              placeholder="you@example.com"
+            />
+            <ReCAPTCHA
+              ref={recaptchaRef}
+              sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+              onChange={(t) => setResendCaptcha(t || "")}
+              className="mb-3"
+            />
+            <button
+              onClick={handleResend}
+              disabled={resending}
+              className={`w-full rounded-xl py-2.5 text-white ${
+                resending
+                  ? "cursor-not-allowed bg-blue-400"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
+            >
+              {resending ? "Resending..." : "Resend verification email"}
+            </button>
+            {resendMsg && (
+              <p className="mt-3 text-center text-sm text-slate-700 dark:text-stone-300">
+                {resendMsg}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

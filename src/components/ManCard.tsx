@@ -91,7 +91,7 @@ const ManCard = ({
       className={`rounded-full px-2 py-0.5 text-[11px] font-semibold sm:px-2 sm:text-xs ${
         isInReadingList
           ? "bg-blue-500 text-white hover:bg-blue-700"
-          : "bg-green-200 text-green-800 hover:bg-green-300"
+          : "bg-green-200 text-green-800 hover:bg-green-300 dark:bg-emerald-950/70 dark:text-emerald-300 dark:hover:bg-emerald-900"
       }`}
     >
       {isInReadingList ? "✓ List" : "+ List"}
@@ -114,7 +114,7 @@ const ManCard = ({
               onEdit?.();
             }}
             title="Edit"
-            className="rounded-full bg-white/90 p-1.5 shadow-sm transition hover:bg-blue-50"
+            className="rounded-full bg-white/90 p-1.5 shadow-sm transition hover:bg-blue-50 dark:bg-[linear-gradient(145deg,_rgba(32,26,22,0.95),_rgba(22,18,15,0.95))] dark:hover:bg-[#2a221d]"
           >
             <PencilSquareIcon className="h-4 w-4 text-blue-500" />
           </button>
@@ -124,7 +124,7 @@ const ManCard = ({
               onDelete(id);
             }}
             title="Delete"
-            className="rounded-full bg-white/90 p-1.5 shadow-sm transition hover:bg-rose-50"
+            className="rounded-full bg-white/90 p-1.5 shadow-sm transition hover:bg-rose-50 dark:bg-[linear-gradient(145deg,_rgba(32,26,22,0.95),_rgba(22,18,15,0.95))] dark:hover:bg-[#2a221d]"
           >
             <TrashIcon className="h-4 w-4 text-rose-400" />
           </button>
@@ -136,8 +136,8 @@ const ManCard = ({
         state={{ title, genre, type }}
         className="block h-full"
       >
-        <div className="flex h-full flex-col overflow-hidden rounded-[20px] border border-slate-200 bg-white shadow-[0_18px_42px_-34px_rgba(15,23,42,0.45)] transition duration-300 group-hover:-translate-y-0.5 group-hover:border-slate-300 group-hover:shadow-[0_22px_50px_-34px_rgba(15,23,42,0.55)] sm:rounded-[22px]">
-          <div className="relative aspect-[2/3] w-full overflow-hidden bg-slate-100">
+        <div className="flex h-full flex-col overflow-hidden rounded-[20px] border border-slate-200 bg-white shadow-[0_18px_42px_-34px_rgba(15,23,42,0.45)] transition duration-300 group-hover:-translate-y-0.5 group-hover:border-slate-300 group-hover:shadow-[0_22px_50px_-34px_rgba(15,23,42,0.55)] dark-theme-card dark:group-hover:border-[#4a3d33] sm:rounded-[22px]">
+          <div className="relative aspect-[2/3] w-full overflow-hidden bg-slate-100 dark:bg-[#241d19]">
             {!imageLoaded && <ShimmerBox className="h-full w-full" />}
             <img
               src={coverUrl}
@@ -164,11 +164,11 @@ const ManCard = ({
           </div>
 
           <div className="mt-3 flex flex-1 flex-col space-y-2 px-2 pb-2 sm:mt-4 sm:px-2.5">
-            <h2 className="line-clamp-2 min-h-[2.6rem] w-full text-[15px] font-semibold leading-5 sm:text-base sm:leading-normal" title={title}>
+            <h2 className="line-clamp-2 min-h-[2.6rem] w-full text-[15px] font-semibold leading-5 text-slate-900 dark:text-white sm:text-base sm:leading-normal" title={title}>
               {title}
             </h2>
 
-            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] capitalize text-gray-500 sm:gap-2.5 sm:text-xs">
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] capitalize text-gray-500 dark:text-slate-400 sm:gap-2.5 sm:text-xs">
               {type}
               {avgScore !== undefined && (
                 <span
@@ -184,10 +184,10 @@ const ManCard = ({
 
             {author && (
               <p
-                className="flex items-center gap-1 text-[13px] text-gray-600 sm:gap-1.5 sm:text-sm"
+                className="flex items-center gap-1 text-[13px] text-gray-600 dark:text-slate-300 sm:gap-1.5 sm:text-sm"
                 title={author}
               >
-                <Pencil className="h-4 w-4 flex-shrink-0 text-gray-700" />
+                <Pencil className="h-4 w-4 flex-shrink-0 text-gray-700 dark:text-slate-400" />
                 <span
                   className="truncate"
                   style={{ maxWidth: "calc(100% - 1.25rem)" }}
@@ -199,10 +199,10 @@ const ManCard = ({
 
             {artist && (
               <p
-                className="flex items-center gap-1 text-[13px] text-gray-600 sm:gap-1.5 sm:text-sm"
+                className="flex items-center gap-1 text-[13px] text-gray-600 dark:text-slate-300 sm:gap-1.5 sm:text-sm"
                 title={artist}
               >
-                <Palette className="h-4 w-4 flex-shrink-0 text-gray-700" />
+                <Palette className="h-4 w-4 flex-shrink-0 text-gray-700 dark:text-slate-400" />
                 <span
                   className="truncate"
                   style={{ maxWidth: "calc(100% - 1.25rem)" }}
@@ -212,7 +212,7 @@ const ManCard = ({
               </p>
             )}
 
-            <div className="mt-3 flex flex-wrap items-center gap-y-2 text-sm text-gray-700">
+            <div className="mt-3 flex flex-wrap items-center gap-y-2 text-sm text-gray-700 dark:text-slate-300">
               {showVotes ? (
                 <div className="flex items-center space-x-1">
                   <UserIcon className="h-3.5 w-3.5 text-blue-400" />
@@ -230,7 +230,7 @@ const ManCard = ({
                   className={`rounded-full px-2 py-0.5 text-[11px] font-semibold sm:text-xs ${
                     isCompared
                       ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-700"
+                      : "bg-gray-200 text-gray-700 dark:bg-[linear-gradient(145deg,_rgba(35,28,24,0.95),_rgba(24,19,16,0.95))] dark:text-slate-200"
                   }`}
                 >
                   {isCompared ? "✓" : "+"} Compare
@@ -250,7 +250,7 @@ const ManCard = ({
                     className={`rounded-full px-2 py-0.5 text-[11px] font-semibold sm:text-xs ${
                       isCompared
                         ? "bg-blue-600 text-white"
-                        : "bg-gray-200 text-gray-700"
+                        : "bg-gray-200 text-gray-700 dark:bg-[linear-gradient(145deg,_rgba(35,28,24,0.95),_rgba(24,19,16,0.95))] dark:text-slate-200"
                     }`}
                   >
                     {isCompared ? "✓" : "+"} Compare

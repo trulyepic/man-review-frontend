@@ -259,23 +259,23 @@ const FilteredSeriesPage = () => {
 
   return (
     <div className="mx-auto w-full max-w-7xl px-3 pb-8 pt-4 sm:px-6 sm:pb-10 sm:pt-6 lg:px-8">
-      <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white/90 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.45)]">
-        <div className="flex flex-col gap-4 border-b border-slate-200/80 px-3.5 py-4 sm:gap-5 sm:px-6 sm:py-6">
+      <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white/90 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.45)] dark-theme-shell">
+        <div className="flex flex-col gap-4 border-b border-slate-200/80 px-3.5 py-4 dark:border-[#342a23] sm:gap-5 sm:px-6 sm:py-6">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 ring-1 ring-inset ring-slate-200 sm:px-3 sm:py-1.5 sm:text-xs sm:tracking-[0.18em]">
+              <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 ring-1 ring-inset ring-slate-200 dark-theme-chip dark:text-slate-400 sm:px-3 sm:py-1.5 sm:text-xs sm:tracking-[0.18em]">
                 {seriesType?.toUpperCase()}
               </span>
-              <span className="inline-flex items-center rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-200 sm:px-3 sm:py-1.5 sm:text-sm">
+              <span className="inline-flex items-center rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-200 dark-theme-chip dark:text-slate-300 sm:px-3 sm:py-1.5 sm:text-sm">
                 {items.length} loaded
               </span>
               {activeGenre ? (
-                <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-100 sm:px-3 sm:py-1.5 sm:text-sm">
+                <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-100 dark:bg-[linear-gradient(145deg,_rgba(34,47,83,0.82),_rgba(24,31,55,0.82))] dark:text-blue-200 dark:ring-[#475276] sm:px-3 sm:py-1.5 sm:text-sm">
                   {activeGenre}
                 </span>
               ) : null}
               {searchTerm.trim() ? (
-                <span className="inline-flex max-w-full items-center rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-100 sm:px-3 sm:py-1.5 sm:text-sm">
+                <span className="inline-flex max-w-full items-center rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-100 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-900 sm:px-3 sm:py-1.5 sm:text-sm">
                   Search: {searchTerm.trim()}
                 </span>
               ) : null}
@@ -285,7 +285,7 @@ const FilteredSeriesPage = () => {
               <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
                 <button
                   onClick={openCreateListOnly}
-                  className="w-full rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-medium text-blue-800 shadow-sm transition hover:bg-blue-100 sm:w-auto"
+                      className="w-full rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-medium text-blue-800 shadow-sm transition hover:bg-blue-100 dark:border-[#475276] dark:bg-[linear-gradient(145deg,_rgba(34,47,83,0.82),_rgba(24,31,55,0.82))] dark:text-blue-200 dark:hover:bg-[linear-gradient(145deg,_rgba(43,58,101,0.86),_rgba(29,38,67,0.86))] sm:w-auto"
                 >
                   + Create Reading List
                 </button>
@@ -309,12 +309,12 @@ const FilteredSeriesPage = () => {
                 hasMore={!searchTerm.trim() && hasMore}
                 loader={
                   items.length > 0 ? (
-                    <p className="py-6 text-center text-gray-500">Loading...</p>
+                    <p className="py-6 text-center text-gray-500 dark:text-slate-400">Loading...</p>
                   ) : null
                 }
                 endMessage={
                   !loading && items.length > 0 ? (
-                    <p className="py-6 text-center text-gray-400">
+                    <p className="py-6 text-center text-gray-400 dark:text-slate-500">
                       You've seen everything. New series are added periodically.
                     </p>
                   ) : null
@@ -323,7 +323,7 @@ const FilteredSeriesPage = () => {
                 {items.length === 0 && loading ? <ShimmerLoader /> : null}
 
                 {items.length === 0 && !loading ? (
-                  <div className="py-12 text-center text-gray-600">
+                  <div className="py-12 text-center text-gray-600 dark:text-slate-300">
                     <p className="mb-3">
                       {activeGenre
                         ? `No ${
@@ -334,7 +334,7 @@ const FilteredSeriesPage = () => {
                     {activeGenre ? (
                       <button
                         onClick={() => setSearchTerm("")}
-                        className="inline-flex items-center rounded-md bg-gray-200 px-4 py-2 text-gray-800 hover:bg-gray-300"
+                        className="inline-flex items-center rounded-md bg-gray-200 px-4 py-2 text-gray-800 hover:bg-gray-300 dark:bg-[linear-gradient(145deg,_rgba(30,24,20,0.92),_rgba(22,18,15,0.92))] dark:text-slate-200 dark:hover:bg-[#241d19]"
                       >
                         Clear genre filter
                       </button>

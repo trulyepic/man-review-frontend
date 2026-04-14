@@ -37,7 +37,7 @@ function SeriesRefPill({ s }: { s: ForumThread["series_refs"][number] }) {
   return (
     <Link
       to={`/series/${s.series_id}`}
-      className="inline-flex items-center gap-2 text-xs px-2 py-1 rounded-full bg-white/60 backdrop-blur-sm border border-white/70 hover:bg-white/80"
+      className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/60 px-2 py-1 text-xs backdrop-blur-sm hover:bg-white/80 dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(35,28,23,0.98),_rgba(22,18,15,0.98))] dark:text-stone-100 dark:hover:bg-[#2a211b]"
       title={s.title || `#${s.series_id}`}
     >
       {s.cover_url ? (
@@ -49,7 +49,7 @@ function SeriesRefPill({ s }: { s: ForumThread["series_refs"][number] }) {
           decoding="async"
         />
       ) : (
-        <div className="w-6 h-8 bg-gray-200 rounded" />
+        <div className="w-6 h-8 rounded bg-gray-200 dark:bg-[#241d19]" />
       )}
       <span className="max-w-[10rem] truncate">
         {s.title || `#${s.series_id}`}
@@ -58,7 +58,7 @@ function SeriesRefPill({ s }: { s: ForumThread["series_refs"][number] }) {
   );
 }
 
-function Pager({
+function LegacyForumPager({
   page,
   totalPages,
   hasPrev,
@@ -88,7 +88,7 @@ function Pager({
       aria-label="Pagination"
     >
       <button
-        className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+        className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(27,22,19,0.96),_rgba(21,17,14,0.96))] dark:text-slate-200 dark:hover:bg-[#241d19]"
         onClick={() => onGo(page - 1)}
         disabled={hasPrev === undefined ? page <= 1 : !hasPrev}
         // disabled={page <= 1}
@@ -105,7 +105,7 @@ function Pager({
               className={`rounded-full border px-3 py-1.5 transition ${
                 n === page
                   ? "border-slate-900 bg-slate-900 font-semibold text-white"
-                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(27,22,19,0.96),_rgba(21,17,14,0.96))] dark:text-slate-200 dark:hover:bg-[#241d19]"
               }`}
               onClick={() => onGo(n)}
               aria-current={n === page ? "page" : undefined}
@@ -116,7 +116,7 @@ function Pager({
         );
       })}
       <button
-        className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+        className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(27,22,19,0.96),_rgba(21,17,14,0.96))] dark:text-slate-200 dark:hover:bg-[#241d19]"
         onClick={() => onGo(page + 1)}
         // disabled={page >= totalPages}
         disabled={hasNext === undefined ? page >= totalPages : !hasNext}
@@ -126,6 +126,8 @@ function Pager({
     </nav>
   );
 }
+
+void LegacyForumPager;
 
 export default function ForumPage() {
   const [q, setQ] = useState("");
@@ -253,7 +255,7 @@ export default function ForumPage() {
   };
 
   return (
-    <div className="relative mx-auto max-w-5xl bg-[radial-gradient(900px_260px_at_50%_-100px,rgba(99,102,241,0.10),transparent)] px-3 py-6 sm:px-6 sm:py-8">
+    <div className="relative mx-auto max-w-5xl bg-[radial-gradient(900px_260px_at_50%_-100px,rgba(99,102,241,0.10),transparent)] px-3 py-6 dark:bg-[radial-gradient(1100px_320px_at_50%_-120px,rgba(76,175,149,0.12),transparent)] sm:px-6 sm:py-8">
       <Helmet>
         <title>{pageTitleSafe}</title>
         <link rel="canonical" href={canonical} />
@@ -269,33 +271,33 @@ export default function ForumPage() {
         <meta name="twitter:card" content="summary_large_image" />
       </Helmet>
 
-      <div className="mb-4 rounded-[2rem] border border-slate-200/80 bg-white/80 px-4 py-4 shadow-[0_18px_50px_rgba(15,23,42,0.06)] backdrop-blur-sm sm:mb-6 sm:px-6 sm:py-5">
+      <div className="mb-4 rounded-[2rem] border border-slate-200/80 bg-white/80 px-4 py-4 shadow-[0_18px_50px_rgba(15,23,42,0.06)] backdrop-blur-sm dark:border-[#3a3028] dark:bg-[linear-gradient(135deg,rgba(31,25,21,0.98),rgba(22,18,15,0.97)_58%,rgba(18,33,28,0.72))] dark:shadow-[0_20px_55px_rgba(0,0,0,0.6)] sm:mb-6 sm:px-6 sm:py-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-2">
-            <div className="text-xs font-semibold uppercase tracking-[0.32em] text-slate-500">
+            <div className="text-xs font-semibold uppercase tracking-[0.32em] text-slate-500 dark:text-emerald-200/75">
               Community
             </div>
             <div className="space-y-2">
-              <h1 className="text-3xl font-semibold tracking-tight text-slate-950">
+              <h1 className="text-3xl font-semibold tracking-tight text-slate-950 dark:text-white">
                 Forum
               </h1>
-              <p className="max-w-2xl text-sm leading-6 text-slate-600 sm:text-[15px]">
+              <p className="max-w-2xl text-sm leading-6 text-slate-600 dark:text-stone-300 sm:text-[15px]">
                 Follow updates, start discussions, and keep series talk in one
                 place.
               </p>
             </div>
           </div>
-        <button
-          onClick={onClickNewThread}
-          className="inline-flex w-full items-center justify-center rounded-full bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 sm:w-auto"
-        >
-          New Thread
-        </button>
+          <button
+            onClick={onClickNewThread}
+            className="inline-flex w-full items-center justify-center rounded-full bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.28)] transition hover:bg-blue-700 sm:w-auto"
+          >
+            New Thread
+          </button>
         </div>
       </div>
 
-      <div className="mb-4 flex flex-col gap-3 rounded-[1.75rem] border border-slate-200/80 bg-white/80 px-4 py-4 shadow-[0_18px_50px_rgba(15,23,42,0.05)] backdrop-blur-sm sm:px-6">
-        <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
+      <div className="mb-4 flex flex-col gap-4 rounded-[1.75rem] border border-slate-200/80 bg-white/80 px-4 py-4 shadow-[0_18px_50px_rgba(15,23,42,0.05)] backdrop-blur-sm dark:border-[#3a3028] dark:bg-[linear-gradient(140deg,rgba(27,22,19,0.98),rgba(18,15,13,0.97)_62%,rgba(20,33,28,0.66))] dark:shadow-[0_18px_50px_rgba(0,0,0,0.6)] sm:px-6 sm:py-5">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600 dark:text-stone-300">
           Showing <strong>{threads.length}</strong> of <strong>{total}</strong>
           <span>{resultsLabel}</span>
           {totalPages > 1 && (
@@ -306,7 +308,7 @@ export default function ForumPage() {
           )}
           {/* summary badge */}
           {user && myThreadCount > 0 && (
-            <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+            <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:border-emerald-800/70 dark:bg-emerald-950/30 dark:text-emerald-200">
               Your threads <strong>{myThreadCount}</strong>
             </span>
           )}
@@ -328,7 +330,7 @@ export default function ForumPage() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search threads..."
-          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100 dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(22,18,15,0.98),_rgba(18,15,12,0.98))] dark:text-stone-100 dark:placeholder:text-stone-500 dark:focus:border-[#5a4a3f] dark:focus:ring-[#2c241d]"
         />
       </div>
 
@@ -343,13 +345,13 @@ export default function ForumPage() {
           return (
             <li
               key={t.id}
-              className="rounded-2xl border border-white/70 bg-white/40 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md transition hover:bg-white/60 hover:shadow-md"
+              className="rounded-[1.75rem] border border-white/70 bg-white/40 p-4 shadow-sm ring-1 ring-black/5 backdrop-blur-md transition hover:bg-white/60 hover:shadow-md dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,rgba(29,24,20,0.98),rgba(21,17,14,0.98))] dark:ring-[rgba(255,255,255,0.03)] dark:shadow-[0_16px_36px_rgba(0,0,0,0.4)] dark:hover:bg-[linear-gradient(145deg,rgba(35,28,23,0.98),rgba(24,20,16,0.98))]"
             >
               <div className="flex flex-col gap-3">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <Link
                     to={`/forum/${t.id}`}
-                    className="text-base font-semibold leading-6 hover:underline sm:text-lg"
+                    className="text-base font-semibold leading-6 text-slate-900 hover:underline dark:text-stone-50 sm:text-lg"
                   >
                     {stripMdHeading(t.title)}
                   </Link>
@@ -375,7 +377,7 @@ export default function ForumPage() {
                             }
                           })();
                         }}
-                        className="inline-flex items-center rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+                        className="inline-flex items-center rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 dark:border-[#3a3028] dark:text-stone-200 dark:hover:bg-[linear-gradient(145deg,_rgba(34,47,83,0.8),_rgba(24,31,55,0.8))] dark:hover:text-blue-200"
                       >
                         Edit
                       </button>
@@ -392,8 +394,8 @@ export default function ForumPage() {
                           disabled={deletingId === t.id}
                           className={`inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-medium transition ${
                             deletingId === t.id
-                              ? "cursor-not-allowed border-slate-200 text-slate-400"
-                              : "border-slate-200 text-slate-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700"
+                              ? "cursor-not-allowed border-slate-200 text-slate-400 dark:border-[#3a3028] dark:text-slate-500"
+                              : "border-slate-200 text-slate-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700 dark:border-[#3a3028] dark:text-stone-200 dark:hover:bg-red-950/30 dark:hover:text-red-300"
                           }`}
                         >
                           {deletingId === t.id ? "Deleting..." : "Delete"}
@@ -404,20 +406,20 @@ export default function ForumPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-gray-500 dark:text-stone-400">
                     {t.post_count} posts - updated{" "}
                     {new Date(t.updated_at).toLocaleString()}
                     {t.author_username ? ` - by ${t.author_username}` : null}
                   </div>
 
                   {isPatchNotes && (
-                    <span className="inline-flex items-center rounded-full bg-violet-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-700">
+                    <span className="inline-flex items-center rounded-full bg-violet-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-violet-700 dark:bg-violet-950/35 dark:text-violet-200">
                       Pinned
                     </span>
                   )}
 
                   {t.locked && (
-                    <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-800">
+                    <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-800 dark:bg-amber-950/35 dark:text-amber-200">
                       Locked
                     </span>
                   )}
@@ -494,7 +496,7 @@ export default function ForumPage() {
               <div className="mb-2">
                 This will remove the original post and all replies.
               </div>
-              <div className="rounded bg-gray-50 p-2 text-sm">
+              <div className="rounded-2xl border border-slate-200/70 bg-slate-50 px-3 py-2 text-sm text-slate-700 dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(22,18,15,0.96),_rgba(18,15,12,0.96))] dark:text-stone-300">
                 "{stripMdHeading(confirmThread.title)}"
               </div>
             </div>
@@ -550,6 +552,73 @@ export default function ForumPage() {
         onClose={notice.hide}
       />
     </div>
+  );
+}
+
+function Pager({
+  page,
+  totalPages,
+  hasPrev,
+  hasNext,
+  onGo,
+}: {
+  page: number;
+  totalPages: number;
+  hasPrev?: boolean;
+  hasNext?: boolean;
+  onGo: (p: number) => void;
+}) {
+  const nums: number[] = [];
+  const add = (n: number) => {
+    if (n >= 1 && n <= totalPages) nums.push(n);
+  };
+  add(1);
+  add(2);
+  for (let n = page - 2; n <= page + 2; n++) add(n);
+  add(totalPages - 1);
+  add(totalPages);
+  const unique = Array.from(new Set(nums)).sort((a, b) => a - b);
+
+  return (
+    <nav
+      className="flex flex-wrap items-center gap-2 text-sm"
+      aria-label="Pagination"
+    >
+      <button
+        className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(27,22,19,0.96),_rgba(21,17,14,0.96))] dark:text-stone-200 dark:hover:bg-[#241d19]"
+        onClick={() => onGo(page - 1)}
+        disabled={hasPrev === undefined ? page <= 1 : !hasPrev}
+      >
+        Prev
+      </button>
+      {unique.map((n, i) => {
+        const prev = unique[i - 1];
+        const gap = prev != null && n - prev > 1;
+        return (
+          <span key={n} className="flex items-center">
+            {gap && <span className="px-1 text-slate-400 dark:text-stone-500">...</span>}
+            <button
+              className={`rounded-full border px-3 py-1.5 transition ${
+                n === page
+                  ? "border-slate-900 bg-slate-900 font-semibold text-white dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(27,22,19,0.96),_rgba(21,17,14,0.96))] dark:text-stone-200 dark:hover:bg-[#241d19]"
+              }`}
+              onClick={() => onGo(n)}
+              aria-current={n === page ? "page" : undefined}
+            >
+              {n}
+            </button>
+          </span>
+        );
+      })}
+      <button
+        className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(27,22,19,0.96),_rgba(21,17,14,0.96))] dark:text-stone-200 dark:hover:bg-[#241d19]"
+        onClick={() => onGo(page + 1)}
+        disabled={hasNext === undefined ? page >= totalPages : !hasNext}
+      >
+        Next
+      </button>
+    </nav>
   );
 }
 
@@ -899,16 +968,16 @@ function NewThreadModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4">
-      <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-[1.75rem] bg-white p-4 shadow-xl sm:max-h-[calc(100vh-2rem)] sm:max-w-2xl sm:rounded-xl sm:p-5">
+      <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-[1.75rem] bg-white p-4 shadow-xl dark:border dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(30,24,20,0.98),_rgba(21,17,14,0.98))] dark:text-stone-100 sm:max-h-[calc(100vh-2rem)] sm:max-w-2xl sm:rounded-xl sm:p-5">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">{headerText}</h2>
-          <button onClick={onClose} className="text-gray-500">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-stone-50">{headerText}</h2>
+          <button onClick={onClose} className="text-gray-500 dark:text-stone-400">
             x
           </button>
         </div>
 
         {mode === "create" ? (
-          <div className="text-xs text-gray-500 mb-2">
+          <div className="mb-2 text-xs text-gray-500 dark:text-stone-400">
             {user
               ? `You can create ${remaining} more ${
                   remaining === 1 ? "thread" : "threads"
@@ -916,7 +985,7 @@ function NewThreadModal({
               : "You must be logged in to create threads."}
           </div>
         ) : (
-          <div className="text-xs text-gray-500 mb-2">
+          <div className="mb-2 text-xs text-gray-500 dark:text-stone-400">
             Editing thread details.
           </div>
         )}
@@ -925,7 +994,7 @@ function NewThreadModal({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Thread title"
-          className="mb-3 w-full rounded-xl border border-slate-200 px-3 py-2.5"
+          className="mb-3 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-slate-900 dark:border-[#3a3028] dark:bg-[#18120f] dark:text-stone-100 dark:placeholder:text-stone-500"
         />
 
         {/* body with @-mention support */}
@@ -936,13 +1005,13 @@ function NewThreadModal({
             onChange={onMdChange}
             onKeyDown={onMdKeyDown}
             placeholder="Say something (Markdown supported)... Tip: type @ to mention a series"
-            className="h-36 w-full rounded-xl border border-slate-200 px-3 py-2.5 sm:h-40"
+            className="h-36 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-slate-900 dark:border-[#3a3028] dark:bg-[#18120f] dark:text-stone-100 dark:placeholder:text-stone-500 sm:h-40"
           />
 
           {mdMenuOpen && mdResults.length > 0 && (
             <div
               ref={mdMenuRef}
-              className="absolute left-0 right-0 mt-1 z-40 max-h-60 overflow-auto rounded border bg-white shadow"
+              className="absolute left-0 right-0 z-40 mt-1 max-h-60 overflow-auto rounded border bg-white shadow dark:border-[#3a3028] dark:bg-[#18120f]"
             >
               {mdResults.map((r, i) => (
                 <button
@@ -957,8 +1026,8 @@ function NewThreadModal({
                     const end = hit ? hit.tokenEnd : caret;
                     insertMdMention(r, start, end);
                   }}
-                  className={`w-full flex items-center gap-2 px-3 py-2 text-left ${
-                    i === mdHighlight ? "bg-gray-100" : "hover:bg-gray-50"
+                  className={`flex w-full items-center gap-2 px-3 py-2 text-left ${
+                    i === mdHighlight ? "bg-gray-100 dark:bg-[#241d19]" : "hover:bg-gray-50 dark:hover:bg-[#201915]"
                   }`}
                   title={r.title || `#${r.series_id}`}
                 >
@@ -974,8 +1043,8 @@ function NewThreadModal({
                     <div className="w-6 h-8 rounded bg-gray-200" />
                   )}
                   <div className="min-w-0">
-                    <div className="text-sm truncate">{r.title}</div>
-                    <div className="text-[11px] text-gray-500">
+                    <div className="truncate text-sm text-slate-900 dark:text-stone-100">{r.title}</div>
+                    <div className="text-[11px] text-gray-500 dark:text-stone-400">
                       #{r.series_id}
                     </div>
                   </div>
@@ -985,7 +1054,7 @@ function NewThreadModal({
           )}
         </div>
 
-        <div className="mt-1 text-[11px] text-gray-500">
+        <div className="mt-1 text-[11px] text-gray-500 dark:text-stone-400">
           Mentions: {mdMentionCount}/{MAX_MENTIONS}
           {mdMentionCount >= MAX_MENTIONS && (
             <span className="ml-1 text-amber-700">Limit reached</span>
@@ -994,30 +1063,30 @@ function NewThreadModal({
 
         {/* "Reference series" section */}
         <div className="mt-3">
-          <label className="text-sm font-medium">Reference series</label>
-          <div className="text-xs text-gray-500 mb-1">
+          <label className="text-sm font-medium text-slate-900 dark:text-stone-100">Reference series</label>
+          <div className="mb-1 text-xs text-gray-500 dark:text-stone-400">
             You can add up to {MAX_SERIES_REFS} series.
           </div>
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search series..."
-            className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5"
+            className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-slate-900 dark:border-[#3a3028] dark:bg-[#18120f] dark:text-stone-100 dark:placeholder:text-stone-500"
           />
           {results.length > 0 && (
-            <div className="mt-2 max-h-40 overflow-auto border rounded p-2 space-y-1">
+            <div className="mt-2 max-h-40 space-y-1 overflow-auto rounded border p-2 dark:border-[#3a3028] dark:bg-[#18120f]">
               {results.map((r) => (
                 <button
                   key={r.series_id}
                   onClick={() => togglePick(r.series_id)}
                   className={`w-full text-left px-2 py-1 rounded ${
                     picked.includes(r.series_id)
-                      ? "bg-blue-100"
-                      : "hover:bg-gray-100"
+                      ? "bg-blue-100 dark:bg-blue-950/35"
+                      : "hover:bg-gray-100 dark:hover:bg-[#201915]"
                   }`}
                 >
                   {r.title}{" "}
-                  <span className="text-xs text-gray-500">#{r.series_id}</span>
+                  <span className="text-xs text-gray-500 dark:text-stone-400">#{r.series_id}</span>
                 </button>
               ))}
             </div>
@@ -1027,7 +1096,7 @@ function NewThreadModal({
               {picked.map((id) => (
                 <span
                   key={id}
-                  className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full"
+                  className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-950/35 dark:text-blue-200"
                 >
                   #{id}
                 </span>
@@ -1039,7 +1108,7 @@ function NewThreadModal({
         <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button
             onClick={onClose}
-            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 sm:w-auto"
+            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 dark:border-[#3a3028] dark:text-stone-200 sm:w-auto"
           >
             Cancel
           </button>

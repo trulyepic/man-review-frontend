@@ -19,9 +19,7 @@ const ComparePage = () => {
       setDetails(results);
     };
 
-    if (items.length) {
-      fetchDetails();
-    }
+    if (items.length) fetchDetails();
   }, [items]);
 
   type RatingLabel =
@@ -60,178 +58,108 @@ const ComparePage = () => {
     return ratings;
   };
 
+  const renderCard = (
+    item: any,
+    detail: SeriesDetailData,
+    mobile = false
+  ) => (
+    <div
+      key={item.id}
+      className={`dark-theme-card flex flex-col rounded-[1.75rem] border border-slate-200 p-4 shadow-[0_18px_40px_rgba(15,23,42,0.08)] dark:border-[#3a3028] ${
+        mobile ? "min-w-[280px] max-w-[280px]" : ""
+      }`}
+    >
+      <div className="relative mb-3 overflow-hidden rounded-2xl">
+        <div className="absolute left-2 top-2 z-10 rounded-full bg-black/75 px-2 py-1 text-sm font-bold text-white ring-1 ring-white/80">
+          {typeof item.rank === "number" ? `#${item.rank}` : "-"}
+        </div>
+        <img
+          src={item.cover_url}
+          alt={item.title}
+          className={`w-full object-cover ${mobile ? "h-48" : "h-72"}`}
+        />
+      </div>
+
+      <h2 className="mb-0.5 text-base font-semibold text-slate-900 dark:text-stone-50 sm:text-lg">
+        {item.title}
+      </h2>
+      <p className="text-xs text-slate-500 dark:text-stone-400 sm:text-sm">
+        {item.genre}
+      </p>
+      <p className="text-xs text-slate-500 dark:text-stone-400 sm:text-sm">
+        {item.type}
+      </p>
+
+      <p className="mt-2 text-sm font-semibold text-blue-600 dark:text-blue-300 sm:text-base">
+        Score:{" "}
+        {item.final_score !== undefined
+          ? Number(item.final_score).toFixed(1)
+          : "-"}
+      </p>
+
+      <div className="mt-auto grid grid-cols-1 gap-2 pt-3">
+        {Object.entries(calculateRatings(detail)).map(([label, score]) => {
+          const displayCounts = getDisplayVoteCounts(detail.vote_counts, item.id);
+          const voteCount = displayCounts[label];
+          return (
+            <div
+              key={label}
+              className="dark-theme-card-soft relative rounded-2xl border border-slate-200 p-3 dark:border-[#3a3028]"
+            >
+              <h4 className="font-medium text-slate-700 dark:text-stone-300">
+                {label}
+              </h4>
+              <p className="text-lg font-bold text-blue-500 dark:text-blue-300">
+                {score === -1 ? "-/10" : `${score.toFixed(1)}/10`}
+              </p>
+              {voteCount !== undefined && (
+                <div className="absolute bottom-2 right-3 flex items-center gap-1 text-xs text-slate-500 dark:text-stone-400">
+                  {voteCount > 1 ? (
+                    <UsersIcon className="h-4 w-4 text-blue-400" />
+                  ) : (
+                    <UserIcon className="h-4 w-4 text-blue-400" />
+                  )}
+                  {voteCount}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-center">
+    <div className="dark-theme-shell mx-auto max-w-7xl px-4 py-8">
+      <h1 className="mb-6 text-center text-2xl font-bold text-slate-900 dark:text-stone-50 sm:text-3xl">
         Compare Series
       </h1>
 
-      {/* Horizontal scroll for mobile */}
-      <div className="block sm:hidden overflow-x-auto pb-4">
-        <div className="flex gap-4 w-max">
-          {details.map((detail, i) => {
-            const item = items[i];
-            const ratings = calculateRatings(detail);
-
-            return (
-              <div
-                key={item.id}
-                className="bg-white shadow-md p-4 rounded text-center flex flex-col min-w-[280px] max-w-[280px]"
-              >
-                <div className="relative w-full h-48 mb-2 rounded overflow-hidden">
-                  <div className="absolute top-2 left-2 text-sm font-bold text-white bg-black/70 px-2 py-1 rounded-full z-10 shadow ring-1 ring-white">
-                    {typeof item.rank === "number" ? `#${item.rank}` : "–"}
-                  </div>
-                  <img
-                    src={item.cover_url}
-                    alt={item.title}
-                    className="w-full object-cover"
-                  />
-                </div>
-
-                <h2 className="font-semibold text-base mb-0.5">{item.title}</h2>
-                <p className="text-xs text-gray-500">{item.genre}</p>
-                <p className="text-xs text-gray-500">{item.type}</p>
-
-                <p className="text-blue-600 font-semibold mt-2 text-sm">
-                  Score:{" "}
-                  {item.final_score !== undefined
-                    ? Number(item.final_score).toFixed(1)
-                    : "-"}
-                </p>
-
-                {/*temp comment. will remove when more people vote */}
-                {/* <p className="text-xs text-gray-600 mb-3">
-                  Votes: {item.vote_count.toLocaleString()}
-                </p> */}
-
-                <div className="grid grid-cols-1 gap-2 mt-auto">
-                  {Object.entries(ratings).map(([label, score]) => {
-                    // const voteCount = detail.vote_counts?.[label];
-                    const displayCounts = getDisplayVoteCounts(
-                      detail.vote_counts,
-                      item.id
-                    );
-                    const voteCount = displayCounts[label];
-                    return (
-                      <div
-                        key={label}
-                        className="bg-gray-100 p-2 rounded text-left text-sm relative"
-                      >
-                        <h4 className="text-gray-700 font-medium">{label}</h4>
-                        <p className="text-blue-500 font-bold text-lg">
-                          {score === -1 ? "-/10" : `${score.toFixed(1)}/10`}
-                        </p>
-                        {voteCount !== undefined && (
-                          <div className="absolute bottom-1 right-2 text-xs text-gray-500 flex items-center gap-1">
-                            {voteCount > 1 ? (
-                              <UsersIcon className="w-4 h-4 text-blue-400" />
-                            ) : (
-                              <UserIcon className="w-4 h-4 text-blue-400" />
-                            )}
-                            {voteCount}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
+      <div className="block overflow-x-auto pb-4 sm:hidden">
+        <div className="flex w-max gap-4">
+          {details.map((detail, i) => renderCard(items[i], detail, true))}
         </div>
       </div>
 
-      {/* Original grid view for sm and above */}
-      <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+      <div className="hidden grid-cols-1 gap-4 sm:grid sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 sm:gap-6">
         {details.length === 0 ? (
-          <p className="text-center text-gray-500 col-span-full">
+          <p className="col-span-full text-center text-slate-500 dark:text-stone-400">
             Loading series details...
           </p>
         ) : (
-          details.map((detail, i) => {
-            const item = items[i];
-            // const ratings = calculateRatings(detail);
-
-            return (
-              <div
-                key={item.id}
-                className="bg-white shadow-md p-4 rounded text-center flex flex-col"
-              >
-                <div className="relative w-full h-48 sm:h-60 md:h-64 lg:h-72 xl:h-80 mb-2 rounded overflow-hidden">
-                  <div className="absolute top-2 left-2 text-sm font-bold text-white bg-black/70 px-2 py-1 rounded-full z-10 shadow ring-1 ring-white">
-                    {typeof item.rank === "number" ? `#${item.rank}` : "–"}
-                  </div>
-                  <img
-                    src={item.cover_url}
-                    alt={item.title}
-                    className="w-full object-cover"
-                  />
-                </div>
-
-                <h2 className="font-semibold text-base sm:text-lg mb-0.5">
-                  {item.title}
-                </h2>
-                <p className="text-xs sm:text-sm text-gray-500">{item.genre}</p>
-                <p className="text-xs sm:text-sm text-gray-500">{item.type}</p>
-
-                <p className="text-blue-600 font-semibold mt-2 text-sm sm:text-base">
-                  Score:{" "}
-                  {item.final_score !== undefined
-                    ? Number(item.final_score).toFixed(1)
-                    : "-"}
-                </p>
-
-                {/*temp comment. will remove when more people vote */}
-                {/* <p className="text-xs sm:text-sm text-gray-600 mb-3">
-                  Votes: {item.vote_count.toLocaleString()}
-                </p> */}
-
-                <div className="grid grid-cols-1 gap-2 mt-auto">
-                  {Object.entries(calculateRatings(detail)).map(
-                    ([label, score]) => {
-                      // const voteCount = detail.vote_counts?.[label];
-                      const displayCounts = getDisplayVoteCounts(
-                        detail.vote_counts,
-                        item.id
-                      );
-                      const voteCount = displayCounts[label];
-                      return (
-                        <div
-                          key={label}
-                          className="bg-gray-100 p-2 rounded text-left text-sm relative"
-                        >
-                          <h4 className="text-gray-700 font-medium">{label}</h4>
-                          <p className="text-blue-500 font-bold text-lg">
-                            {score === -1 ? "-/10" : `${score.toFixed(1)}/10`}
-                          </p>
-                          {voteCount !== undefined && (
-                            <div className="absolute bottom-1 right-2 text-xs text-gray-500 flex items-center gap-1">
-                              {voteCount > 1 ? (
-                                <UsersIcon className="w-4 h-4 text-blue-400" />
-                              ) : (
-                                <UserIcon className="w-4 h-4 text-blue-400" />
-                              )}
-                              {voteCount}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    }
-                  )}
-                </div>
-              </div>
-            );
-          })
+          details.map((detail, i) => renderCard(items[i], detail))
         )}
       </div>
 
-      <div className="text-center mt-6">
+      <div className="mt-6 text-center">
         <Link
           to="/"
-          className="text-blue-600 underline hover:text-blue-800 transition"
+          className="inline-flex items-center gap-1 font-medium text-blue-600 underline transition hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-200"
         >
-          ← Back to Rankings
+          <span aria-hidden className="text-sm">
+            Back
+          </span>
+          <span>to Rankings</span>
         </Link>
       </div>
     </div>

@@ -9,9 +9,7 @@ import {
 type Props = {
   open: boolean;
   onClose: () => void;
-  // If seriesId is provided, we're adding that series to a list.
   seriesId?: number;
-  // Called after successful action (create or add)
   onDone?: () => void;
 };
 
@@ -72,7 +70,6 @@ export default function ReadingListModal({
 
   const handleAdd = async () => {
     if (!seriesId) {
-      // “Create only” mode: nothing else to do
       onDone?.();
       onClose();
       return;
@@ -101,30 +98,43 @@ export default function ReadingListModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white w-full max-w-md rounded-xl shadow-lg p-5">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold">
-            {seriesId ? "Add to Reading List" : "Create a Reading List"}
-          </h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-black">
-            ✕
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm">
+      <div className="dark-theme-shell w-full max-w-md rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-[0_28px_80px_rgba(15,23,42,0.22)] dark:border-[#3a3028]">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-stone-50">
+              {seriesId ? "Add to Reading List" : "Create a Reading List"}
+            </h2>
+            <p className="mt-1 text-sm text-slate-600 dark:text-stone-300">
+              {seriesId
+                ? "Choose a list and optionally save where you left off."
+                : "Create a new list to organize your reading."}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-600 transition hover:bg-slate-50 dark:border-[#3a3028] dark:text-stone-300 dark:hover:bg-[#241d19]"
+          >
+            Close
           </button>
         </div>
 
         {loading ? (
-          <div className="py-6 text-center text-gray-500">Loading…</div>
+          <div className="py-6 text-center text-gray-500 dark:text-stone-400">
+            Loading...
+          </div>
         ) : (
           <>
-            {/* Existing lists */}
             {lists.length > 0 && (
               <div className="mb-4">
-                <p className="text-sm text-gray-600 mb-2">Your Lists</p>
+                <p className="mb-2 text-sm text-gray-600 dark:text-stone-300">
+                  Your Lists
+                </p>
                 <div className="space-y-2">
                   {lists.map((l) => (
                     <label
                       key={l.id}
-                      className="flex items-center gap-2 cursor-pointer"
+                      className="flex cursor-pointer items-center gap-2 rounded-2xl border border-slate-200 px-3 py-2 dark:border-[#3a3028] dark:bg-[#18120f]"
                     >
                       <input
                         type="radio"
@@ -133,8 +143,10 @@ export default function ReadingListModal({
                         checked={selectedListId === l.id}
                         onChange={() => setSelectedListId(l.id)}
                       />
-                      <span className="font-medium">{l.name}</span>
-                      <span className="text-xs text-gray-500">
+                      <span className="font-medium text-slate-900 dark:text-stone-100">
+                        {l.name}
+                      </span>
+                      <span className="text-xs text-gray-500 dark:text-stone-400">
                         ({l.items?.length ?? 0})
                       </span>
                     </label>
@@ -143,14 +155,15 @@ export default function ReadingListModal({
               </div>
             )}
 
-            {/* Create new (only if below cap) */}
             {canCreateMore && (
               <div className="mb-4">
-                <p className="text-sm text-gray-600 mb-2">Create New</p>
+                <p className="mb-2 text-sm text-gray-600 dark:text-stone-300">
+                  Create New
+                </p>
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    className="flex-1 border rounded px-2 py-1"
+                    className="dark-theme-field flex-1 rounded-xl border border-slate-200 px-3 py-2 text-slate-900 dark:border-[#3a3028] dark:text-stone-100 dark:placeholder:text-stone-500"
                     placeholder="List name (e.g., Current Reads)"
                     value={newListName}
                     onChange={(e) => setNewListName(e.target.value)}
@@ -159,7 +172,7 @@ export default function ReadingListModal({
                   <button
                     onClick={handleCreateList}
                     disabled={submitting}
-                    className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                    className="rounded-xl bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
                   >
                     Create
                   </button>
@@ -169,12 +182,12 @@ export default function ReadingListModal({
 
             {seriesId && (
               <div className="mb-4">
-                <label className="block text-sm text-gray-600 mb-2">
+                <label className="mb-2 block text-sm text-gray-600 dark:text-stone-300">
                   Left off chapter
                 </label>
                 <input
                   type="text"
-                  className="w-full border rounded px-2 py-1"
+                  className="dark-theme-field w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 dark:border-[#3a3028] dark:text-stone-100 dark:placeholder:text-stone-500"
                   placeholder="Optional, e.g. 128 or 128.5"
                   value={leftOffChapter}
                   onChange={(e) => setLeftOffChapter(e.target.value)}
@@ -184,16 +197,22 @@ export default function ReadingListModal({
             )}
 
             {!canCreateMore && (
-              <div className="mb-3 text-xs text-gray-500">
-                You’ve reached the limit of 2 lists. Delete a list from “My
-                Lists”.
+              <div className="mb-3 text-xs text-gray-500 dark:text-stone-400">
+                You've reached the limit of 2 lists. Delete a list from "My Lists".
               </div>
             )}
 
-            {error && <div className="text-red-600 text-sm mb-3">{error}</div>}
+            {error && (
+              <div className="mb-3 text-sm text-red-600 dark:text-red-300">
+                {error}
+              </div>
+            )}
 
             <div className="flex justify-end gap-2">
-              <button onClick={onClose} className="px-3 py-1 rounded border">
+              <button
+                onClick={onClose}
+                className="rounded-xl border border-slate-200 px-3 py-1.5 text-sm text-slate-700 dark:border-[#3a3028] dark:text-stone-200"
+              >
                 Cancel
               </button>
               <button
@@ -202,7 +221,7 @@ export default function ReadingListModal({
                   submitting ||
                   (!!seriesId && !selectedListId && lists.length > 0)
                 }
-                className="px-4 py-1.5 rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+                className="rounded-xl bg-emerald-600 px-4 py-1.5 text-white hover:bg-emerald-700 disabled:opacity-50"
               >
                 {seriesId ? "Add" : "Done"}
               </button>

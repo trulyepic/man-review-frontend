@@ -2,8 +2,8 @@ import React from "react";
 import ShimmerBox from "./ShimmerBox";
 
 export const ListHeaderShimmer: React.FC = () => (
-  <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white/90 shadow-[0_22px_55px_-40px_rgba(15,23,42,0.45)] backdrop-blur-sm">
-    <div className="flex items-start justify-between gap-3 border-b border-slate-200/80 bg-slate-50/80 px-5 py-5">
+  <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white/90 shadow-[0_22px_55px_-40px_rgba(15,23,42,0.45)] backdrop-blur-sm dark-theme-shell">
+    <div className="flex items-start justify-between gap-3 border-b border-slate-200/80 bg-slate-50/80 px-5 py-5 dark:border-[#342a23] dark:bg-[radial-gradient(circle_at_top_left,_rgba(45,212,191,0.08),_transparent_28%),linear-gradient(180deg,_rgba(38,31,27,0.94),_rgba(30,24,21,0.92))]">
       <div className="min-w-0 space-y-3">
         <div className="flex items-center gap-2">
           <ShimmerBox className="h-5 w-5 rounded" />
@@ -30,7 +30,7 @@ export const ListHeaderShimmer: React.FC = () => (
 );
 
 export const ItemRowShimmer: React.FC = () => (
-  <div className="flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_12px_30px_-24px_rgba(15,23,42,0.55)]">
+  <div className="flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_12px_30px_-24px_rgba(15,23,42,0.55)] dark-theme-card">
     <div className="relative shrink-0">
       <ShimmerBox className="h-24 w-16 rounded-2xl" />
     </div>
@@ -44,7 +44,7 @@ export const ItemRowShimmer: React.FC = () => (
         <ShimmerBox className="h-7 w-20 rounded-full" />
         <ShimmerBox className="h-7 w-24 rounded-full" />
       </div>
-      <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50/90 p-3">
+      <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50/90 p-3 dark-theme-card-soft">
         <ShimmerBox className="h-4 w-24 rounded" />
         <ShimmerBox className="mt-3 h-10 w-32 rounded-xl" />
       </div>

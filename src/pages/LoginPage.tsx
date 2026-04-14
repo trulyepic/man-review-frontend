@@ -8,7 +8,7 @@ import { scheduleLogoutAtJwtExp } from "../util/authUtils";
 import { useUser } from "../login/useUser";
 
 const fieldClass =
-  "mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-100";
+  "mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-100 dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(22,18,15,0.98),_rgba(18,15,12,0.98))] dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-[#4a3c33] dark:focus:bg-[#181310] dark:focus:ring-[#2a221c]";
 
 const LoginPage = () => {
   const [username, setUsername] = useState("");
@@ -117,23 +117,25 @@ const LoginPage = () => {
     >
       <div>
         <div className="mb-6">
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
+          <h2 className="text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">
             Login
           </h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
+          <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
             Use your Toon Ranks credentials to continue.
           </p>
         </div>
 
         {error && (
-          <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/80 dark:bg-rose-950/40 dark:text-rose-200">
             {error}
           </div>
         )}
 
         <div className="space-y-4">
           <label className="block">
-            <span className="text-sm font-medium text-slate-700">Username</span>
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+              Username
+            </span>
             <input
               type="text"
               placeholder="Enter your username"
@@ -145,12 +147,12 @@ const LoginPage = () => {
 
           <label className="block">
             <div className="flex items-center justify-between gap-3">
-              <span className="text-sm font-medium text-slate-700">
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
                 Password
               </span>
               <Link
                 to="/signup"
-                className="text-xs font-medium text-slate-500 transition hover:text-slate-700"
+                className="text-xs font-medium text-slate-500 transition hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
               >
                 Need an account?
               </Link>
@@ -165,7 +167,7 @@ const LoginPage = () => {
           </label>
         </div>
 
-        <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200 bg-slate-50/70 px-3 py-3">
+        <div className="mt-5 overflow-x-auto rounded-2xl border border-slate-200 bg-slate-50/70 px-3 py-3 dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(25,21,18,0.96),_rgba(20,17,14,0.96))]">
           <ReCAPTCHA
             ref={recaptchaRef}
             sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
@@ -194,19 +196,21 @@ const LoginPage = () => {
         </button>
 
         {showResend && (
-          <div className="mt-6 rounded-[26px] border border-amber-200 bg-amber-50/80 p-4 sm:p-5">
+          <div className="mt-6 rounded-[26px] border border-amber-200 bg-amber-50/80 p-4 dark:border-amber-700/60 dark:bg-amber-950/30 sm:p-5">
             <div className="space-y-2">
-              <h3 className="text-base font-semibold text-slate-900">
+              <h3 className="text-base font-semibold text-slate-900 dark:text-white">
                 Resend verification email
               </h3>
-              <p className="text-sm leading-6 text-slate-600">
+              <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
                 If your verification link expired, enter the email used for
-                signup and we’ll send another one.
+                signup and we'll send another one.
               </p>
             </div>
 
             <label className="mt-4 block">
-              <span className="text-sm font-medium text-slate-700">Email</span>
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                Email
+              </span>
               <input
                 type="email"
                 placeholder="Email used at signup"
@@ -216,7 +220,7 @@ const LoginPage = () => {
               />
             </label>
 
-            <div className="mt-4 overflow-x-auto rounded-2xl border border-amber-200 bg-white/80 px-3 py-3">
+            <div className="mt-4 overflow-x-auto rounded-2xl border border-amber-200 bg-white/80 px-3 py-3 dark:border-amber-700/60 dark:bg-[linear-gradient(145deg,_rgba(25,21,18,0.96),_rgba(20,17,14,0.96))]">
               <ReCAPTCHA
                 ref={recaptchaRef}
                 sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
@@ -237,7 +241,7 @@ const LoginPage = () => {
             </button>
 
             {resendMsg && (
-              <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+              <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900/80 dark:bg-emerald-950/40 dark:text-emerald-200">
                 {resendMsg}
               </div>
             )}
@@ -245,14 +249,14 @@ const LoginPage = () => {
         )}
 
         <div className="my-6 flex items-center gap-3">
-          <div className="h-px flex-1 bg-slate-200" />
-          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+          <div className="h-px flex-1 bg-slate-200 dark:bg-[#3a3028]" />
+          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
             Or continue with
           </span>
-          <div className="h-px flex-1 bg-slate-200" />
+          <div className="h-px flex-1 bg-slate-200 dark:bg-[#3a3028]" />
         </div>
 
-        <div className="rounded-[24px] border border-slate-200 bg-slate-50/70 px-4 py-4">
+        <div className="rounded-[24px] border border-slate-200 bg-slate-50/70 px-4 py-4 dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(25,21,18,0.96),_rgba(20,17,14,0.96))]">
           <GoogleOAuthButton />
         </div>
       </div>

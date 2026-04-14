@@ -44,12 +44,12 @@ function statusClass(status?: string): string {
 
 function statChipClass(tone: "neutral" | "accent" | "muted" = "neutral"): string {
   if (tone === "accent") {
-    return "inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700 ring-1 ring-inset ring-blue-100";
+    return "inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700 ring-1 ring-inset ring-blue-100 dark:bg-blue-950/50 dark:text-blue-300 dark:ring-blue-900";
   }
   if (tone === "muted") {
-    return "inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-500 ring-1 ring-inset ring-slate-200";
+    return "inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-500 ring-1 ring-inset ring-slate-200 dark-theme-chip dark:text-slate-300";
   }
-  return "inline-flex items-center rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600 ring-1 ring-inset ring-slate-200";
+  return "inline-flex items-center rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600 ring-1 ring-inset ring-slate-200 dark-theme-chip dark:text-slate-300";
 }
 
 /** Child that loads/paginates items only when mounted (list expanded). */
@@ -333,20 +333,20 @@ function ListItems({
   const effectiveHasMore = hasMore && !isFiltering;
 
   return initialCount === 0 ? (
-    <div className="px-4 py-6 text-sm text-gray-500">No items yet.</div>
+    <div className="px-4 py-6 text-sm text-gray-500 dark:text-slate-400">No items yet.</div>
   ) : (
     <>
       {/* 🔽 NEW: Filter bar */}
-      <div className="border-b border-slate-200/80 bg-slate-50/80 px-4 py-4 backdrop-blur-sm sm:px-5">
+      <div className="border-b border-slate-200/80 bg-slate-50/80 px-4 py-4 backdrop-blur-sm dark:border-[#342a23] dark:bg-[radial-gradient(circle_at_top_left,_rgba(45,212,191,0.08),_transparent_28%),linear-gradient(180deg,_rgba(38,31,27,0.94),_rgba(30,24,21,0.92))] sm:px-5">
         <div className="grid grid-cols-1 gap-3 sm:flex sm:flex-wrap sm:items-end">
           <div className="flex min-w-0 flex-col gap-1 sm:min-w-[110px]">
-            <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
               Type
             </label>
             <select
               value={filterType}
               onChange={handleTypeChange}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-200"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-200 dark-theme-field dark:focus:ring-[#2a221c]"
             >
               <option value="">All</option>
               <option value="MANHWA">Manhwa</option>
@@ -356,13 +356,13 @@ function ListItems({
           </div>
 
           <div className="flex min-w-0 flex-col gap-1 sm:min-w-[130px]">
-            <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
               Status
             </label>
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value as StatusKey)}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-200"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-200 dark-theme-field dark:focus:ring-[#2a221c]"
             >
               <option value="">All</option>
               <option value="ONGOING">Ongoing</option>
@@ -375,13 +375,13 @@ function ListItems({
 
           {/* Sort (from previous step) */}
           <div className="flex min-w-0 flex-col gap-1 sm:min-w-[180px]">
-            <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
               Sort
             </label>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortKey)}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-200"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-200 dark-theme-field dark:focus:ring-[#2a221c]"
             >
               <option value="DEFAULT">Default (list order)</option>
               <option value="RANK_ASC">Rank ↑</option>
@@ -398,7 +398,7 @@ function ListItems({
           {/* Minimum stars and votes */}
           <div className="grid grid-cols-2 gap-2 sm:flex sm:items-end">
             <div className="flex min-w-0 flex-col">
-              <label className="text-xs text-gray-500">Stars min.</label>
+              <label className="text-xs text-gray-500 dark:text-slate-400">Stars min.</label>
               <input
                 type="number"
                 step="0.1"
@@ -406,11 +406,11 @@ function ListItems({
                 value={minStars}
                 onChange={(e) => setMinStars(e.target.value)}
                 placeholder="e.g. 7.5"
-                className="w-full rounded-md border px-2 py-2 text-sm sm:w-24 sm:py-1"
+                className="w-full rounded-md border border-slate-200 bg-white px-2 py-2 text-sm text-slate-700 sm:w-24 sm:py-1 dark-theme-field"
               />
             </div>
             <div className="flex min-w-0 flex-col">
-              <label className="text-xs text-gray-500">Votes min.</label>
+              <label className="text-xs text-gray-500 dark:text-slate-400">Votes min.</label>
               <input
                 type="number"
                 inputMode="numeric"
@@ -418,7 +418,7 @@ function ListItems({
                 value={minVotes}
                 onChange={(e) => setMinVotes(e.target.value)}
                 placeholder="e.g. 100"
-                className="w-full rounded-md border px-2 py-2 text-sm sm:w-28 sm:py-1"
+                className="w-full rounded-md border border-slate-200 bg-white px-2 py-2 text-sm text-slate-700 sm:w-28 sm:py-1 dark-theme-field"
               />
             </div>
           </div>
@@ -432,7 +432,7 @@ function ListItems({
               setMinVotes("");
               setSortBy("DEFAULT");
             }}
-            className="rounded-md bg-gray-100 px-3 py-2 text-xs hover:bg-gray-200 sm:ml-auto sm:py-1"
+            className="rounded-md bg-gray-100 px-3 py-2 text-xs text-slate-700 hover:bg-gray-200 dark:bg-[linear-gradient(145deg,_rgba(30,24,20,0.92),_rgba(22,18,15,0.92))] dark:text-slate-200 dark:hover:bg-[#241d19] sm:ml-auto sm:py-1"
             title="Clear filters"
           >
             Reset
@@ -447,14 +447,14 @@ function ListItems({
         hasMore={effectiveHasMore}
         loader={
           loading ? (
-            <div className="flex justify-center py-4">
-              <div className="w-5 h-5 border-4 border-gray-400 border-t-transparent rounded-full animate-spin" />
-            </div>
+              <div className="flex justify-center py-4">
+                <div className="w-5 h-5 border-4 border-gray-400 border-t-transparent rounded-full animate-spin dark:border-[#8d7b6d]" />
+              </div>
           ) : null
         }
         endMessage={
           sortedItems.length > 0 ? (
-            <p className="text-center py-3 text-gray-300">End of this list.</p>
+            <p className="text-center py-3 text-gray-300 dark:text-slate-600">End of this list.</p>
           ) : null
         }
       >
@@ -463,11 +463,11 @@ function ListItems({
             count={Math.min(Math.max(initialCount, 4), 8)}
           />
         ) : sortedItems.length === 0 ? (
-          <div className="px-4 py-6 text-sm text-gray-500">
+          <div className="px-4 py-6 text-sm text-gray-500 dark:text-slate-400">
             No items match your filters.
           </div>
         ) : (
-          <ul className="divide-y">
+          <ul className="divide-y divide-slate-200/80 dark:divide-[#342a23]">
             {sortedItems.map((it) => {
               const s = summaries[it.series_id];
               const stx = s?.status?.toUpperCase();
@@ -479,7 +479,7 @@ function ListItems({
 
               return (
                 <li key={it.series_id} className="px-4 py-4 sm:px-5">
-                  <div className="grid gap-4 rounded-[28px] border border-slate-200/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(248,250,252,0.96))] p-4 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.55)] transition hover:border-slate-300/80 hover:shadow-[0_24px_48px_-30px_rgba(15,23,42,0.62)] sm:p-5 lg:grid-cols-[minmax(0,11rem)_minmax(0,1fr)] lg:gap-5">
+                  <div className="grid gap-4 rounded-[28px] border border-slate-200/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(248,250,252,0.96))] p-4 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.55)] transition hover:border-slate-300/80 hover:shadow-[0_24px_48px_-30px_rgba(15,23,42,0.62)] dark-theme-card dark:hover:border-[#4a3d33] sm:p-5 lg:grid-cols-[minmax(0,11rem)_minmax(0,1fr)] lg:gap-5">
                     <Link
                       to={`/series/${it.series_id}`}
                       className="relative block overflow-hidden rounded-[26px] bg-slate-100 transition hover:scale-[1.01]"
@@ -491,7 +491,7 @@ function ListItems({
                         <img
                           src={s.cover_url}
                           alt={s?.title || `Series ${it.series_id}`}
-                        className="h-48 w-full rounded-[26px] bg-slate-100 object-cover object-[center_18%] sm:h-56 sm:object-center lg:h-full lg:min-h-[17rem]"
+                          className="h-48 w-full rounded-[26px] bg-slate-100 object-cover object-[center_18%] dark:bg-[#241d19] sm:h-56 sm:object-center lg:h-full lg:min-h-[17rem]"
                           loading="lazy"
                           decoding="async"
                           width={176}
@@ -499,7 +499,7 @@ function ListItems({
                         />
                       ) : (
                         <div
-                          className="flex h-48 w-full items-center justify-center rounded-[26px] bg-slate-100 text-[10px] text-slate-400 sm:h-56 lg:h-full lg:min-h-[17rem]"
+                          className="flex h-48 w-full items-center justify-center rounded-[26px] bg-slate-100 text-[10px] text-slate-400 dark:bg-[#241d19] dark:text-slate-500 sm:h-56 lg:h-full lg:min-h-[17rem]"
                           aria-label={
                             s?.title
                               ? `${s.title} (no cover)`
@@ -541,14 +541,14 @@ function ListItems({
                             ) : (
                               <Link
                                 to={`/series/${it.series_id}`}
-                                className="block text-xl font-semibold tracking-tight text-slate-950 transition hover:text-slate-700 hover:underline sm:text-2xl"
+                              className="block text-xl font-semibold tracking-tight text-slate-950 transition hover:text-slate-700 hover:underline dark:text-white dark:hover:text-slate-200 sm:text-2xl"
                                 title={s?.title || `Series #${it.series_id}`}
                               >
                                 {s?.title || `Series #${it.series_id}`}
                               </Link>
                             )}
 
-                            <div className="mt-3 flex flex-wrap items-center gap-2.5 text-sm text-slate-600">
+                          <div className="mt-3 flex flex-wrap items-center gap-2.5 text-sm text-slate-600 dark:text-slate-300">
                               {summariesLoading && !s ? (
                                 <>
                                   <ShimmerBox className="h-7 w-20 rounded-full" />
@@ -604,7 +604,7 @@ function ListItems({
                           </div>
                         </div>
 
-                        <div className="rounded-[24px] border border-slate-200 bg-white/90 p-4 shadow-[0_16px_34px_-32px_rgba(15,23,42,0.7)]">
+                          <div className="rounded-[24px] border border-slate-200 bg-white/90 p-4 shadow-[0_16px_34px_-32px_rgba(15,23,42,0.7)] dark-theme-card-soft dark:shadow-[0_16px_34px_-32px_rgba(0,0,0,0.8)]">
                           {(() => {
                             const draftValue =
                               chapterDrafts[it.series_id] ?? it.left_off_chapter ?? "";
@@ -619,15 +619,15 @@ function ListItems({
                               <div className="flex flex-col gap-3">
                                 <div className="flex flex-wrap items-center justify-between gap-3">
                                   <div>
-                                    <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                                    <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
                                       Reading progress
                                     </span>
-                                    <p className="mt-1 text-sm text-slate-600">
+                                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
                                       Track the chapter you last reached for this title.
                                     </p>
                                   </div>
                                   {!isEditing && hasSavedChapter ? (
-                                    <span className="inline-flex items-center rounded-full bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700 ring-1 ring-inset ring-slate-200">
+                                    <span className="inline-flex items-center rounded-full bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700 ring-1 ring-inset ring-slate-200 dark-theme-chip dark:text-slate-200">
                                       Ch. {it.left_off_chapter}
                                     </span>
                                   ) : null}
@@ -667,8 +667,8 @@ function ListItems({
                                       autoFocus
                                       className={`w-40 rounded-xl border px-3 py-2 text-xs shadow-sm outline-none transition ${
                                         isDirty
-                                          ? "border-amber-300 bg-amber-50"
-                                          : "border-slate-200 bg-white"
+                                          ? "border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950/30"
+                                          : "border-slate-200 bg-white dark-theme-field"
                                       }`}
                                     />
                                     <button
@@ -693,7 +693,7 @@ function ListItems({
                                         setEditingSeriesId(null);
                                       }}
                                       disabled={isSaving}
-                                      className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                      className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark-theme-card-soft dark:text-slate-200 dark:hover:bg-[#241d19]"
                                     >
                                       Cancel
                                     </button>
@@ -722,8 +722,8 @@ function ListItems({
                                       }}
                                       className={`rounded-xl px-3 py-2 text-xs font-semibold transition ${
                                         hasSavedChapter
-                                          ? "border border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
-                                          : "border border-dashed border-slate-300 bg-transparent text-slate-500 hover:bg-white"
+                                          ? "border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 dark-theme-card-soft dark:text-slate-200 dark:hover:bg-[#241d19]"
+                                          : "border border-dashed border-slate-300 bg-transparent text-slate-500 hover:bg-white dark:border-[#3a3028] dark:text-slate-400 dark:hover:bg-[#1e1815]"
                                       }`}
                                     >
                                       {hasSavedChapter
@@ -878,9 +878,9 @@ export default function MyReadingListsPage() {
   if (error) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="text-red-600 mb-3">{error}</div>
+        <div className="text-red-600 dark:text-red-300 mb-3">{error}</div>
         <button
-          className="px-3 py-1 rounded-md border hover:bg-gray-50"
+          className="px-3 py-1 rounded-md border border-slate-200 hover:bg-gray-50 dark:border-[#3a3028] dark:text-slate-200 dark:hover:bg-[#241d19]"
           onClick={() => loadLists(1)}
         >
           Try again
@@ -891,15 +891,15 @@ export default function MyReadingListsPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-3 py-6 sm:px-6 sm:py-8 lg:px-8">
-      <section className="mb-6 overflow-hidden rounded-[28px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.14),_transparent_34%),linear-gradient(135deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.95))] px-4 py-5 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.45)] sm:mb-8 sm:px-8 sm:py-7">
+      <section className="mb-6 overflow-hidden rounded-[28px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.14),_transparent_34%),linear-gradient(135deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.95))] px-4 py-5 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.45)] dark:border-[#322922] dark:bg-[radial-gradient(circle_at_top_left,_rgba(45,212,191,0.14),_transparent_26%),linear-gradient(135deg,_rgba(29,22,18,0.98),_rgba(24,19,16,0.96))] dark:shadow-[0_24px_60px_-42px_rgba(0,0,0,0.85)] sm:mb-8 sm:px-8 sm:py-7">
         <div className="max-w-3xl">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500 dark:text-slate-400">
             Library dashboard
           </p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950 dark:text-white sm:text-4xl">
             Your reading lists, organized and ready.
           </h1>
-          <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">
+          <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300 sm:text-base">
             Review your collections, manage sharing, and jump back into each title.
           </p>
         </div>
@@ -931,7 +931,7 @@ export default function MyReadingListsPage() {
           }
         >
           {lists.length === 0 && !loading ? (
-            <div className="rounded-[24px] border border-dashed border-slate-300 bg-white/80 px-6 py-12 text-center text-slate-600 shadow-sm">
+            <div className="rounded-[24px] border border-dashed border-slate-300 bg-white/80 px-6 py-12 text-center text-slate-600 shadow-sm dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(26,21,18,0.95),_rgba(19,16,13,0.95))] dark:text-slate-300">
               No lists yet. Use “+ Create Reading List” on the homepage.
             </div>
           ) : (
@@ -942,9 +942,9 @@ export default function MyReadingListsPage() {
                   <section
                     key={l.id}
                     id={`list-${l.id}`}
-                    className="overflow-hidden rounded-[28px] border border-slate-200 bg-white/90 shadow-[0_22px_55px_-40px_rgba(15,23,42,0.45)] backdrop-blur-sm"
+                    className="overflow-hidden rounded-[28px] border border-slate-200 bg-white/90 shadow-[0_22px_55px_-40px_rgba(15,23,42,0.45)] backdrop-blur-sm dark-theme-shell"
                   >
-                    <header className="flex flex-col gap-4 border-b border-slate-200/80 bg-[linear-gradient(180deg,_rgba(248,250,252,0.96),_rgba(255,255,255,0.98))] px-4 py-4 sm:px-5 sm:py-5 lg:flex-row lg:items-start lg:justify-between">
+                    <header className="flex flex-col gap-4 border-b border-slate-200/80 bg-[linear-gradient(180deg,_rgba(248,250,252,0.96),_rgba(255,255,255,0.98))] px-4 py-4 sm:px-5 sm:py-5 dark:border-[#342a23] dark:bg-[radial-gradient(circle_at_top_left,_rgba(45,212,191,0.1),_transparent_26%),linear-gradient(180deg,_rgba(35,28,24,0.98),_rgba(24,19,16,0.96))] lg:flex-row lg:items-start lg:justify-between">
                       <div className="min-w-0">
                         <button
                           className="text-left"
@@ -956,7 +956,7 @@ export default function MyReadingListsPage() {
                           }
                           title={isOpen ? "Collapse" : "Expand"}
                         >
-                          <h2 className="flex items-center gap-2 truncate text-xl font-semibold tracking-tight text-slate-950">
+                          <h2 className="flex items-center gap-2 truncate text-xl font-semibold tracking-tight text-slate-950 dark:text-white">
                             {isOpen ? "▾ " : "▸ "} {l.name}
                           </h2>
                         </button>
@@ -975,7 +975,7 @@ export default function MyReadingListsPage() {
                           >
                             {l.is_public ? "Public" : "Private"}
                           </span>
-                          <span className="inline-flex items-center rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-500 ring-1 ring-inset ring-slate-200">
+                          <span className="inline-flex items-center rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-500 ring-1 ring-inset ring-slate-200 dark-theme-chip dark:text-slate-300">
                             {l.item_count} {l.item_count === 1 ? "title" : "titles"}
                           </span>
                         </div>
@@ -985,7 +985,7 @@ export default function MyReadingListsPage() {
                         <button
                           onClick={() => toggleShare(l)}
                           disabled={busyId === l.id}
-                          className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 lg:w-auto"
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 dark-theme-card-soft dark:text-slate-200 dark:hover:bg-[#241d19] lg:w-auto"
                           title={
                             l.is_public ? "Make private" : "Share publicly"
                           }
@@ -1011,7 +1011,7 @@ export default function MyReadingListsPage() {
                         <button
                           onClick={() => copyPrivateAnchor(l)}
                           disabled={copyId === l.id}
-                          className="w-full rounded-xl bg-slate-100 px-3.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-200 lg:w-auto"
+                          className="w-full rounded-xl bg-slate-100 px-3.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-200 dark:bg-[linear-gradient(145deg,_rgba(30,24,20,0.92),_rgba(22,18,15,0.92))] dark:text-slate-200 dark:hover:bg-[#241d19] lg:w-auto"
                           title="Copy private anchor link"
                         >
                           {copyId === l.id ? "Copying…" : "Copy Private Link"}

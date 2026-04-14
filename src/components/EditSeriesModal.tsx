@@ -21,8 +21,12 @@ type Props = {
   onSuccess: () => void;
 };
 
+const fieldClass =
+  "dark-theme-field w-full rounded-2xl border border-slate-200 px-3 py-2.5 text-slate-900 placeholder:text-slate-400 dark:border-[#3a3028] dark:text-stone-100 dark:placeholder:text-stone-500";
+
 const EditSeriesModal = ({ id, initialData, onClose, onSuccess }: Props) => {
   const [form, setForm] = useState({ ...initialData });
+  const [error, setError] = useState<string | null>(null);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -32,51 +36,73 @@ const EditSeriesModal = ({ id, initialData, onClose, onSuccess }: Props) => {
 
   const handleSubmit = async () => {
     try {
+      setError(null);
       await editSeries(id, form);
       onSuccess();
       onClose();
     } catch (err) {
-      alert("Failed to update series.");
+      setError("Failed to update series.");
       console.error(err);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/20 backdrop-blur-[1px] flex items-center justify-center z-50">
-      <div className="bg-white/30 backdrop-blur-md p-6 rounded-md shadow-lg w-full max-w-md border border-white/20">
-        <h2 className="text-xl font-bold mb-4">Edit Series</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4 py-6">
+      <div className="dark-theme-shell w-full max-w-md rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-[0_28px_80px_rgba(15,23,42,0.22)] dark:border-[#3a3028]">
+        <div className="mb-5 flex items-center justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-stone-50">
+              Edit Series
+            </h2>
+            <p className="mt-1 text-sm text-slate-600 dark:text-stone-300">
+              Update the title metadata without leaving the page.
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-600 transition hover:bg-slate-50 dark:border-[#3a3028] dark:text-stone-300 dark:hover:bg-[#241d19]"
+          >
+            Close
+          </button>
+        </div>
+
         <div className="space-y-3">
+          {error && (
+            <div className="rounded-2xl border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800/70 dark:bg-red-950/30 dark:text-red-200">
+              {error}
+            </div>
+          )}
           <input
             name="title"
             value={form.title}
             onChange={handleChange}
-            className="w-full p-2 border rounded bg-white bg-opacity-30 mb-4"
+            className={fieldClass}
           />
           <input
             name="genre"
             value={form.genre}
             onChange={handleChange}
-            className="w-full p-2 border rounded bg-white bg-opacity-30 mb-4"
+            className={fieldClass}
           />
           <input
             name="author"
             value={form.author}
             onChange={handleChange}
-            className="w-full p-2 border rounded bg-white bg-opacity-30 mb-4"
+            className={fieldClass}
             placeholder="Author"
           />
           <input
             name="artist"
             value={form.artist}
             onChange={handleChange}
-            className="w-full p-2 border rounded bg-white bg-opacity-30 mb-4"
+            className={fieldClass}
             placeholder="Artist"
           />
           <select
             name="type"
             value={form.type}
             onChange={handleChange}
-            className="w-full p-2 border rounded bg-white/30 text-gray-800 backdrop-blur-sm mb-4 focus:outline-none focus:ring-2 focus:ring-white/40"
+            className={fieldClass}
           >
             <option value="MANGA">Manga</option>
             <option value="MANHWA">Manhwa</option>
@@ -85,12 +111,12 @@ const EditSeriesModal = ({ id, initialData, onClose, onSuccess }: Props) => {
 
           <select
             name="status"
-            value={form.status || ""} // blank => null on submit if you want
+            value={form.status || ""}
             onChange={(e) => {
               const v = e.target.value as Props["initialData"]["status"];
               setForm((prev) => ({ ...prev, status: v || null }));
             }}
-            className="w-full p-2 border rounded bg-white/30 text-gray-800 backdrop-blur-sm mb-1 focus:outline-none focus:ring-2 focus:ring-white/40"
+            className={fieldClass}
           >
             <option value="">Status (optional)</option>
             <option value="ONGOING">Ongoing</option>
@@ -100,13 +126,16 @@ const EditSeriesModal = ({ id, initialData, onClose, onSuccess }: Props) => {
             <option value="UNKNOWN">Unknown</option>
           </select>
         </div>
-        <div className="flex justify-end gap-3 mt-4">
-          <button onClick={onClose} className="px-4 py-2 bg-gray-200 rounded">
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-[#3a3028] dark:text-stone-200 dark:hover:bg-[#241d19]"
+          >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
           >
             Save
           </button>

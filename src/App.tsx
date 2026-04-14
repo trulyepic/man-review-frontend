@@ -38,7 +38,7 @@ function App() {
       <Router>
         <div className="flex flex-col min-h-screen">
           <Header />
-          <main className="flex-grow bg-[linear-gradient(180deg,_#f8fafc_0%,_#ffffff_18%,_#ffffff_100%)]">
+          <main className="flex-grow bg-[linear-gradient(180deg,_#f8fafc_0%,_#ffffff_18%,_#ffffff_100%)] transition-colors dark:bg-[radial-gradient(circle_at_top_left,_rgba(45,212,191,0.08),_transparent_18%),radial-gradient(circle_at_top_right,_rgba(245,158,11,0.04),_transparent_18%),linear-gradient(180deg,_#18120f_0%,_#120f0d_18%,_#171210_100%)]">
             <>
               <Routes>
                 <Route path="/" element={<Home />} />
