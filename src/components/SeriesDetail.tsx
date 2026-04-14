@@ -153,7 +153,7 @@ const SeriesDetail = ({ series, updateRating, seriesDetail }: Props) => {
             key={category}
             className={`rounded-[24px] border px-4 py-4 shadow-sm transition sm:px-5 ${
               hasVoted
-                ? "border-blue-100 bg-blue-50/60 dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(33,42,76,0.42),_rgba(22,28,51,0.42))]"
+                ? "border-blue-100 bg-blue-50/60 dark:border-[#475276] dark:bg-[radial-gradient(circle_at_top_right,_rgba(59,130,246,0.12),_transparent_30%),linear-gradient(145deg,_rgba(27,22,19,0.98),_rgba(21,17,14,0.98))] dark:shadow-[0_18px_34px_-28px_rgba(0,0,0,0.82)]"
                 : "border-slate-200 bg-slate-50/70 dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(24,20,17,0.94),_rgba(19,16,13,0.94))]"
             }`}
           >
