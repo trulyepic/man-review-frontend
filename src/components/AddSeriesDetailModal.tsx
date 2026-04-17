@@ -50,10 +50,10 @@ const AddSeriesDetailModal = ({
         <div className="mb-5 flex items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold text-slate-900 dark:text-stone-50">
-              Edit Series Details
+              Add Title Details
             </h2>
             <p className="mt-1 text-sm text-slate-600 dark:text-stone-300">
-              Update the synopsis and cover art for this title.
+              Add the synopsis and detail cover art for this title.
             </p>
           </div>
           <button
@@ -93,7 +93,7 @@ const AddSeriesDetailModal = ({
               className="block w-full rounded-2xl border border-slate-200 px-3 py-2.5 text-sm text-slate-700 file:mr-4 file:rounded-xl file:border file:border-slate-200 file:bg-slate-50 file:px-4 file:py-2 file:text-sm file:font-medium hover:file:bg-slate-100 dark:border-[#3a3028] dark:text-stone-300 dark:file:border-[#3a3028] dark:file:bg-[#18120f] dark:hover:file:bg-[#241d19]"
             />
             <p className="mt-2 text-xs text-slate-500 dark:text-stone-400">
-              Recommended size: 900x600px. Max size: 800KB.
+              Recommended size: 600x400px. Max size: 800KB.
             </p>
           </div>
         </div>

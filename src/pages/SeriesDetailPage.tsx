@@ -3,7 +3,6 @@ import { useParams, useLocation } from "react-router-dom";
 import SeriesDetail from "../components/SeriesDetail";
 import AddSeriesDetailModal from "../components/AddSeriesDetailModal";
 import {
-  getCurrentUser,
   getSeriesDetailById,
   getSeriesSummary,
 } from "../api/manApi";
@@ -14,6 +13,8 @@ import type { SeriesDetailData } from "../types/types";
 import { Helmet } from "react-helmet";
 import RatingInfoTooltip from "../components/RatingInfoTooltip";
 import { getDisplayVoteCounts } from "../util/displayVoteCounts";
+import { canSubmitSeriesRole, isAdminRole } from "../util/roleUtils";
+import { useUser } from "../login/useUser";
 
 const dummyData = {
   id: 1,
@@ -27,11 +28,22 @@ const dummyData = {
 };
 
 const SeriesDetailPage = () => {
-  const user = getCurrentUser();
-  const isAdmin = user?.role === "ADMIN";
+  const { user } = useUser();
+  const isAdmin = isAdminRole(user?.role);
+  const canSubmit = canSubmitSeriesRole(user?.role);
   const { id } = useParams();
   const location = useLocation();
-  const { title, genre, type, author, artist } = location.state || {};
+  const locationState = (location.state || {}) as {
+    title?: string;
+    genre?: string;
+    type?: string;
+    author?: string;
+    artist?: string;
+    approval_status?: string | null;
+    submitted_by_id?: number | string | null;
+    can_manage_pending_details?: boolean;
+  };
+  const { title, genre, type, author, artist } = locationState;
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [series, setSeries] = useState<typeof dummyData>({
@@ -89,6 +101,16 @@ const SeriesDetailPage = () => {
 
   const { title: fetchedTitle } = pickBasicFromDetail(seriesDetail);
   const displayTitle = fetchedTitle ?? series.title ?? `Series #${id}`;
+  const hasDetailCover = Boolean(seriesDetail?.series_cover_url);
+  const isPendingTitle =
+    String(
+      seriesDetail?.approval_status ?? locationState.approval_status ?? ""
+    ).toUpperCase() === "PENDING";
+  const canManagePendingDetails = Boolean(
+    user && canSubmit && isPendingTitle
+  );
+  const canEditDetails = Boolean(user && isAdmin);
+  const canShowDetailsAction = canEditDetails || canManagePendingDetails;
 
   useEffect(() => {
     setSeries((prev) => ({
@@ -246,13 +268,13 @@ const SeriesDetailPage = () => {
       </Helmet>
 
       <div className="mx-auto max-w-6xl px-4 py-6 md:px-8 lg:px-10">
-        {isAdmin && (
+        {canShowDetailsAction && (
           <div className="mb-4 flex justify-end">
             <button
               onClick={() => setShowEditModal(true)}
               className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 dark-theme-card-soft dark:text-slate-200 dark:hover:bg-[#241d19]"
             >
-              Edit Series Detail
+              {isAdmin ? "Edit title details" : "Add title details"}
             </button>
           </div>
         )}
@@ -263,11 +285,40 @@ const SeriesDetailPage = () => {
           <>
             <section className="overflow-visible rounded-[32px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.12),_transparent_28%),linear-gradient(135deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.96))] shadow-[0_28px_70px_-46px_rgba(15,23,42,0.55)] dark-theme-shell">
               <div className="px-5 pt-5 sm:px-7 sm:pt-7 lg:px-8 lg:pt-8">
-                <img
-                  src={seriesDetail.series_cover_url}
-                  alt={displayTitle}
-                  className="w-full rounded-[26px] border border-slate-200 bg-white object-cover shadow-[0_24px_48px_-28px_rgba(15,23,42,0.45)] dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(25,21,18,0.96),_rgba(20,17,14,0.96))] dark:shadow-[0_24px_48px_-28px_rgba(0,0,0,0.85)]"
-                />
+                {hasDetailCover ? (
+                  <img
+                    src={seriesDetail.series_cover_url}
+                    alt={displayTitle}
+                    className="w-full rounded-[26px] border border-slate-200 bg-white object-cover shadow-[0_24px_48px_-28px_rgba(15,23,42,0.45)] dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(25,21,18,0.96),_rgba(20,17,14,0.96))] dark:shadow-[0_24px_48px_-28px_rgba(0,0,0,0.85)]"
+                  />
+                ) : (
+                  <div className="flex min-h-[320px] w-full items-center justify-center rounded-[26px] border border-dashed border-slate-300 bg-[linear-gradient(135deg,_rgba(248,250,252,0.98),_rgba(241,245,249,0.95))] px-6 py-10 text-center shadow-[0_24px_48px_-28px_rgba(15,23,42,0.45)] dark:border-[#4a3b31] dark:bg-[linear-gradient(145deg,_rgba(28,22,19,0.96),_rgba(20,16,14,0.96))] dark:shadow-[0_24px_48px_-28px_rgba(0,0,0,0.85)]">
+                    <div className="max-w-xl">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                        Detail cover pending
+                      </p>
+                      <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
+                        Add the detail cover
+                      </h2>
+                      <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        Upload the wide cover image for this title.
+                      </p>
+                      <p className="mt-2 text-xs font-medium uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+                        Recommended size: 600 × 400 px
+                      </p>
+                      {canManagePendingDetails && (
+                        <div className="mt-5">
+                          <button
+                            onClick={() => setShowEditModal(true)}
+                            className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+                          >
+                            Add title details
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="px-5 py-5 sm:px-7 sm:py-7 lg:px-8 lg:py-8">
@@ -332,6 +383,16 @@ const SeriesDetailPage = () => {
                   <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300 sm:text-[15px]">
                     {seriesDetail.synopsis || "Synopsis coming soon."}
                   </p>
+                  {!seriesDetail.synopsis && canManagePendingDetails && (
+                    <div className="mt-4">
+                      <button
+                        onClick={() => setShowEditModal(true)}
+                        className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-[#3a3028] dark:text-slate-200 dark:hover:bg-[#241d19]"
+                      >
+                        Add title details
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </section>

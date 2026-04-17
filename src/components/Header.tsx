@@ -14,6 +14,7 @@ import { useUser } from "../login/useUser";
 import SocialLinks from "./SocialLinks";
 import myHomeLogo from "../images/logo/myHomeLogo.png";
 import { useTheme } from "./ThemeContext";
+import { canSubmitSeriesUser, isAdminUser } from "../util/roleUtils";
 
 const DEFAULT_LABEL = "ALL";
 
@@ -39,6 +40,8 @@ const Header = () => {
   const location = useLocation();
   const { searchTerm, setSearchTerm } = useSearch();
   const { theme, toggleTheme } = useTheme();
+  const isAdmin = isAdminUser(user);
+  const canSubmit = canSubmitSeriesUser(user);
 
   const [showSearch, setShowSearch] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -114,6 +117,10 @@ const readingListIdle =
   "bg-gradient-to-r from-blue-50 to-sky-100 text-blue-700 ring-1 ring-inset ring-blue-200 hover:from-blue-100 hover:to-sky-100 dark:from-[#221c18] dark:to-[#171310] dark:text-blue-300 dark:ring-[#342b24] dark:hover:from-[#2a221d] dark:hover:to-[#1d1713]";
   const readingListActive =
     "bg-slate-900 text-white ring-1 ring-inset ring-slate-900";
+  const adminLinkIdle =
+    "bg-white text-slate-700 ring-1 ring-inset ring-slate-200 hover:bg-slate-50 dark:from-[#221c18] dark:to-[#171310] dark:bg-[linear-gradient(145deg,_rgba(32,26,22,0.95),_rgba(22,18,15,0.95))] dark:text-amber-200 dark:ring-[#342b24] dark:hover:bg-[#2a221d]";
+  const adminLinkActive =
+    "bg-amber-500 text-white ring-1 ring-inset ring-amber-500";
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl dark:border-[#322922]/80 dark:bg-[radial-gradient(circle_at_top_left,_rgba(45,212,191,0.08),_transparent_24%),linear-gradient(180deg,_rgba(24,19,16,0.97),_rgba(18,14,12,0.97))]">
@@ -225,6 +232,32 @@ const readingListIdle =
 
           {user ? (
             <>
+              {isAdmin && (
+                <NavLink
+                  to="/pending-titles"
+                  className={({ isActive }) =>
+                    [
+                      readingListLink,
+                      isActive ? adminLinkActive : adminLinkIdle,
+                    ].join(" ")
+                  }
+                >
+                  Review Titles
+                </NavLink>
+              )}
+              {canSubmit && (
+                <NavLink
+                  to="/my-submissions"
+                  className={({ isActive }) =>
+                    [
+                      readingListLink,
+                      isActive ? readingListActive : readingListIdle,
+                    ].join(" ")
+                  }
+                >
+                  My Submissions
+                </NavLink>
+              )}
               <NavLink
                 to="/my-lists"
                 className={({ isActive }) =>
@@ -320,6 +353,34 @@ const readingListIdle =
 
             {user ? (
               <div className="flex flex-col gap-2">
+                {isAdmin && (
+                  <NavLink
+                    to="/pending-titles"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={({ isActive }) =>
+                      [
+                        "inline-flex w-max items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold transition shadow-sm",
+                        isActive ? adminLinkActive : adminLinkIdle,
+                      ].join(" ")
+                    }
+                  >
+                    Review Titles
+                  </NavLink>
+                )}
+                {canSubmit && (
+                  <NavLink
+                    to="/my-submissions"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={({ isActive }) =>
+                      [
+                        "inline-flex w-max items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold transition shadow-sm",
+                        isActive ? readingListActive : readingListIdle,
+                      ].join(" ")
+                    }
+                  >
+                    My Submissions
+                  </NavLink>
+                )}
                 <NavLink
                   to="/my-lists"
                   onClick={() => setMobileMenuOpen(false)}

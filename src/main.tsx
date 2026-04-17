@@ -8,6 +8,17 @@ import { ThemeProvider } from "./components/ThemeContext.tsx";
 
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
+type RecaptchaOptionsWindow = Window & {
+  recaptchaOptions?: {
+    enterprise?: boolean;
+  };
+};
+
+(window as RecaptchaOptionsWindow).recaptchaOptions = {
+  ...((window as RecaptchaOptionsWindow).recaptchaOptions ?? {}),
+  enterprise: true,
+};
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <GoogleOAuthProvider clientId={clientId}>

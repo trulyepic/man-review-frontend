@@ -19,6 +19,7 @@ import ReadingListModal from "../components/ReadingListModal";
 import ShimmerLoader from "../components/ShimmerLoader";
 import { useSearch } from "../components/SearchContext";
 import { useUser } from "../login/useUser";
+import { isAdminUser } from "../util/roleUtils";
 
 const PAGE_SIZE = 25;
 
@@ -34,7 +35,7 @@ const FilteredSeriesPage = () => {
   const controllerRef = useRef<AbortController | null>(null);
 
   const { user } = useUser();
-  const isAdmin = user?.role === "ADMIN";
+  const isAdmin = isAdminUser(user);
 
   const [showListModal, setShowListModal] = useState(false);
   const [modalSeriesId, setModalSeriesId] = useState<number | undefined>();

@@ -49,7 +49,11 @@ const categoryKeyMap: Record<Category, string> = {
   "Drama / Fighting": "drama_or_fight",
 };
 
-const SeriesDetail = ({ series, updateRating, seriesDetail }: Props) => {
+export default function SeriesDetail({
+  series,
+  updateRating,
+  seriesDetail,
+}: Props) {
   const [votes, setVotes] = useState<Record<Category, number | null>>(
     () =>
       Object.fromEntries(categories.map((cat) => [cat, null])) as Record<
@@ -240,6 +244,4 @@ const SeriesDetail = ({ series, updateRating, seriesDetail }: Props) => {
       })}
     </div>
   );
-};
-
-export default SeriesDetail;
+}

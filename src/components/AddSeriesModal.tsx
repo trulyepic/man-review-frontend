@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { createSeries } from "../api/manApi";
-import type { SeriesPayload } from "../api/manApi";
+import type { Series, SeriesPayload } from "../api/manApi";
 
 interface Props {
   onClose: () => void;
@@ -14,6 +15,7 @@ const AddSeriesModal = ({ onClose }: Props) => {
   const [cover, setCover] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [submittedSeries, setSubmittedSeries] = useState<Series | null>(null);
 
   const handleSubmit = async () => {
     if (!form.title || !form.genre || !form.type || !cover) {
@@ -23,9 +25,8 @@ const AddSeriesModal = ({ onClose }: Props) => {
     setError(null);
     setLoading(true);
     try {
-      await createSeries({ ...form, cover } as SeriesPayload);
-      onClose();
-      window.location.reload();
+      const created = await createSeries({ ...form, cover } as SeriesPayload);
+      setSubmittedSeries(created);
     } catch (err) {
       setError("Error adding series.");
       console.error("Error adding series:", err);
@@ -63,13 +64,63 @@ const AddSeriesModal = ({ onClose }: Props) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4 py-6">
       <div className="dark-theme-shell w-full max-w-md rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-[0_28px_80px_rgba(15,23,42,0.22)] dark:border-[#3a3028]">
+        {submittedSeries ? (
+          <div className="space-y-5">
+            <div>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-stone-50">
+                Title submitted
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-stone-300">
+                <span className="font-medium text-slate-800 dark:text-stone-100">
+                  {submittedSeries.title}
+                </span>{" "}
+                has been submitted for admin approval and will appear on the site once it is approved.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700/60 dark:bg-amber-950/30 dark:text-amber-200">
+              Newly submitted titles stay hidden from rankings, search, compare, and public detail pages until an admin approves them.
+            </div>
+
+            <div className="flex flex-wrap justify-end gap-3">
+              <Link
+                to="/my-submissions"
+                onClick={onClose}
+                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-[#3a3028] dark:text-stone-200 dark:hover:bg-[#241d19]"
+              >
+                View my submissions
+              </Link>
+              <Link
+                to={`/series/${submittedSeries.id}`}
+                state={{
+                  title: submittedSeries.title,
+                  genre: submittedSeries.genre,
+                  type: submittedSeries.type,
+                  author: submittedSeries.author,
+                  artist: submittedSeries.artist,
+                }}
+                onClick={onClose}
+                className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+              >
+                Add details now
+              </Link>
+              <button
+                onClick={onClose}
+                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-[#3a3028] dark:text-stone-200 dark:hover:bg-[#241d19]"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
         <div className="mb-5 flex items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold text-slate-900 dark:text-stone-50">
-              Add New Series
+              Submit New Title
             </h2>
             <p className="mt-1 text-sm text-slate-600 dark:text-stone-300">
-              Create a new title with the core metadata and cover art.
+              Add the core metadata and cover art. An admin will review it before it goes live.
             </p>
           </div>
           <button
@@ -169,9 +220,11 @@ const AddSeriesModal = ({ onClose }: Props) => {
             onClick={handleSubmit}
             className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
           >
-            {loading ? "Saving..." : "Save"}
+            {loading ? "Submitting..." : "Submit for Review"}
           </button>
         </div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -24,11 +24,16 @@ export const api = axios.create({
   // baseURL: "http://localhost:8000",
 });
 
-// Helper to detect auth endpoints
-function isAuthRoute(url?: string) {
+// Helper to detect public auth endpoints
+function isPublicAuthRoute(url?: string) {
   if (!url) return false;
-  // covers /auth/login, /auth/signup, /auth/verify-email, /auth/google-oauth, etc.
-  return url.startsWith("/auth/");
+  return (
+    url.startsWith("/auth/login") ||
+    url.startsWith("/auth/signup") ||
+    url.startsWith("/auth/verify-email") ||
+    url.startsWith("/auth/google-oauth") ||
+    url.startsWith("/auth/resend-verification")
+  );
 }
 
 // Attach token on every request
@@ -46,7 +51,7 @@ function isAuthRoute(url?: string) {
 
 // Attach token EXCEPT on auth routes
 api.interceptors.request.use((config) => {
-  if (!isAuthRoute(config.url)) {
+  if (!isPublicAuthRoute(config.url)) {
     const token = localStorage.getItem("token");
     if (token) {
       config.headers = config.headers ?? {};
@@ -111,7 +116,7 @@ api.interceptors.response.use(
       const url = err.config?.url;
 
       if (status === 401) {
-        if (isAuthRoute(url)) {
+        if (isPublicAuthRoute(url)) {
           // ❌ Do NOT redirect on failed /auth/* calls (e.g., wrong password)
           // Let the page catch and show "Invalid username or password"
           return Promise.reject(err);
