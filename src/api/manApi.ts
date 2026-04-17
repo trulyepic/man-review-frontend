@@ -497,6 +497,7 @@ export interface Series {
   author?: string;
   artist?: string;
   status?: SeriesStatus;
+  approval_status?: string | null;
 }
 
 export interface SeriesPayload {
@@ -527,6 +528,15 @@ export interface RankedSeries {
   author?: string;
   artist?: string;
   status?: SeriesStatus;
+  approval_status?: string | null;
+}
+
+export interface PendingSeries extends Series {
+  submitted_by_id?: number | null;
+  submitted_by_username?: string | null;
+  approved_by_id?: number | null;
+  approved_at?: string | null;
+  detail_ready?: boolean;
 }
 
 // ---------- Reading List Types ----------
@@ -544,12 +554,15 @@ export interface ReadingList {
 }
 
 // ---------- Auth Types ----------
-export type UserRole = "ADMIN" | "USER" | (string & {});
+export type UserRole = "ADMIN" | "GENERAL" | "CONTRIBUTOR" | (string & {});
 export interface AuthUser {
   id: number;
   username: string;
   email?: string | null;
   role?: UserRole | null;
+}
+export interface AdminUser extends AuthUser {
+  is_verified: boolean;
 }
 export interface AuthResponse {
   access_token: string;
@@ -645,6 +658,21 @@ export const createSeries = async (data: SeriesPayload): Promise<Series> => {
   if (data.status) form.append("status", data.status);
 
   const res = await api.post<Series>("/series/", form);
+  return res.data;
+};
+
+export const getPendingSeries = async (): Promise<PendingSeries[]> => {
+  const res = await api.get<PendingSeries[]>("/series/pending");
+  return res.data;
+};
+
+export const getMySubmittedSeries = async (): Promise<PendingSeries[]> => {
+  const res = await api.get<PendingSeries[]>("/series/submissions/mine");
+  return res.data;
+};
+
+export const approveSeries = async (seriesId: number): Promise<Series> => {
+  const res = await api.post<Series>(`/series/${seriesId}/approve`);
   return res.data;
 };
 
@@ -978,6 +1006,19 @@ export const getCurrentUser = (): AuthUser | null => {
 export const logout = (): void => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
+};
+
+export const getAdminUsers = async (): Promise<AdminUser[]> => {
+  const res = await api.get<AdminUser[]>("/auth/users");
+  return res.data;
+};
+
+export const updateUserRole = async (
+  userId: number,
+  role: UserRole
+): Promise<AdminUser> => {
+  const res = await api.patch<AdminUser>(`/auth/users/${userId}/role`, { role });
+  return res.data;
 };
 
 export const reportIssue = async (payload: {

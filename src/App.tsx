@@ -20,6 +20,8 @@ import IssuesPage from "./pages/IssuesPage";
 import ForumPage from "./pages/ForumPage";
 import ThreadPage from "./pages/ThreadPage";
 import PublicReadingListPage from "./pages/PublicReadingListPage";
+import PendingTitlesPage from "./pages/PendingTitlesPage";
+import MySubmissionsPage from "./pages/MySubmissionsPage";
 import { useEffect, useState } from "react";
 import { SessionExpiredModal } from "./components/SessionExpiredModal";
 
@@ -62,6 +64,8 @@ function App() {
                 />
                 <Route path="/compare" element={<ComparePage />} />
                 <Route path="/my-lists" element={<MyReadingListsPage />} />
+                <Route path="/my-submissions" element={<MySubmissionsPage />} />
+                <Route path="/pending-titles" element={<PendingTitlesPage />} />
                 <Route path="/issues" element={<IssuesPage />} />
                 <Route path="/report-issue" element={<ReportIssuePage />} />
 

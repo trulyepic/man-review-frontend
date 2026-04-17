@@ -19,6 +19,7 @@ import CompareManager from "../components/CompareManager";
 import { useUser } from "../login/useUser";
 import ReadingListModal from "../components/ReadingListModal";
 import GenreStrip from "../components/GenreStrip";
+import { canSubmitSeriesUser, isAdminUser } from "../util/roleUtils";
 // import { Link } from "react-router-dom";
 
 const PAGE_SIZE = 25;
@@ -42,7 +43,8 @@ const Home = () => {
   // const { searchTerm } = useSearch();
   const { searchTerm, setSearchTerm } = useSearch();
   const { user } = useUser();
-  const isAdmin = user?.role === "ADMIN";
+  const isAdmin = isAdminUser(user);
+  const canSubmitSeries = canSubmitSeriesUser(user);
 
   // Normalize a single genre label (e.g., "sci-fi" -> "Sci-Fi")
   const normalizeGenre = (g: string) =>
@@ -296,7 +298,7 @@ const Home = () => {
                 ) : null}
               </div>
 
-              {(isAdmin || canCreateMoreLists) && (
+              {(canSubmitSeries || canCreateMoreLists) && (
                 <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
                   {canCreateMoreLists && (
                     <button
@@ -306,12 +308,12 @@ const Home = () => {
                       + Create Reading List
                     </button>
                   )}
-                  {isAdmin && (
+                  {canSubmitSeries && (
                     <button
                       onClick={() => setShowModal(true)}
                       className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 dark-theme-card-soft dark:text-slate-100 dark:hover:bg-[#241d19] sm:w-auto"
                     >
-                      + Add Series
+                      + Add Title
                     </button>
                   )}
                 </div>

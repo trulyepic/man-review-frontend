@@ -1,7 +1,15 @@
 // types.ts
-export type UserRole = "ADMIN" | "USER" | (string & {});
+export type UserRole = "ADMIN" | "GENERAL" | "CONTRIBUTOR" | (string & {});
 
 export type SeriesDetailData = {
+  id?: number;
+  series_id?: number;
+  title?: string;
+  genre?: string;
+  type?: string;
+  cover_url?: string;
+  approval_status?: string | null;
+  submitted_by_id?: number | null;
   synopsis: string;
   series_cover_url: string;
   author?: string;
