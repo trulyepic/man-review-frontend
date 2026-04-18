@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import { Link } from "react-router-dom";
 import {
   approveSeries,
   getAdminUsers,
@@ -10,9 +12,35 @@ import {
 } from "../api/manApi";
 import { useUser } from "../login/useUser";
 import { isAdminUser } from "../util/roleUtils";
-import { Link } from "react-router-dom";
 
 const roleOptions: UserRole[] = ["GENERAL", "CONTRIBUTOR", "ADMIN"];
+
+const roleDisplay: Record<
+  UserRole,
+  {
+    badge: string;
+    select: string;
+  }
+> = {
+  GENERAL: {
+    badge:
+      "bg-slate-100 text-slate-700 ring-slate-200 dark:bg-[#18120f] dark:text-stone-300 dark:ring-[#3a3028]",
+    select:
+      "border-slate-200 bg-white text-slate-900 dark:border-[#3a3028] dark:bg-[#18120f] dark:text-stone-100",
+  },
+  CONTRIBUTOR: {
+    badge:
+      "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-200 dark:ring-emerald-800/70",
+    select:
+      "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800/70 dark:bg-emerald-950/30 dark:text-emerald-200",
+  },
+  ADMIN: {
+    badge:
+      "bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-950/30 dark:text-amber-200 dark:ring-amber-800/70",
+    select:
+      "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800/70 dark:bg-amber-950/30 dark:text-amber-200",
+  },
+};
 
 export default function PendingTitlesPage() {
   const { user } = useUser();
@@ -24,9 +52,12 @@ export default function PendingTitlesPage() {
   const [error, setError] = useState<string | null>(null);
   const [approvingId, setApprovingId] = useState<number | null>(null);
   const [updatingUserId, setUpdatingUserId] = useState<number | null>(null);
+  const [accessOpen, setAccessOpen] = useState(false);
 
   const contributorCount = useMemo(
-    () => users.filter((item) => String(item.role).toUpperCase() === "CONTRIBUTOR").length,
+    () =>
+      users.filter((item) => String(item.role).toUpperCase() === "CONTRIBUTOR")
+        .length,
     [users]
   );
 
@@ -41,12 +72,12 @@ export default function PendingTitlesPage() {
       setPendingTitles(pending);
       setUsers(adminUsers);
     } catch (err) {
-      const message = (err as Error).message || "Failed to load admin review data.";
-      if (
-        message.includes("404") ||
-        message.includes("405")
-      ) {
-        setError("The current backend deployment does not have the review endpoints yet. Deploy the backend branch to use pending-title approval and contributor access management.");
+      const message =
+        (err as Error).message || "Failed to load admin review data.";
+      if (message.includes("404") || message.includes("405")) {
+        setError(
+          "The current backend deployment does not have the review endpoints yet. Deploy the backend branch to use pending-title approval and contributor access management."
+        );
       } else {
         setError(message);
       }
@@ -120,7 +151,8 @@ export default function PendingTitlesPage() {
                 Pending title approvals
               </h1>
               <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
-                Review newly submitted titles before they go live on the site, and manage who can submit future titles.
+                Review newly submitted titles before they go live on the site,
+                and manage who can submit future titles.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -147,7 +179,8 @@ export default function PendingTitlesPage() {
                 Submitted titles
               </h2>
               <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                Approved titles will become visible in rankings, search, compare, and detail pages.
+                Approved titles will become visible in rankings, search,
+                compare, and detail pages.
               </p>
             </div>
 
@@ -160,22 +193,26 @@ export default function PendingTitlesPage() {
                 No titles are waiting for approval right now.
               </div>
             ) : (
-              <div className="grid gap-4 lg:grid-cols-2">
+              <div className="space-y-4">
                 {pendingTitles.map((item) => (
                   <article
                     key={item.id}
                     className="dark-theme-card overflow-hidden rounded-[28px] border border-slate-200 shadow-[0_18px_40px_-34px_rgba(15,23,42,0.45)]"
                   >
-                    <div className="flex gap-4 p-4 sm:p-5">
+                    <div className="flex flex-col gap-5 p-4 sm:p-5 lg:flex-row lg:items-start lg:gap-7">
                       <Link
                         to={`/series/${item.id}`}
-                        state={{ title: item.title, genre: item.genre, type: item.type }}
-                        className="block h-36 w-24 shrink-0 overflow-hidden rounded-[22px] border border-slate-200 bg-slate-100 shadow-sm dark:border-[#3a3028] dark:bg-[#241d19]"
+                        state={{
+                          title: item.title,
+                          genre: item.genre,
+                          type: item.type,
+                        }}
+                        className="mx-auto flex h-72 w-52 shrink-0 items-center justify-center overflow-hidden rounded-[26px] border border-slate-200 bg-slate-100 shadow-sm transition hover:scale-[1.01] dark:border-[#3a3028] dark:bg-[#241d19] sm:h-80 sm:w-56 lg:mx-0"
                       >
                         <img
                           src={item.cover_url}
                           alt={item.title}
-                          className="h-full w-full object-cover"
+                          className="h-full w-full object-contain"
                         />
                       </Link>
 
@@ -191,14 +228,14 @@ export default function PendingTitlesPage() {
                           ) : null}
                         </div>
 
-                        <h3 className="mt-3 text-xl font-semibold leading-tight text-slate-950 dark:text-white">
+                        <h3 className="mt-3 text-2xl font-semibold leading-tight text-slate-950 dark:text-white">
                           {item.title}
                         </h3>
-                        <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                        <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 dark:text-slate-300">
                           {item.genre}
                         </p>
 
-                        <div className="mt-4 grid gap-2 text-sm text-slate-600 dark:text-slate-300 sm:grid-cols-2">
+                        <div className="mt-5 grid gap-x-6 gap-y-3 text-sm text-slate-600 dark:text-slate-300 sm:grid-cols-2">
                           <div>
                             <span className="font-medium text-slate-800 dark:text-slate-100">
                               Author:
@@ -215,7 +252,8 @@ export default function PendingTitlesPage() {
                             <span className="font-medium text-slate-800 dark:text-slate-100">
                               Submitted by:
                             </span>{" "}
-                            {item.submitted_by_username || `User #${item.submitted_by_id ?? "?"}`}
+                            {item.submitted_by_username ||
+                              `User #${item.submitted_by_id ?? "?"}`}
                           </div>
                           <div className="sm:col-span-2">
                             <span className="font-medium text-slate-800 dark:text-slate-100">
@@ -227,21 +265,27 @@ export default function PendingTitlesPage() {
                           </div>
                         </div>
 
-                        <div className="mt-4 flex flex-wrap gap-3">
+                        <div className="mt-6 flex flex-wrap gap-3">
                           <button
                             onClick={() => handleApprove(item.id)}
-                            disabled={approvingId === item.id || !item.detail_ready}
+                            disabled={
+                              approvingId === item.id || !item.detail_ready
+                            }
                             className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60"
                           >
                             {approvingId === item.id
                               ? "Approving..."
                               : item.detail_ready
-                              ? "Approve title"
-                              : "Waiting on details"}
+                                ? "Approve title"
+                                : "Waiting on details"}
                           </button>
                           <Link
                             to={`/series/${item.id}`}
-                            state={{ title: item.title, genre: item.genre, type: item.type }}
+                            state={{
+                              title: item.title,
+                              genre: item.genre,
+                              type: item.type,
+                            }}
                             className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-[#3a3028] dark:text-slate-200 dark:hover:bg-[#241d19]"
                           >
                             Preview details
@@ -256,68 +300,109 @@ export default function PendingTitlesPage() {
           </section>
 
           <section>
-            <div className="mb-4">
-              <h2 className="text-xl font-semibold text-slate-950 dark:text-white">
-                Title submission access
-              </h2>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-                Set trusted users to <span className="font-medium">Contributor</span> so they can submit titles without getting edit or delete access.
-              </p>
-            </div>
+            <div className="overflow-hidden rounded-[24px] border border-slate-200 dark:border-[#3a3028]">
+              <button
+                type="button"
+                onClick={() => setAccessOpen((prev) => !prev)}
+                className="flex w-full items-start justify-between gap-4 px-4 py-4 text-left transition hover:bg-slate-50/70 dark:hover:bg-[#18120f]"
+              >
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-950 dark:text-white">
+                    Title submission access
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                    Set trusted users to{" "}
+                    <span className="font-medium">Contributor</span> so they
+                    can submit titles without getting edit or delete access.
+                  </p>
+                </div>
+                <div className="mt-1 inline-flex items-center gap-3">
+                  <span className="inline-flex items-center rounded-full bg-white px-3 py-1.5 text-sm font-medium text-slate-600 ring-1 ring-inset ring-slate-200 dark-theme-chip dark:text-slate-300">
+                    {users.length} users
+                  </span>
+                  <ChevronDownIcon
+                    className={`h-5 w-5 text-slate-500 transition-transform dark:text-slate-300 ${
+                      accessOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </div>
+              </button>
 
-            {loading ? (
-              <div className="py-10 text-sm text-slate-500 dark:text-slate-400">
-                Loading users...
-              </div>
-            ) : (
-              <div className="overflow-hidden rounded-[24px] border border-slate-200 dark:border-[#3a3028]">
-                <table className="min-w-full text-sm">
-                  <thead className="bg-slate-50 text-slate-600 dark:bg-[#18120f] dark:text-stone-300">
-                    <tr>
-                      <th className="px-4 py-3 text-left">Username</th>
-                      <th className="px-4 py-3 text-left">Email</th>
-                      <th className="px-4 py-3 text-left">Current role</th>
-                      <th className="px-4 py-3 text-left">Verified</th>
-                      <th className="px-4 py-3 text-right">Access</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 dark:divide-[#3a3028]">
-                    {users.map((account) => (
-                      <tr key={account.id} className="dark-theme-card-soft">
-                        <td className="px-4 py-3 font-medium text-slate-900 dark:text-stone-100">
-                          {account.username}
-                        </td>
-                        <td className="px-4 py-3 text-slate-600 dark:text-stone-300">
-                          {account.email || "—"}
-                        </td>
-                        <td className="px-4 py-3 text-slate-600 dark:text-stone-300">
-                          {account.role}
-                        </td>
-                        <td className="px-4 py-3 text-slate-600 dark:text-stone-300">
-                          {account.is_verified ? "Yes" : "No"}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <select
-                            value={String(account.role).toUpperCase()}
-                            disabled={updatingUserId === account.id}
-                            onChange={(e) =>
-                              handleRoleChange(account.id, e.target.value as UserRole)
-                            }
-                            className="dark-theme-field rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 dark:border-[#3a3028] dark:text-stone-100"
-                          >
-                            {roleOptions.map((role) => (
-                              <option key={role} value={role}>
-                                {role}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+              {accessOpen && (
+                <div className="border-t border-slate-200 dark:border-[#3a3028]">
+                  {loading ? (
+                    <div className="px-4 py-10 text-sm text-slate-500 dark:text-slate-400">
+                      Loading users...
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full text-sm">
+                        <thead className="bg-slate-50 text-slate-600 dark:bg-[#18120f] dark:text-stone-300">
+                          <tr>
+                            <th className="px-4 py-3 text-left">Username</th>
+                            <th className="px-4 py-3 text-left">Email</th>
+                            <th className="px-4 py-3 text-left">
+                              Current role
+                            </th>
+                            <th className="px-4 py-3 text-left">Verified</th>
+                            <th className="px-4 py-3 text-right">Access</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200 dark:divide-[#3a3028]">
+                          {users.map((account) => (
+                            <tr key={account.id} className="dark-theme-card-soft">
+                              <td className="px-4 py-3 font-medium text-slate-900 dark:text-stone-100">
+                                {account.username}
+                              </td>
+                              <td className="px-4 py-3 text-slate-600 dark:text-stone-300">
+                                {account.email || "—"}
+                              </td>
+                              <td className="px-4 py-3">
+                                <span
+                                  className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] ring-1 ring-inset ${
+                                    roleDisplay[
+                                      String(account.role).toUpperCase() as UserRole
+                                    ]?.badge ?? roleDisplay.GENERAL.badge
+                                  }`}
+                                >
+                                  {account.role}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-slate-600 dark:text-stone-300">
+                                {account.is_verified ? "Yes" : "No"}
+                              </td>
+                              <td className="px-4 py-3 text-right">
+                                <select
+                                  value={String(account.role).toUpperCase()}
+                                  disabled={updatingUserId === account.id}
+                                  onChange={(e) =>
+                                    handleRoleChange(
+                                      account.id,
+                                      e.target.value as UserRole
+                                    )
+                                  }
+                                  className={`dark-theme-field rounded-xl border px-3 py-2 text-sm font-medium ${
+                                    roleDisplay[
+                                      String(account.role).toUpperCase() as UserRole
+                                    ]?.select ?? roleDisplay.GENERAL.select
+                                  }`}
+                                >
+                                  {roleOptions.map((role) => (
+                                    <option key={role} value={role}>
+                                      {role}
+                                    </option>
+                                  ))}
+                                </select>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </section>
         </div>
       </section>

@@ -26,6 +26,7 @@ const fieldClass =
 
 const EditSeriesModal = ({ id, initialData, onClose, onSuccess }: Props) => {
   const [form, setForm] = useState({ ...initialData });
+  const [cover, setCover] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleChange = (
@@ -37,13 +38,42 @@ const EditSeriesModal = ({ id, initialData, onClose, onSuccess }: Props) => {
   const handleSubmit = async () => {
     try {
       setError(null);
-      await editSeries(id, form);
+      await editSeries(id, {
+        ...form,
+        ...(cover ? { cover } : {}),
+      });
       onSuccess();
       onClose();
     } catch (err) {
       setError("Failed to update series.");
       console.error(err);
     }
+  };
+
+  const handleImageValidation = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
+
+    img.onload = () => {
+      const { width, height } = img;
+      const aspectRatio = width / height;
+
+      if (aspectRatio < 0.6 || aspectRatio > 0.7) {
+        setError("Please upload an image with a 2:3 portrait ratio (for example 200x300).");
+        return;
+      }
+
+      setError(null);
+      setCover(file);
+    };
+
+    img.onerror = () => {
+      setError("Invalid image file.");
+      setCover(null);
+    };
   };
 
   return (
@@ -125,6 +155,20 @@ const EditSeriesModal = ({ id, initialData, onClose, onSuccess }: Props) => {
             <option value="SEASON_END">Season End</option>
             <option value="UNKNOWN">Unknown</option>
           </select>
+
+          <label
+            htmlFor={`series-cover-upload-${id}`}
+            className="block w-full cursor-pointer rounded-2xl border border-dashed border-slate-300 px-4 py-3 text-center text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-[#4b3d33] dark:text-stone-200 dark:hover:bg-[#241d19]"
+          >
+            {cover ? cover.name : "Choose new cover image (optional)"}
+          </label>
+          <input
+            id={`series-cover-upload-${id}`}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleImageValidation}
+          />
         </div>
         <div className="mt-6 flex justify-end gap-3">
           <button
