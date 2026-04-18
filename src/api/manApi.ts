@@ -513,7 +513,7 @@ export interface SeriesPayload {
 export interface SeriesDetailPayload {
   series_id: number;
   synopsis: string;
-  series_cover: File;
+  series_cover?: File | null;
 }
 
 export interface RankedSeries {
@@ -693,9 +693,24 @@ export const editSeries = async (
     type: SeriesType;
     author: string;
     artist: string;
+    cover: File;
+    status: SeriesStatus;
   }>
 ): Promise<Series> => {
-  const res = await api.put<Series>(`/series/${id}`, data);
+  const form = new FormData();
+  if (data.title !== undefined) form.append("title", data.title);
+  if (data.genre !== undefined) form.append("genre", data.genre);
+  if (data.type !== undefined) form.append("type", data.type);
+  if (data.author !== undefined) form.append("author", data.author);
+  if (data.artist !== undefined) form.append("artist", data.artist);
+  if (data.status !== undefined && data.status !== null) {
+    form.append("status", data.status);
+  }
+  if (data.cover instanceof File) {
+    form.append("cover", data.cover);
+  }
+
+  const res = await api.put<Series>(`/series/${id}`, form);
   return res.data;
 };
 
@@ -832,7 +847,9 @@ export const createSeriesDetail = async (
   form.append("series_id", String(data.series_id));
   form.append("synopsis", data.synopsis);
   // Backend previously expected "file" here — keep this for compatibility
-  form.append("file", data.series_cover);
+  if (data.series_cover) {
+    form.append("file", data.series_cover);
+  }
 
   await api.post("/series-details/", form);
 };

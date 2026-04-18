@@ -100,7 +100,7 @@ export default function GenreStrip({ genres, active, onSelect }: Props) {
   const tabBase =
     "whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] transition-colors sm:px-3.5 sm:py-2 sm:text-sm sm:tracking-[0.14em]";
   const tabActive =
-    "bg-slate-900 text-white shadow-[0_10px_24px_-18px_rgba(15,23,42,0.9)] dark:bg-[radial-gradient(circle_at_top_left,_rgba(45,212,191,0.16),_transparent_40%),linear-gradient(145deg,_rgba(34,63,124,0.96),_rgba(23,44,96,0.96))] dark:text-white";
+    "bg-[linear-gradient(135deg,_#315ff4,_#2347c5)] text-white shadow-[0_12px_26px_-18px_rgba(35,71,197,0.7)] ring-1 ring-inset ring-blue-500/40 dark:bg-[radial-gradient(circle_at_top_left,_rgba(45,212,191,0.16),_transparent_40%),linear-gradient(145deg,_rgba(34,63,124,0.96),_rgba(23,44,96,0.96))] dark:text-white dark:ring-[#3056a5]";
   const tabIdle =
     "text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-[linear-gradient(145deg,_rgba(35,28,24,0.95),_rgba(24,19,16,0.95))] dark:hover:text-white";
 

@@ -18,11 +18,14 @@ import { canSubmitSeriesUser, isAdminUser } from "../util/roleUtils";
 
 const DEFAULT_LABEL = "ALL";
 
+const selectedNavClasses =
+  "bg-[linear-gradient(135deg,_#315ff4,_#2347c5)] text-white shadow-[0_12px_26px_-18px_rgba(35,71,197,0.7)] ring-1 ring-inset ring-blue-500/40 dark:bg-[radial-gradient(circle_at_top_left,_rgba(45,212,191,0.16),_transparent_40%),linear-gradient(145deg,_rgba(34,63,124,0.96),_rgba(23,44,96,0.96))] dark:text-white dark:ring-[#3056a5]";
+
 const desktopNavLink = ({ isActive }: { isActive: boolean }) =>
   [
     "rounded-full px-3 py-2 text-sm font-semibold tracking-wide transition",
     isActive
-      ? "bg-slate-900 text-white shadow-sm"
+      ? selectedNavClasses
       : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-[#241d19] dark:hover:text-white",
   ].join(" ");
 
@@ -30,7 +33,7 @@ const authLink = ({ isActive }: { isActive: boolean }) =>
   [
     "rounded-full px-3 py-2 text-sm font-semibold transition",
     isActive
-      ? "bg-slate-900 text-white shadow-sm"
+      ? selectedNavClasses
       : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-[#241d19] dark:hover:text-white",
   ].join(" ");
 
@@ -46,10 +49,13 @@ const Header = () => {
   const [showSearch, setShowSearch] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [mobileAccountOpen, setMobileAccountOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] =
     useState<string>(DEFAULT_LABEL);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -65,7 +71,9 @@ const Header = () => {
   const handleHomeClick = () => {
     setSearchTerm("");
     setMobileMenuOpen(false);
+    setMobileAccountOpen(false);
     setIsDropdownOpen(false);
+    setAccountMenuOpen(false);
     setSelectedCategory(DEFAULT_LABEL);
   };
 
@@ -74,6 +82,7 @@ const Header = () => {
     if (searchTerm.trim()) {
       navigate(`/?search=${encodeURIComponent(searchTerm)}`);
       setMobileMenuOpen(false);
+      setMobileAccountOpen(false);
     }
   };
 
@@ -84,6 +93,12 @@ const Header = () => {
         !dropdownRef.current.contains(event.target as Node)
       ) {
         setIsDropdownOpen(false);
+      }
+      if (
+        accountMenuRef.current &&
+        !accountMenuRef.current.contains(event.target as Node)
+      ) {
+        setAccountMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -111,16 +126,14 @@ const Header = () => {
     setSelectedCategory(DEFAULT_LABEL);
   }, [location.pathname]);
 
-  const readingListLink =
-    "inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold transition shadow-sm";
 const readingListIdle =
   "bg-gradient-to-r from-blue-50 to-sky-100 text-blue-700 ring-1 ring-inset ring-blue-200 hover:from-blue-100 hover:to-sky-100 dark:from-[#221c18] dark:to-[#171310] dark:text-blue-300 dark:ring-[#342b24] dark:hover:from-[#2a221d] dark:hover:to-[#1d1713]";
   const readingListActive =
-    "bg-slate-900 text-white ring-1 ring-inset ring-slate-900";
+    selectedNavClasses;
   const adminLinkIdle =
     "bg-white text-slate-700 ring-1 ring-inset ring-slate-200 hover:bg-slate-50 dark:from-[#221c18] dark:to-[#171310] dark:bg-[linear-gradient(145deg,_rgba(32,26,22,0.95),_rgba(22,18,15,0.95))] dark:text-amber-200 dark:ring-[#342b24] dark:hover:bg-[#2a221d]";
   const adminLinkActive =
-    "bg-amber-500 text-white ring-1 ring-inset ring-amber-500";
+    selectedNavClasses;
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl dark:border-[#322922]/80 dark:bg-[radial-gradient(circle_at_top_left,_rgba(45,212,191,0.08),_transparent_24%),linear-gradient(180deg,_rgba(24,19,16,0.97),_rgba(18,14,12,0.97))]">
@@ -128,7 +141,15 @@ const readingListIdle =
         <div className="flex min-w-0 items-center gap-3 sm:gap-5">
           <button
             className="rounded-full border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100 sm:hidden"
-            onClick={() => setMobileMenuOpen((prev) => !prev)}
+            onClick={() =>
+              setMobileMenuOpen((prev) => {
+                const next = !prev;
+                if (next) {
+                  setMobileAccountOpen(false);
+                }
+                return next;
+              })
+            }
             aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
           >
             {mobileMenuOpen ? (
@@ -232,53 +253,73 @@ const readingListIdle =
 
           {user ? (
             <>
-              {isAdmin && (
-                <NavLink
-                  to="/pending-titles"
-                  className={({ isActive }) =>
-                    [
-                      readingListLink,
-                      isActive ? adminLinkActive : adminLinkIdle,
-                    ].join(" ")
-                  }
+              <div className="relative" ref={accountMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => setAccountMenuOpen((prev) => !prev)}
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-100 px-3.5 py-2 text-sm font-semibold text-slate-700 ring-1 ring-inset ring-slate-200 transition hover:bg-slate-50 dark-theme-chip dark:text-slate-200"
                 >
-                  Review Titles
-                </NavLink>
-              )}
-              {canSubmit && (
-                <NavLink
-                  to="/my-submissions"
-                  className={({ isActive }) =>
-                    [
-                      readingListLink,
-                      isActive ? readingListActive : readingListIdle,
-                    ].join(" ")
-                  }
-                >
-                  My Submissions
-                </NavLink>
-              )}
-              <NavLink
-                to="/my-lists"
-                className={({ isActive }) =>
-                  [
-                    readingListLink,
-                    isActive ? readingListActive : readingListIdle,
-                  ].join(" ")
-                }
-              >
-                <BookmarkIcon className="h-4 w-4" />
-                My Lists
-              </NavLink>
-              <span className="inline-flex items-center rounded-full bg-slate-100 px-3.5 py-2 text-sm font-semibold text-slate-700 ring-1 ring-inset ring-slate-200 dark-theme-chip dark:text-slate-200">
-                {user.username}
-              </span>
-              <button
-                onClick={handleLogout}
-                className="rounded-full px-3 py-2 text-sm font-semibold text-rose-500 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40"
-              >
-                Logout
-              </button>
+                  {user.username}
+                  <ChevronDownIcon className="h-4 w-4" />
+                </button>
+
+                {accountMenuOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-56 overflow-hidden rounded-3xl border border-slate-200 bg-white p-2 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.55)] dark-theme-card">
+                    <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                      Account
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      {isAdmin && (
+                        <NavLink
+                          to="/pending-titles"
+                          onClick={() => setAccountMenuOpen(false)}
+                          className={({ isActive }) =>
+                            [
+                              "inline-flex items-center justify-center gap-1.5 rounded-2xl px-4 py-3 text-sm font-semibold transition shadow-sm",
+                              isActive ? adminLinkActive : adminLinkIdle,
+                            ].join(" ")
+                          }
+                        >
+                          Review Titles
+                        </NavLink>
+                      )}
+                      {canSubmit && (
+                        <NavLink
+                          to="/my-submissions"
+                          onClick={() => setAccountMenuOpen(false)}
+                          className={({ isActive }) =>
+                            [
+                              "inline-flex items-center justify-center gap-1.5 rounded-2xl px-4 py-3 text-sm font-semibold transition shadow-sm",
+                              isActive ? readingListActive : readingListIdle,
+                            ].join(" ")
+                          }
+                        >
+                          My Submissions
+                        </NavLink>
+                      )}
+                      <NavLink
+                        to="/my-lists"
+                        onClick={() => setAccountMenuOpen(false)}
+                        className={({ isActive }) =>
+                          [
+                            "inline-flex items-center justify-center gap-1.5 rounded-2xl px-4 py-3 text-sm font-semibold transition shadow-sm",
+                            isActive ? readingListActive : readingListIdle,
+                          ].join(" ")
+                        }
+                      >
+                        <BookmarkIcon className="h-4 w-4" />
+                        My Lists
+                      </NavLink>
+                      <button
+                        onClick={handleLogout}
+                        className="rounded-2xl px-4 py-3 text-sm font-semibold text-rose-500 transition hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </>
           ) : (
             <>
@@ -296,24 +337,41 @@ const readingListIdle =
       {mobileMenuOpen && (
         <div className="border-t border-slate-200/80 bg-white/95 px-4 py-4 shadow-[0_18px_35px_-30px_rgba(15,23,42,0.45)] dark:border-[#322922]/80 dark:bg-[radial-gradient(circle_at_top_left,_rgba(45,212,191,0.08),_transparent_24%),linear-gradient(180deg,_rgba(24,19,16,0.98),_rgba(18,14,12,0.98))] sm:hidden">
           <div className="mx-auto flex max-w-7xl flex-col gap-3">
-            {[
-              { to: "/", label: "ALL" },
-              { to: "/type/MANHWA", label: "MANHWA" },
-              { to: "/type/MANGA", label: "MANGA" },
-              { to: "/type/MANHUA", label: "MANHUA" },
-              { to: "/forum", label: "FORUM" },
-            ].map((item) => (
-              <NavLink
-                key={item.label}
-                to={item.to}
-                onClick={() => setMobileMenuOpen(false)}
-                className="rounded-2xl px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-[#241d19]"
-              >
-                {item.label}
-              </NavLink>
-            ))}
+            <div className="rounded-[28px] border border-slate-200 bg-white/90 p-4 shadow-sm dark-theme-card">
+              <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
+                Browse
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { to: "/", label: "All" },
+                  { to: "/type/MANHWA", label: "Manhwa" },
+                  { to: "/type/MANGA", label: "Manga" },
+                  { to: "/type/MANHUA", label: "Manhua" },
+                  { to: "/forum", label: "Forum" },
+                ].map((item) => (
+                  <NavLink
+                    key={item.label}
+                    to={item.to}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={({ isActive }) =>
+                      [
+                        "rounded-2xl px-4 py-3 text-sm font-semibold transition",
+                        isActive
+                          ? selectedNavClasses
+                          : "bg-slate-50 text-slate-700 hover:bg-slate-100 dark:bg-[#181310] dark:text-slate-200 dark:hover:bg-[#241d19]",
+                      ].join(" ")
+                    }
+                  >
+                    {item.label}
+                  </NavLink>
+                ))}
+              </div>
+            </div>
 
-            <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-3 dark-theme-card">
+            <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-3 dark-theme-card">
+              <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
+                Search
+              </div>
               <form onSubmit={handleSearchSubmit} className="flex gap-2">
                 <input
                   type="text"
@@ -331,97 +389,127 @@ const readingListIdle =
               </form>
             </div>
 
-            <div className="flex items-center justify-between rounded-[24px] border border-slate-200 bg-white px-4 py-3 dark-theme-card">
-              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Follow
-              </span>
-              <SocialLinks variant="header" />
-            </div>
-
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="inline-flex w-max items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100 dark-theme-card dark:text-slate-200 dark:hover:bg-[#241d19]"
-            >
-              {theme === "dark" ? (
-                <SunIcon className="h-4 w-4" />
-              ) : (
-                <MoonIcon className="h-4 w-4" />
-              )}
-              {theme === "dark" ? "Light mode" : "Dark mode"}
-            </button>
-
             {user ? (
-              <div className="flex flex-col gap-2">
-                {isAdmin && (
-                  <NavLink
-                    to="/pending-titles"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={({ isActive }) =>
-                      [
-                        "inline-flex w-max items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold transition shadow-sm",
-                        isActive ? adminLinkActive : adminLinkIdle,
-                      ].join(" ")
-                    }
-                  >
-                    Review Titles
-                  </NavLink>
-                )}
-                {canSubmit && (
-                  <NavLink
-                    to="/my-submissions"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={({ isActive }) =>
-                      [
-                        "inline-flex w-max items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold transition shadow-sm",
-                        isActive ? readingListActive : readingListIdle,
-                      ].join(" ")
-                    }
-                  >
-                    My Submissions
-                  </NavLink>
-                )}
-                <NavLink
-                  to="/my-lists"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={({ isActive }) =>
-                    [
-                      "inline-flex w-max items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold transition shadow-sm",
-                      isActive ? readingListActive : readingListIdle,
-                    ].join(" ")
-                  }
-                >
-                  <BookmarkIcon className="h-4 w-4" />
-                  My Lists
-                </NavLink>
-                <span className="inline-flex w-max items-center rounded-full bg-slate-100 px-3.5 py-2 text-sm font-semibold text-slate-700 ring-1 ring-inset ring-slate-200 dark-theme-chip dark:text-slate-200">
-                  {user.username}
-                </span>
+              <div className="rounded-[28px] border border-slate-200 bg-white/90 p-4 shadow-sm dark-theme-card">
                 <button
-                  onClick={handleLogout}
-                  className="w-max rounded-full px-3 py-2 text-sm font-semibold text-rose-500 transition hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                  type="button"
+                  onClick={() => setMobileAccountOpen((prev) => !prev)}
+                  className="flex w-full items-center justify-between gap-3"
                 >
-                  Logout
+                  <div>
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
+                      Account
+                    </div>
+                    <div className="mt-1 text-sm font-semibold text-slate-800 dark:text-slate-100">
+                      {user.username}
+                    </div>
+                  </div>
+                  <div className="inline-flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleTheme();
+                      }}
+                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100 dark-theme-card dark:text-slate-200 dark:hover:bg-[#241d19]"
+                    >
+                      {theme === "dark" ? (
+                        <SunIcon className="h-4 w-4" />
+                      ) : (
+                        <MoonIcon className="h-4 w-4" />
+                      )}
+                      {theme === "dark" ? "Light" : "Dark"}
+                    </button>
+                    <ChevronDownIcon
+                      className={`h-5 w-5 text-slate-500 transition-transform dark:text-slate-300 ${
+                        mobileAccountOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </div>
                 </button>
+
+                {mobileAccountOpen && (
+                  <div className="mt-3 flex flex-col gap-2">
+                    {isAdmin && (
+                      <NavLink
+                        to="/pending-titles"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={({ isActive }) =>
+                          [
+                            "inline-flex w-full items-center justify-center gap-1.5 rounded-2xl px-4 py-3 text-sm font-semibold transition shadow-sm",
+                            isActive ? adminLinkActive : adminLinkIdle,
+                          ].join(" ")
+                        }
+                      >
+                        Review Titles
+                      </NavLink>
+                    )}
+                    {canSubmit && (
+                      <NavLink
+                        to="/my-submissions"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={({ isActive }) =>
+                          [
+                            "inline-flex w-full items-center justify-center gap-1.5 rounded-2xl px-4 py-3 text-sm font-semibold transition shadow-sm",
+                            isActive ? readingListActive : readingListIdle,
+                          ].join(" ")
+                        }
+                      >
+                        My Submissions
+                      </NavLink>
+                    )}
+                    <NavLink
+                      to="/my-lists"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={({ isActive }) =>
+                        [
+                          "inline-flex w-full items-center justify-center gap-1.5 rounded-2xl px-4 py-3 text-sm font-semibold transition shadow-sm",
+                          isActive ? readingListActive : readingListIdle,
+                        ].join(" ")
+                      }
+                    >
+                      <BookmarkIcon className="h-4 w-4" />
+                      My Lists
+                    </NavLink>
+                    <button
+                      onClick={handleLogout}
+                      className="rounded-2xl px-4 py-3 text-sm font-semibold text-rose-500 transition hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
-              <div className="flex flex-wrap gap-2">
+              <div className="rounded-[28px] border border-slate-200 bg-white/90 p-4 shadow-sm dark-theme-card">
+                <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
+                  Account
+                </div>
+                <div className="grid grid-cols-2 gap-2">
                 <NavLink
                   to="/login"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={authLink}
+                  className="rounded-2xl bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
                 >
                   Login
                 </NavLink>
                 <NavLink
                   to="/signup"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={authLink}
+                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:bg-[#181310] dark:text-slate-200 dark:hover:bg-[#241d19]"
                 >
                   Sign Up
                 </NavLink>
+                </div>
               </div>
             )}
+
+            <div className="flex items-center justify-between rounded-[24px] border border-slate-200 bg-white px-4 py-3 dark-theme-card">
+              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                Follow
+              </span>
+              <SocialLinks variant="header" />
+            </div>
           </div>
         </div>
       )}

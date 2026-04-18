@@ -3,12 +3,16 @@ import { createSeriesDetail } from "../api/manApi";
 
 const AddSeriesDetailModal = ({
   seriesId,
+  initialSynopsis = "",
+  hasExistingDetails = false,
   onClose,
 }: {
   seriesId: number;
+  initialSynopsis?: string;
+  hasExistingDetails?: boolean;
   onClose: () => void;
 }) => {
-  const [synopsis, setSynopsis] = useState("");
+  const [synopsis, setSynopsis] = useState(initialSynopsis);
   const [cover, setCover] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -16,13 +20,17 @@ const AddSeriesDetailModal = ({
   const MAX_SIZE_KB = 800;
 
   const handleSubmit = async () => {
-    if (!cover || !synopsis.trim()) {
-      setError("All fields are required.");
+    if (!synopsis.trim() || (!hasExistingDetails && !cover)) {
+      setError(
+        hasExistingDetails
+          ? "Synopsis is required."
+          : "Synopsis and detail cover are required."
+      );
       return;
     }
 
-    const fileSizeKB = cover.size / 1024;
-    if (fileSizeKB > MAX_SIZE_KB) {
+    const fileSizeKB = cover ? cover.size / 1024 : 0;
+    if (cover && fileSizeKB > MAX_SIZE_KB) {
       setError("Cover image must be less than 800KB.");
       return;
     }
@@ -50,10 +58,12 @@ const AddSeriesDetailModal = ({
         <div className="mb-5 flex items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold text-slate-900 dark:text-stone-50">
-              Add Title Details
+              {hasExistingDetails ? "Edit title details" : "Add title details"}
             </h2>
             <p className="mt-1 text-sm text-slate-600 dark:text-stone-300">
-              Add the synopsis and detail cover art for this title.
+              {hasExistingDetails
+                ? "Update the synopsis or replace the detail cover for this title."
+                : "Add the synopsis and detail cover for this title."}
             </p>
           </div>
           <button
@@ -84,7 +94,7 @@ const AddSeriesDetailModal = ({
 
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-stone-200">
-              Series Cover Image
+              Detail Cover Image
             </label>
             <input
               type="file"
@@ -94,6 +104,7 @@ const AddSeriesDetailModal = ({
             />
             <p className="mt-2 text-xs text-slate-500 dark:text-stone-400">
               Recommended size: 600x400px. Max size: 800KB.
+              {hasExistingDetails ? " Upload a new image only if you want to replace the current cover." : ""}
             </p>
           </div>
         </div>
@@ -110,7 +121,11 @@ const AddSeriesDetailModal = ({
             disabled={loading}
             className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60"
           >
-            {loading ? "Saving..." : "Save"}
+            {loading
+              ? "Saving..."
+              : hasExistingDetails
+              ? "Save changes"
+              : "Add title details"}
           </button>
         </div>
       </div>

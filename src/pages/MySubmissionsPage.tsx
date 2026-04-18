@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { getMySubmittedSeries, type PendingSeries } from "../api/manApi";
 import { useUser } from "../login/useUser";
 import { canSubmitSeriesUser } from "../util/roleUtils";
+import EditSeriesModal from "../components/EditSeriesModal";
 
 function statusLabel(status?: string | null) {
   if (!status) return "Pending review";
@@ -13,6 +14,7 @@ export default function MySubmissionsPage() {
   const { user } = useUser();
   const canSubmit = canSubmitSeriesUser(user);
   const [items, setItems] = useState<PendingSeries[]>([]);
+  const [editItem, setEditItem] = useState<PendingSeries | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -122,7 +124,7 @@ export default function MySubmissionsPage() {
                           submitted_by_id: item.submitted_by_id,
                           can_manage_pending_details: !isApproved,
                         }}
-                        className="block h-36 w-24 shrink-0 overflow-hidden rounded-[22px] border border-slate-200 bg-slate-100 shadow-sm dark:border-[#3a3028] dark:bg-[#241d19]"
+                        className="block h-40 w-28 shrink-0 overflow-hidden rounded-[22px] border border-slate-200 bg-slate-100 shadow-sm dark:border-[#3a3028] dark:bg-[#241d19] sm:h-44 sm:w-32"
                       >
                         <img
                           src={item.cover_url}
@@ -180,6 +182,14 @@ export default function MySubmissionsPage() {
                         )}
 
                         <div className="mt-4 flex flex-wrap gap-3">
+                          {!isApproved && (
+                            <button
+                              onClick={() => setEditItem(item)}
+                              className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+                            >
+                              Edit submission
+                            </button>
+                          )}
                           <Link
                             to={`/series/${item.id}`}
                             state={{
@@ -192,9 +202,13 @@ export default function MySubmissionsPage() {
                               submitted_by_id: item.submitted_by_id,
                               can_manage_pending_details: !isApproved,
                             }}
-                            className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+                            className={`rounded-xl px-4 py-2 text-sm font-medium transition ${
+                              isApproved
+                                ? "bg-blue-600 font-semibold text-white hover:bg-blue-700"
+                                : "border border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-[#3a3028] dark:text-slate-200 dark:hover:bg-[#241d19]"
+                            }`}
                           >
-                            {isApproved ? "Open title" : "Complete details"}
+                            {isApproved ? "Open title" : "Preview submission"}
                           </Link>
                         </div>
                       </div>
@@ -206,6 +220,29 @@ export default function MySubmissionsPage() {
           )}
         </div>
       </section>
+
+      {editItem && (
+        <EditSeriesModal
+          id={editItem.id}
+          initialData={{
+            title: editItem.title,
+            genre: editItem.genre,
+            type: editItem.type,
+            author: editItem.author,
+            artist: editItem.artist,
+            status: editItem.status ?? null,
+          }}
+          onClose={() => setEditItem(null)}
+          onSuccess={async () => {
+            try {
+              const rows = await getMySubmittedSeries();
+              setItems(rows);
+            } catch (err) {
+              console.error("Failed to refresh submissions:", err);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
