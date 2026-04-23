@@ -15,6 +15,7 @@ import SocialLinks from "./SocialLinks";
 import myHomeLogo from "../images/logo/myHomeLogo.png";
 import { useTheme } from "./ThemeContext";
 import { canSubmitSeriesUser, isAdminUser } from "../util/roleUtils";
+import { searchSeries, type RankedSeries } from "../api/manApi";
 
 const DEFAULT_LABEL = "ALL";
 
@@ -48,6 +49,15 @@ const Header = () => {
 
   const [showSearch, setShowSearch] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [mobileSearchQuery, setMobileSearchQuery] = useState("");
+  const [mobileSearchResults, setMobileSearchResults] = useState<RankedSeries[]>(
+    []
+  );
+  const [mobileSearchLoading, setMobileSearchLoading] = useState(false);
+  const [mobileSearchError, setMobileSearchError] = useState<string | null>(
+    null
+  );
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [mobileAccountOpen, setMobileAccountOpen] = useState(false);
@@ -56,6 +66,7 @@ const Header = () => {
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const accountMenuRef = useRef<HTMLDivElement>(null);
+  const mobileSearchControllerRef = useRef<AbortController | null>(null);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -68,10 +79,25 @@ const Header = () => {
     setShowSearch((prev) => !prev);
   };
 
+  const closeMobileSearch = () => {
+    mobileSearchControllerRef.current?.abort();
+    setMobileSearchOpen(false);
+    setMobileSearchLoading(false);
+    setMobileSearchError(null);
+  };
+
+  const handleMobileSearchOpen = () => {
+    setMobileMenuOpen(false);
+    setMobileAccountOpen(false);
+    setMobileSearchQuery(searchTerm);
+    setMobileSearchOpen(true);
+  };
+
   const handleHomeClick = () => {
     setSearchTerm("");
     setMobileMenuOpen(false);
     setMobileAccountOpen(false);
+    setMobileSearchOpen(false);
     setIsDropdownOpen(false);
     setAccountMenuOpen(false);
     setSelectedCategory(DEFAULT_LABEL);
@@ -84,6 +110,21 @@ const Header = () => {
       setMobileMenuOpen(false);
       setMobileAccountOpen(false);
     }
+  };
+
+  const handleMobileSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const value = mobileSearchQuery.trim();
+    if (!value) return;
+    setSearchTerm(value);
+    closeMobileSearch();
+    navigate(`/?search=${encodeURIComponent(value)}`);
+  };
+
+  const handleMobileSearchSelect = (item: RankedSeries) => {
+    setSearchTerm(item.title);
+    closeMobileSearch();
+    navigate(`/series/${item.id}`);
   };
 
   useEffect(() => {
@@ -126,6 +167,46 @@ const Header = () => {
     setSelectedCategory(DEFAULT_LABEL);
   }, [location.pathname]);
 
+  useEffect(() => {
+    if (!mobileSearchOpen) return;
+
+    const query = mobileSearchQuery.trim();
+    mobileSearchControllerRef.current?.abort();
+
+    if (!query) {
+      setMobileSearchResults([]);
+      setMobileSearchLoading(false);
+      setMobileSearchError(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    mobileSearchControllerRef.current = controller;
+    setMobileSearchLoading(true);
+    setMobileSearchError(null);
+
+    const timer = window.setTimeout(async () => {
+      try {
+        const results = await searchSeries(query, controller.signal);
+        setMobileSearchResults(results.slice(0, 8));
+      } catch (err) {
+        if (!controller.signal.aborted) {
+          console.error("Mobile search failed:", err);
+          setMobileSearchError("Search suggestions are unavailable right now.");
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setMobileSearchLoading(false);
+        }
+      }
+    }, 180);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [mobileSearchOpen, mobileSearchQuery]);
+
 const readingListIdle =
   "bg-gradient-to-r from-blue-50 to-sky-100 text-blue-700 ring-1 ring-inset ring-blue-200 hover:from-blue-100 hover:to-sky-100 dark:from-[#221c18] dark:to-[#171310] dark:text-blue-300 dark:ring-[#342b24] dark:hover:from-[#2a221d] dark:hover:to-[#1d1713]";
   const readingListActive =
@@ -139,26 +220,6 @@ const readingListIdle =
     <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl dark:border-[#322922]/80 dark:bg-[radial-gradient(circle_at_top_left,_rgba(45,212,191,0.08),_transparent_24%),linear-gradient(180deg,_rgba(24,19,16,0.97),_rgba(18,14,12,0.97))]">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
         <div className="flex min-w-0 items-center gap-3 sm:gap-5">
-          <button
-            className="rounded-full border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100 sm:hidden"
-            onClick={() =>
-              setMobileMenuOpen((prev) => {
-                const next = !prev;
-                if (next) {
-                  setMobileAccountOpen(false);
-                }
-                return next;
-              })
-            }
-            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
-          >
-            {mobileMenuOpen ? (
-              <XMarkIcon className="h-5 w-5" />
-            ) : (
-              <Bars3Icon className="h-5 w-5" />
-            )}
-          </button>
-
           <a
             href="/"
             onClick={handleHomeClick}
@@ -210,6 +271,37 @@ const readingListIdle =
               Forum
             </NavLink>
           </nav>
+        </div>
+
+        <div className="flex items-center gap-2 sm:hidden">
+          <button
+            type="button"
+            onClick={handleMobileSearchOpen}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 dark-theme-card dark:text-slate-300 dark:hover:bg-[#241d19] dark:hover:text-white"
+            aria-label="Search titles"
+          >
+            <MagnifyingGlassIcon className="h-5 w-5" />
+          </button>
+          <button
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 dark-theme-card dark:text-slate-300 dark:hover:bg-[#241d19] dark:hover:text-white"
+            onClick={() =>
+              setMobileMenuOpen((prev) => {
+                const next = !prev;
+                if (next) {
+                  setMobileAccountOpen(false);
+                  setMobileSearchOpen(false);
+                }
+                return next;
+              })
+            }
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+          >
+            {mobileMenuOpen ? (
+              <XMarkIcon className="h-5 w-5" />
+            ) : (
+              <Bars3Icon className="h-5 w-5" />
+            )}
+          </button>
         </div>
 
         <div className="hidden items-center gap-3 sm:flex">
@@ -334,6 +426,125 @@ const readingListIdle =
         </div>
       </div>
 
+      {mobileSearchOpen && (
+        <div className="border-t border-slate-200/80 bg-white/95 px-4 py-4 shadow-[0_18px_35px_-30px_rgba(15,23,42,0.45)] dark:border-[#322922]/80 dark:bg-[radial-gradient(circle_at_top_left,_rgba(45,212,191,0.08),_transparent_24%),linear-gradient(180deg,_rgba(24,19,16,0.98),_rgba(18,14,12,0.98))] sm:hidden">
+          <div className="mx-auto max-w-7xl">
+            <div className="rounded-[28px] border border-slate-200 bg-white/95 p-4 shadow-sm dark-theme-card">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
+                    Search
+                  </div>
+                  <div className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    Find a title quickly
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeMobileSearch}
+                  className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 dark:border-[#342b24] dark:text-slate-300 dark:hover:bg-[#241d19]"
+                >
+                  Close
+                </button>
+              </div>
+
+              <form onSubmit={handleMobileSearchSubmit} className="relative">
+                <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                <input
+                  autoFocus
+                  type="text"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-12 text-sm text-slate-700 outline-none transition focus:border-slate-300 focus:bg-white focus:ring-2 focus:ring-slate-200 dark-theme-field dark:focus:ring-[#2a221c]"
+                  placeholder="Search titles..."
+                  value={mobileSearchQuery}
+                  onChange={(e) => setMobileSearchQuery(e.target.value)}
+                />
+                {mobileSearchQuery ? (
+                  <button
+                    type="button"
+                    onClick={() => setMobileSearchQuery("")}
+                    className="absolute right-3 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-[#241d19] dark:hover:text-slate-100"
+                    aria-label="Clear search"
+                  >
+                    <XMarkIcon className="h-4 w-4" />
+                  </button>
+                ) : null}
+              </form>
+
+              <div className="mt-4 space-y-2">
+                {!mobileSearchQuery.trim() ? null : mobileSearchLoading ? (
+                  <div className="space-y-2">
+                    {[...Array(4)].map((_, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-3 rounded-2xl border border-slate-200/80 px-3 py-3 dark:border-[#342b24]"
+                      >
+                        <div className="h-14 w-12 animate-pulse rounded-xl bg-slate-200 dark:bg-[#2a221d]" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-3 w-2/3 animate-pulse rounded-full bg-slate-200 dark:bg-[#2a221d]" />
+                          <div className="h-3 w-1/3 animate-pulse rounded-full bg-slate-200 dark:bg-[#2a221d]" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : mobileSearchError ? (
+                  <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200">
+                    {mobileSearchError}
+                  </div>
+                ) : mobileSearchResults.length > 0 ? (
+                  <>
+                    {mobileSearchResults.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => handleMobileSearchSelect(item)}
+                        className="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-3 text-left transition hover:border-slate-300 hover:bg-slate-50 dark-theme-card-soft dark:hover:bg-[#241d19]"
+                      >
+                        <img
+                          src={item.cover_url}
+                          alt={item.title}
+                          className="h-16 w-12 shrink-0 rounded-xl object-cover"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                            {item.title}
+                          </div>
+                          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                            <span className="rounded-full bg-slate-100 px-2 py-1 font-medium text-slate-600 dark-theme-chip dark:text-slate-300">
+                              {item.type}
+                            </span>
+                            {item.genre ? (
+                              <span className="truncate">{item.genre}</span>
+                            ) : null}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+
+                    <button
+                      type="submit"
+                      onClick={() => {
+                        const value = mobileSearchQuery.trim();
+                        if (!value) return;
+                        setSearchTerm(value);
+                        closeMobileSearch();
+                        navigate(`/?search=${encodeURIComponent(value)}`);
+                      }}
+                      className="mt-3 w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 dark:bg-[linear-gradient(135deg,_#315ff4,_#2347c5)] dark:hover:brightness-110"
+                    >
+                      See all results for “{mobileSearchQuery.trim()}”
+                    </button>
+                  </>
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-4 text-sm text-slate-500 dark:border-[#342b24] dark:text-slate-400">
+                    No matching titles yet. Try another name or search for the full phrase.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {mobileMenuOpen && (
         <div className="border-t border-slate-200/80 bg-white/95 px-4 py-4 shadow-[0_18px_35px_-30px_rgba(15,23,42,0.45)] dark:border-[#322922]/80 dark:bg-[radial-gradient(circle_at_top_left,_rgba(45,212,191,0.08),_transparent_24%),linear-gradient(180deg,_rgba(24,19,16,0.98),_rgba(18,14,12,0.98))] sm:hidden">
           <div className="mx-auto flex max-w-7xl flex-col gap-3">
@@ -366,27 +577,6 @@ const readingListIdle =
                   </NavLink>
                 ))}
               </div>
-            </div>
-
-            <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-3 dark-theme-card">
-              <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
-                Search
-              </div>
-              <form onSubmit={handleSearchSubmit} className="flex gap-2">
-                <input
-                  type="text"
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-200 dark-theme-field dark:focus:ring-[#2a221c]"
-                  placeholder="Search titles..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <button
-                  type="submit"
-                  className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white"
-                >
-                  Go
-                </button>
-              </form>
             </div>
 
             {user ? (
