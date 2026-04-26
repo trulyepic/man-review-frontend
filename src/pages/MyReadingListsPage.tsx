@@ -81,7 +81,6 @@ function ListItems({
   // const [rankMin, setRankMin] = useState<string>(""); // string to allow empty
   // const [rankMax, setRankMax] = useState<string>("");
   const [minStars, setMinStars] = useState<string>(""); // e.g. 7.5
-  const [minVotes, setMinVotes] = useState<string>(""); // e.g. 100
 
   type SortKey =
     | "DEFAULT"
@@ -104,6 +103,25 @@ function ListItems({
   const [filterStatus, setFilterStatus] = useState<StatusKey>("");
   const toSortable = (it: ReadingListItem) => summaries[it.series_id];
   const normalizeChapter = (value?: string | null) => value?.trim() ?? "";
+  const starsFilterActive = minStars.trim() !== "";
+
+  const matchesStarFilter = (score: number | null | undefined, rawInput: string) => {
+    if (score == null) return false;
+
+    const trimmed = rawInput.trim();
+    if (!trimmed) return true;
+
+    const parsed = Number(trimmed);
+    if (!Number.isFinite(parsed)) return true;
+
+    if (!trimmed.includes(".")) {
+      return score >= parsed && score < parsed + 1;
+    }
+
+    const decimals = trimmed.split(".")[1]?.length ?? 0;
+    const step = 10 ** -decimals;
+    return score >= parsed && score < parsed + step;
+  };
 
   const isChapterDirty = (item: ReadingListItem) =>
     normalizeChapter(chapterDrafts[item.series_id] ?? item.left_off_chapter) !==
@@ -225,17 +243,8 @@ function ListItems({
     }
 
     // Stars (final_score)
-    const ms = minStars.trim() !== "" ? Number(minStars) : null;
-    if (ms != null) {
-      if (s.final_score == null) return false;
-      if (Number(s.final_score) < ms) return false;
-    }
-
-    // Votes
-    const mv = minVotes.trim() !== "" ? Number(minVotes) : null;
-    if (mv != null) {
-      if (s.vote_count == null) return false;
-      if (s.vote_count < mv) return false;
+    if (starsFilterActive) {
+      if (!matchesStarFilter(Number(s.final_score), minStars)) return false;
     }
 
     return true;
@@ -325,10 +334,7 @@ function ListItems({
 
   const isFiltering =
     !!filterType ||
-    !!filterStatus ||
-    minStars.trim() !== "" ||
-    minVotes.trim() !== "" ||
-    sortBy !== "DEFAULT";
+    !!filterStatus || starsFilterActive || sortBy !== "DEFAULT";
 
   const effectiveHasMore = hasMore && !isFiltering;
 
@@ -346,7 +352,7 @@ function ListItems({
             <select
               value={filterType}
               onChange={handleTypeChange}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-200 dark-theme-field dark:focus:ring-[#2a221c]"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-200 dark-theme-field dark:focus:ring-[#2a221c] dark:bg-[#17130f] dark:text-[#f4efe8] dark:[color-scheme:dark]"
             >
               <option value="">All</option>
               <option value="MANHWA">Manhwa</option>
@@ -362,7 +368,7 @@ function ListItems({
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value as StatusKey)}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-200 dark-theme-field dark:focus:ring-[#2a221c]"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-200 dark-theme-field dark:focus:ring-[#2a221c] dark:bg-[#17130f] dark:text-[#f4efe8] dark:[color-scheme:dark]"
             >
               <option value="">All</option>
               <option value="ONGOING">Ongoing</option>
@@ -381,7 +387,7 @@ function ListItems({
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortKey)}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-200 dark-theme-field dark:focus:ring-[#2a221c]"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-200 dark-theme-field dark:focus:ring-[#2a221c] dark:bg-[#17130f] dark:text-[#f4efe8] dark:[color-scheme:dark]"
             >
               <option value="DEFAULT">Default (list order)</option>
               <option value="RANK_ASC">Rank ↑</option>
@@ -395,30 +401,28 @@ function ListItems({
             </select>
           </div>
 
-          {/* Minimum stars and votes */}
-          <div className="grid grid-cols-2 gap-2 sm:flex sm:items-end">
+          {/* Minimum stars */}
+          <div className="grid grid-cols-1 gap-2 sm:flex sm:items-end">
             <div className="flex min-w-0 flex-col">
-              <label className="text-xs text-gray-500 dark:text-slate-400">Stars min.</label>
+              <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                Stars
+              </label>
               <input
                 type="number"
                 step="0.1"
                 inputMode="decimal"
                 value={minStars}
-                onChange={(e) => setMinStars(e.target.value)}
-                placeholder="e.g. 7.5"
-                className="w-full rounded-md border border-slate-200 bg-white px-2 py-2 text-sm text-slate-700 sm:w-24 sm:py-1 dark-theme-field"
-              />
-            </div>
-            <div className="flex min-w-0 flex-col">
-              <label className="text-xs text-gray-500 dark:text-slate-400">Votes min.</label>
-              <input
-                type="number"
-                inputMode="numeric"
-                min={0}
-                value={minVotes}
-                onChange={(e) => setMinVotes(e.target.value)}
-                placeholder="e.g. 100"
-                className="w-full rounded-md border border-slate-200 bg-white px-2 py-2 text-sm text-slate-700 sm:w-28 sm:py-1 dark-theme-field"
+                onChange={(e) => {
+                  const nextValue = e.target.value;
+                  setMinStars(nextValue);
+                  if (nextValue.trim() !== "") {
+                    setSortBy("STARS_DESC");
+                  } else if (sortBy === "STARS_DESC") {
+                    setSortBy("DEFAULT");
+                  }
+                }}
+                placeholder="e.g. 7.5+"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-200 sm:w-28 dark-theme-field dark:bg-[#17130f] dark:text-[#f4efe8]"
               />
             </div>
           </div>
@@ -429,7 +433,6 @@ function ListItems({
               setFilterType("");
               setFilterStatus("");
               setMinStars("");
-              setMinVotes("");
               setSortBy("DEFAULT");
             }}
             className="rounded-md bg-gray-100 px-3 py-2 text-xs text-slate-700 hover:bg-gray-200 dark:bg-[linear-gradient(145deg,_rgba(30,24,20,0.92),_rgba(22,18,15,0.92))] dark:text-slate-200 dark:hover:bg-[#241d19] sm:ml-auto sm:py-1"
@@ -441,7 +444,7 @@ function ListItems({
       </div>
 
       <InfiniteScroll
-        key={`list-${listId}-${filterType}-${filterStatus}-${minStars}-${minVotes}-${sortBy}`}
+        key={`list-${listId}-${filterType}-${filterStatus}-${minStars}-${sortBy}`}
         dataLength={sortedItems.length}
         next={loadMore}
         hasMore={effectiveHasMore}
