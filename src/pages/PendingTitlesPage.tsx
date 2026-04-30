@@ -3,6 +3,7 @@ import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
 import {
   approveSeries,
+  deleteSeries,
   getAdminUsers,
   getPendingSeries,
   updateUserRole,
@@ -10,6 +11,7 @@ import {
   type PendingSeries,
   type UserRole,
 } from "../api/manApi";
+import { ConfirmModal } from "../components/ConfirmModal";
 import { useUser } from "../login/useUser";
 import { isAdminUser } from "../util/roleUtils";
 
@@ -51,8 +53,10 @@ export default function PendingTitlesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [approvingId, setApprovingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [updatingUserId, setUpdatingUserId] = useState<number | null>(null);
   const [accessOpen, setAccessOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<PendingSeries | null>(null);
 
   const contributorCount = useMemo(
     () =>
@@ -117,6 +121,21 @@ export default function PendingTitlesPage() {
       setError((err as Error).message || "Failed to update role.");
     } finally {
       setUpdatingUserId(null);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirmDelete) return;
+    setDeletingId(confirmDelete.id);
+    setError(null);
+    try {
+      await deleteSeries(confirmDelete.id);
+      setPendingTitles((prev) => prev.filter((item) => item.id !== confirmDelete.id));
+      setConfirmDelete(null);
+    } catch (err) {
+      setError((err as Error).message || "Failed to delete title.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -269,7 +288,9 @@ export default function PendingTitlesPage() {
                           <button
                             onClick={() => handleApprove(item.id)}
                             disabled={
-                              approvingId === item.id || !item.detail_ready
+                              approvingId === item.id ||
+                              deletingId === item.id ||
+                              !item.detail_ready
                             }
                             className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60"
                           >
@@ -290,6 +311,14 @@ export default function PendingTitlesPage() {
                           >
                             Preview details
                           </Link>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDelete(item)}
+                            disabled={approvingId === item.id || deletingId === item.id}
+                            className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-100 disabled:opacity-60 dark:border-rose-900/80 dark:bg-rose-950/30 dark:text-rose-200 dark:hover:bg-rose-950/45"
+                          >
+                            {deletingId === item.id ? "Deleting..." : "Delete title"}
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -406,6 +435,22 @@ export default function PendingTitlesPage() {
           </section>
         </div>
       </section>
+
+      <ConfirmModal
+        open={!!confirmDelete}
+        title="Delete pending title?"
+        message={
+          confirmDelete
+            ? `This will permanently delete "${confirmDelete.title}", its detail record, votes, and both uploaded images.`
+            : ""
+        }
+        confirmText={deletingId ? "Deleting..." : "Delete"}
+        cancelText="Cancel"
+        destructive
+        onCancel={() => (deletingId ? null : setConfirmDelete(null))}
+        onConfirm={handleDelete}
+        busy={deletingId !== null}
+      />
     </div>
   );
 }

@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { createSeries } from "../api/manApi";
 import type { Series, SeriesPayload } from "../api/manApi";
+import { useUser } from "../login/useUser";
+import { isAdminRole } from "../util/roleUtils";
 
 interface Props {
   onClose: () => void;
@@ -11,6 +13,8 @@ const fieldClass =
   "dark-theme-field w-full rounded-2xl border border-slate-200 px-3 py-2.5 text-slate-900 placeholder:text-slate-400 dark:border-[#3a3028] dark:text-stone-100 dark:placeholder:text-stone-500";
 
 const AddSeriesModal = ({ onClose }: Props) => {
+  const { user } = useUser();
+  const isAdmin = isAdminRole(user?.role);
   const [form, setForm] = useState<Partial<SeriesPayload>>({});
   const [cover, setCover] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -68,28 +72,38 @@ const AddSeriesModal = ({ onClose }: Props) => {
           <div className="space-y-5">
             <div>
               <h2 className="text-xl font-bold text-slate-900 dark:text-stone-50">
-                Title submitted
+                {isAdmin ? "Title created" : "Title saved"}
               </h2>
               <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-stone-300">
                 <span className="font-medium text-slate-800 dark:text-stone-100">
                   {submittedSeries.title}
                 </span>{" "}
-                has been submitted for admin approval and will appear on the site once it is approved.
+                {isAdmin
+                  ? "has been created. Add the title details next to publish the full detail page."
+                  : "has been saved. Add the title details next, and that step will submit it for admin review."}
               </p>
             </div>
 
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700/60 dark:bg-amber-950/30 dark:text-amber-200">
-              Newly submitted titles stay hidden from rankings, search, compare, and public detail pages until an admin approves them.
-            </div>
+            {isAdmin ? (
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-700/60 dark:bg-emerald-950/30 dark:text-emerald-200">
+                Admin titles do not need approval. Once you save the title details, this entry will be available immediately.
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700/60 dark:bg-amber-950/30 dark:text-amber-200">
+                Contributor titles stay private until the detail step is completed and the submission is sent for admin review.
+              </div>
+            )}
 
             <div className="flex flex-wrap justify-end gap-3">
-              <Link
-                to="/my-submissions"
-                onClick={onClose}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-[#3a3028] dark:text-stone-200 dark:hover:bg-[#241d19]"
-              >
-                View my submissions
-              </Link>
+              {!isAdmin && (
+                <Link
+                  to="/my-submissions"
+                  onClick={onClose}
+                  className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-[#3a3028] dark:text-stone-200 dark:hover:bg-[#241d19]"
+                >
+                  View my submissions
+                </Link>
+              )}
               <Link
                 to={`/series/${submittedSeries.id}`}
                 state={{
@@ -98,6 +112,8 @@ const AddSeriesModal = ({ onClose }: Props) => {
                   type: submittedSeries.type,
                   author: submittedSeries.author,
                   artist: submittedSeries.artist,
+                  approval_status: submittedSeries.approval_status,
+                  can_manage_pending_details: true,
                 }}
                 onClick={onClose}
                 className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
@@ -117,10 +133,10 @@ const AddSeriesModal = ({ onClose }: Props) => {
         <div className="mb-5 flex items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold text-slate-900 dark:text-stone-50">
-              Submit New Title
+              Add New Title
             </h2>
             <p className="mt-1 text-sm text-slate-600 dark:text-stone-300">
-              Add the core metadata and cover art. An admin will review it before it goes live.
+              Add the core metadata and cover art first. You’ll continue with title details in the next step.
             </p>
           </div>
           <button
@@ -220,7 +236,7 @@ const AddSeriesModal = ({ onClose }: Props) => {
             onClick={handleSubmit}
             className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
           >
-            {loading ? "Submitting..." : "Submit for Review"}
+            {loading ? "Creating..." : "Create title"}
           </button>
         </div>
           </>

@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { createSeriesDetail } from "../api/manApi";
+import { useUser } from "../login/useUser";
+import { isAdminRole } from "../util/roleUtils";
 
 const AddSeriesDetailModal = ({
   seriesId,
@@ -12,10 +14,13 @@ const AddSeriesDetailModal = ({
   hasExistingDetails?: boolean;
   onClose: () => void;
 }) => {
+  const { user } = useUser();
+  const isAdmin = isAdminRole(user?.role);
   const [synopsis, setSynopsis] = useState(initialSynopsis);
   const [cover, setCover] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [savedMode, setSavedMode] = useState<"created" | "review" | null>(null);
 
   const MAX_SIZE_KB = 800;
 
@@ -43,7 +48,11 @@ const AddSeriesDetailModal = ({
         synopsis,
         series_cover: cover,
       });
-      onClose();
+      if (hasExistingDetails) {
+        onClose();
+      } else {
+        setSavedMode(isAdmin ? "created" : "review");
+      }
     } catch (err) {
       console.error(err);
       setError("Failed to save detail.");
@@ -55,6 +64,42 @@ const AddSeriesDetailModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4 py-6">
       <div className="dark-theme-shell w-full max-w-lg rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-[0_28px_80px_rgba(15,23,42,0.22)] dark:border-[#3a3028]">
+        {savedMode ? (
+          <div className="space-y-5">
+            <div>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-stone-50">
+                {savedMode === "created" ? "Title details saved" : "Submitted for review"}
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-stone-300">
+                {savedMode === "created"
+                  ? "The synopsis and wide cover are saved. This title is now available immediately."
+                  : "The synopsis and wide cover are complete. This title is now waiting for admin approval."}
+              </p>
+            </div>
+
+            <div
+              className={`rounded-2xl px-4 py-3 text-sm ${
+                savedMode === "created"
+                  ? "border border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-700/60 dark:bg-emerald-950/30 dark:text-emerald-200"
+                  : "border border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-700/60 dark:bg-amber-950/30 dark:text-amber-200"
+              }`}
+            >
+              {savedMode === "created"
+                ? "No admin approval is needed for this title."
+                : "Approved titles become visible in rankings, search, compare, and public detail pages."}
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={onClose}
+                className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
         <div className="mb-5 flex items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold text-slate-900 dark:text-stone-50">
@@ -125,9 +170,13 @@ const AddSeriesDetailModal = ({
               ? "Saving..."
               : hasExistingDetails
               ? "Save changes"
-              : "Add title details"}
+              : isAdmin
+              ? "Save title details"
+              : "Submit for review"}
           </button>
         </div>
+          </>
+        )}
       </div>
     </div>
   );
