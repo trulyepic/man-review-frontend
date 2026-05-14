@@ -6,6 +6,8 @@ import GoogleOAuthButton from "../components/GoogleOAuthButton";
 import AuthShell from "../components/AuthShell";
 import { scheduleLogoutAtJwtExp } from "../util/authUtils";
 import { useUser } from "../login/useUser";
+import { NoIndexSeo } from "../components/Seo";
+import { SITE_NAME } from "../config/site";
 
 const fieldClass =
   "mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:bg-white focus:ring-4 focus:ring-blue-100 dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(22,18,15,0.98),_rgba(18,15,12,0.98))] dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-[#4a3c33] dark:focus:bg-[#181310] dark:focus:ring-[#2a221c]";
@@ -115,6 +117,7 @@ const LoginPage = () => {
       footerLinkLabel="Create one"
       footerLinkTo="/signup"
     >
+      <NoIndexSeo title={`Login | ${SITE_NAME}`} />
       <div>
         <div className="mb-6">
           <h2 className="text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">

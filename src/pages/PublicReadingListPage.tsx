@@ -215,7 +215,7 @@ export default function PublicReadingListPage() {
   };
 
   const pageTitle = list
-    ? `${list.name} — Shared Reading List`
+    ? `${list.name} - Shared Reading List`
     : "Shared Reading List";
 
   const handleSortChange = (e: ChangeEvent<HTMLSelectElement>) => {
@@ -230,6 +230,7 @@ export default function PublicReadingListPage() {
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <Helmet>
           <title>{pageTitle}</title>
+          <meta name="robots" content="noindex,follow" />
         </Helmet>
         <ItemRowsShimmerBlock count={6} />
       </div>
@@ -241,6 +242,7 @@ export default function PublicReadingListPage() {
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <Helmet>
           <title>{pageTitle}</title>
+          <meta name="robots" content="noindex,follow" />
         </Helmet>
         <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-amber-800 dark:border-amber-700/60 dark:bg-amber-950/30 dark:text-amber-200">
           {error}
@@ -256,6 +258,7 @@ export default function PublicReadingListPage() {
       <Helmet>
         <title>{pageTitle}</title>
         <meta name="description" content={`Shared list: ${list.name}`} />
+        <meta name="robots" content="noindex,follow" />
       </Helmet>
 
       <header className="mb-8 flex flex-wrap items-start justify-between gap-5 overflow-hidden rounded-[28px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(16,185,129,0.14),_transparent_30%),linear-gradient(135deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.95))] px-6 py-7 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.45)] dark-theme-shell sm:px-8">

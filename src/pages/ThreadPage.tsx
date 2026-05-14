@@ -33,6 +33,11 @@ import { ConfirmModal } from "../components/ConfirmModal";
 import { useNotice } from "../hooks/useNotice";
 import { NoticeModal } from "../components/NoticeModal";
 import { HeartButton } from "../components/HeartButton";
+import {
+  DEFAULT_SOCIAL_IMAGE,
+  SITE_NAME,
+  SITE_ORIGIN,
+} from "../config/site";
 
 // ⬇️ NEW: extend sanitize schema to allow <img> safely
 const sanitizeSchema = {
@@ -507,7 +512,7 @@ export default function ThreadPage() {
   const notice = useNotice();
 
   const loc = useLocation();
-  const siteUrl = "https://toonranks.com";
+  const siteUrl = SITE_ORIGIN;
 
   // Read page from URL
   useEffect(() => {
@@ -516,8 +521,8 @@ export default function ThreadPage() {
   }, [searchParams]);
 
   const threadTitle = thread?.title
-    ? `${thread.title} - Forum - Toon Ranks`
-    : "Forum thread - Toon Ranks";
+    ? `${thread.title} - Forum - ${SITE_NAME}`
+    : `Forum thread - ${SITE_NAME}`;
 
   const canonical = `${siteUrl}${loc.pathname.replace(/\/+$/, "")}`;
 
@@ -550,7 +555,7 @@ export default function ThreadPage() {
   const ogImage =
     opImgFromMd ||
     thread?.series_refs?.[0]?.cover_url ||
-    "https://toonranks.com/android-chrome-512x512.png";
+    DEFAULT_SOCIAL_IMAGE;
 
   // Dates for structured data
   const publishedTime = op ? new Date(op.created_at).toISOString() : undefined;
@@ -695,7 +700,7 @@ export default function ThreadPage() {
         />
 
         {/* Open Graph */}
-        <meta property="og:site_name" content="Toon Ranks" />
+        <meta property="og:site_name" content={SITE_NAME} />
         <meta property="og:type" content="article" />
         <meta property="og:url" content={canonical} />
         <meta property="og:title" content={thread?.title || "Forum thread"} />

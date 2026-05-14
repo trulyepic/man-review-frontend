@@ -1,5 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Helmet } from "react-helmet";
 import {
   deleteSeries,
   fetchRankedSeriesPaginated,
@@ -20,6 +21,11 @@ import ShimmerLoader from "../components/ShimmerLoader";
 import { useSearch } from "../components/SearchContext";
 import { useUser } from "../login/useUser";
 import { isAdminUser } from "../util/roleUtils";
+import {
+  absoluteUrl,
+  DEFAULT_SOCIAL_IMAGE,
+  SITE_NAME,
+} from "../config/site";
 
 const PAGE_SIZE = 25;
 
@@ -36,6 +42,9 @@ const FilteredSeriesPage = () => {
 
   const { user } = useUser();
   const isAdmin = isAdminUser(user);
+  const typeLabel = (seriesType || "").toUpperCase();
+  const pageTitle = `Top ${typeLabel} Rankings | ${SITE_NAME}`;
+  const pageDescription = `Browse top-ranked ${typeLabel.toLowerCase()} series on ${SITE_NAME}. Discover popular titles, compare scores, and save your favorites.`;
 
   const [showListModal, setShowListModal] = useState(false);
   const [modalSeriesId, setModalSeriesId] = useState<number | undefined>();
@@ -260,6 +269,20 @@ const FilteredSeriesPage = () => {
 
   return (
     <div className="mx-auto w-full max-w-7xl px-3 pb-8 pt-4 sm:px-6 sm:pb-10 sm:pt-6 lg:px-8">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <link rel="canonical" href={absoluteUrl(`/type/${typeLabel}`)} />
+        <meta name="description" content={pageDescription} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={absoluteUrl(`/type/${typeLabel}`)} />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content={DEFAULT_SOCIAL_IMAGE} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+        <meta name="twitter:image" content={DEFAULT_SOCIAL_IMAGE} />
+      </Helmet>
       <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white/90 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.45)] dark-theme-shell">
         <div className="flex flex-col gap-4 border-b border-slate-200/80 px-3.5 py-4 dark:border-[#342a23] sm:gap-5 sm:px-6 sm:py-6">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">

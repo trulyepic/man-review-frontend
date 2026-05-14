@@ -20,6 +20,13 @@ import { useUser } from "../login/useUser";
 import ReadingListModal from "../components/ReadingListModal";
 import GenreStrip from "../components/GenreStrip";
 import { canSubmitSeriesUser, isAdminUser } from "../util/roleUtils";
+import {
+  absoluteUrl,
+  DEFAULT_SOCIAL_IMAGE,
+  OPERATOR_NAME,
+  SITE_NAME,
+  SITE_ORIGIN,
+} from "../config/site";
 // import { Link } from "react-router-dom";
 
 const PAGE_SIZE = 25;
@@ -227,14 +234,14 @@ const Home = () => {
   return (
     <>
       <Helmet>
-        <title>Toon Ranks | Top Manga, Manhwa, and Manhua</title>
+        <title>{SITE_NAME} | Top Manga, Manhwa, and Manhua</title>
         <meta
           name="description"
           content="Browse the top-ranked Manga, Manhwa, and Manhua. Vote, review, and explore amazing series on Toon Ranks!"
         />
         <meta
           property="og:title"
-          content="Toon Ranks | Top Manga, Manhwa, and Manhua"
+          content={`${SITE_NAME} | Top Manga, Manhwa, and Manhua`}
         />
         <meta
           property="og:description"
@@ -242,33 +249,37 @@ const Home = () => {
         />
         <meta
           property="og:image"
-          content="https://toonranks.com/android-chrome-512x512.png"
+          content={DEFAULT_SOCIAL_IMAGE}
         />
-        <meta property="og:url" content="https://toonranks.com/" />
+        <meta property="og:url" content={absoluteUrl("/")} />
         <meta property="og:type" content="website" />
 
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Toon Ranks" />
+        <meta name="twitter:title" content={SITE_NAME} />
         <meta
           name="twitter:description"
           content="Discover and rate the best manga, manhwa, and manhua."
         />
         <meta
           name="twitter:image"
-          content="https://toonranks.com/android-chrome-512x512.png"
+          content={DEFAULT_SOCIAL_IMAGE}
         />
 
-        <link rel="canonical" href="https://toonranks.com/" />
+        <link rel="canonical" href={absoluteUrl("/")} />
 
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "WebSite",
-            name: "Toon Ranks",
-            url: "https://toonranks.com",
+            name: SITE_NAME,
+            url: SITE_ORIGIN,
+            publisher: {
+              "@type": "Organization",
+              name: OPERATOR_NAME,
+            },
             potentialAction: {
               "@type": "SearchAction",
-              target: "https://toonranks.com/?search={search_term_string}",
+              target: `${SITE_ORIGIN}/?search={search_term_string}`,
               "query-input": "required name=search_term_string",
             },
           })}

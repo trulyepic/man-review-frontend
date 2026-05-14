@@ -1,18 +1,36 @@
 // src/pages/AboutPage.tsx
 
+import { Helmet } from "react-helmet";
 import SocialLinks from "../components/SocialLinks";
+import { absoluteUrl, SITE_NAME } from "../config/site";
 
 const AboutPage = () => {
   return (
     <div className="max-w-4xl mx-auto py-16 px-4">
-      <h1 className="text-3xl font-bold mb-4">About Toon Ranks</h1>
+      <Helmet>
+        <title>About | {SITE_NAME}</title>
+        <link rel="canonical" href={absoluteUrl("/about")} />
+        <meta
+          name="description"
+          content="Learn about Toon Ranks, a community-powered platform for discovering, ranking, and discussing manga, manhwa, and manhua."
+        />
+        <meta property="og:title" content={`About | ${SITE_NAME}`} />
+        <meta
+          property="og:description"
+          content="Learn about Toon Ranks and how readers use it to discover, rank, and discuss series."
+        />
+        <meta property="og:url" content={absoluteUrl("/about")} />
+        <meta property="og:type" content="website" />
+      </Helmet>
+
+      <h1 className="text-3xl font-bold mb-4">About {SITE_NAME}</h1>
       <p className="text-gray-700 mb-4 leading-relaxed">
-        <strong>Toon Ranks</strong> is a fan-driven platform built for readers
+        <strong>{SITE_NAME}</strong> is a fan-driven platform built for readers
         who love discovering and ranking the best
         <span className="font-medium text-blue-600"> Manhwa</span>,
         <span className="font-medium text-red-500"> Manga</span>, and
         <span className="font-medium text-green-600"> Manhua</span>. Whether
-        you’re into epic fantasy, slice-of-life, drama, or action-packed
+        you're into epic fantasy, slice-of-life, drama, or action-packed
         adventures, this platform helps you find top-rated series and share your
         opinions.
       </p>
@@ -22,20 +40,11 @@ const AboutPage = () => {
         series detail.
       </p>
       <p className="text-gray-700 mb-4 leading-relaxed">
-        Want to contribute or suggest improvements? Reach out via our Follow us
-        on <SocialLinks /> for daily top rankings, teasers, and community
-        highlights!
+        Want to contribute or suggest improvements? Follow us on{" "}
+        <SocialLinks /> for rankings, teasers, and community highlights, or use
+        the{" "}
         <a href="/contact" className="text-blue-500 hover:underline">
-          Contact page
-        </a>{" "}
-        or check out the project on{" "}
-        <a
-          href="https://github.com/yourgithub"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-500 hover:underline"
-        >
-          GitHub
+          contact page
         </a>
         .
       </p>

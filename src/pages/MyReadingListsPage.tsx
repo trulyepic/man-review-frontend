@@ -21,6 +21,8 @@ import {
 } from "../components/ReadingListShimmers";
 import ShimmerBox from "../components/ShimmerBox";
 import { getDisplayVoteCount } from "../util/displayVoteCounts";
+import { NoIndexSeo } from "../components/Seo";
+import { SITE_NAME } from "../config/site";
 
 const PAGE_SIZE_LISTS = 10;
 const PAGE_SIZE_ITEMS = 25;
@@ -881,6 +883,7 @@ export default function MyReadingListsPage() {
   if (error) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <NoIndexSeo title={`My Reading Lists | ${SITE_NAME}`} />
         <div className="text-red-600 dark:text-red-300 mb-3">{error}</div>
         <button
           className="px-3 py-1 rounded-md border border-slate-200 hover:bg-gray-50 dark:border-[#3a3028] dark:text-slate-200 dark:hover:bg-[#241d19]"
@@ -894,6 +897,7 @@ export default function MyReadingListsPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-3 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <NoIndexSeo title={`My Reading Lists | ${SITE_NAME}`} />
       <section className="mb-6 overflow-hidden rounded-[28px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.14),_transparent_34%),linear-gradient(135deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.95))] px-4 py-5 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.45)] dark:border-[#322922] dark:bg-[radial-gradient(circle_at_top_left,_rgba(45,212,191,0.14),_transparent_26%),linear-gradient(135deg,_rgba(29,22,18,0.98),_rgba(24,19,16,0.96))] dark:shadow-[0_24px_60px_-42px_rgba(0,0,0,0.85)] sm:mb-8 sm:px-8 sm:py-7">
         <div className="max-w-3xl">
           <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500 dark:text-slate-400">

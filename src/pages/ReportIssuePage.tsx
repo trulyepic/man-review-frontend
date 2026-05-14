@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { reportIssue, type IssueType } from "../api/manApi";
+import { NoIndexSeo } from "../components/Seo";
+import { SITE_NAME } from "../config/site";
 
 const types: { label: string; value: IssueType }[] = [
   { label: "Bug", value: "BUG" },
@@ -71,6 +73,7 @@ const ReportIssuePage = () => {
 
   return (
     <div className="dark-theme-shell mx-auto max-w-3xl px-4 py-10">
+      <NoIndexSeo title={`Report an Issue | ${SITE_NAME}`} />
       <h1 className="mb-2 text-2xl font-bold text-slate-900 dark:text-stone-50 md:text-3xl">
         Report an Issue
       </h1>
