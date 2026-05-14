@@ -1,4 +1,5 @@
 import SocialLinks from "./SocialLinks";
+import { OPERATOR_NAME, SITE_NAME } from "../config/site";
 
 const footerLinkClass =
   "rounded-full px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-[#241d19] dark:hover:text-white";
@@ -11,7 +12,7 @@ const Footer = () => {
           <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
             <div className="max-w-md">
               <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500 dark:text-slate-400">
-                Toon Ranks
+                {SITE_NAME}
               </p>
               <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">
                 Rank, compare, and keep up with the series worth your time.
@@ -30,7 +31,8 @@ const Footer = () => {
                 <SocialLinks variant="footer" />
               </div>
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                &copy; {new Date().getFullYear()} ToonRank. All rights reserved.
+                &copy; {new Date().getFullYear()} {SITE_NAME}. Operated by{" "}
+                {OPERATOR_NAME}.
               </p>
             </div>
           </div>
@@ -63,9 +65,14 @@ const Footer = () => {
                 </a>
               </li>
               <li>
-                <span className="inline-flex rounded-full px-3 py-1.5 text-sm font-medium text-slate-400 dark:text-slate-500">
+                <a href="/terms" className={footerLinkClass}>
                   Terms
-                </span>
+                </a>
+              </li>
+              <li>
+                <a href="/privacy" className={footerLinkClass}>
+                  Privacy
+                </a>
               </li>
             </ul>
           </nav>

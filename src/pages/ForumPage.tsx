@@ -12,6 +12,11 @@ import {
 import { Link, useSearchParams } from "react-router-dom";
 import { useUser } from "../login/useUser";
 import { Helmet } from "react-helmet";
+import {
+  DEFAULT_SOCIAL_IMAGE,
+  SITE_NAME,
+  SITE_ORIGIN,
+} from "../config/site";
 import { stripMdHeading } from "../util/strings";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { useNotice } from "../hooks/useNotice";
@@ -152,13 +157,13 @@ export default function ForumPage() {
   const myName = user?.username || "";
   const isAdmin = (user?.role || "").toUpperCase() === "ADMIN";
 
-  const siteUrl = "https://toonranks.com";
+  const siteUrl = SITE_ORIGIN;
   const isSearching = !!q.trim();
   const canonical = `${siteUrl}/forum`;
   const queryLabel = q.trim();
   const pageTitleSafe = isSearching
-    ? `Forum search "${queryLabel}" - Toon Ranks`
-    : "Forum - Toon Ranks";
+    ? `Forum search "${queryLabel}" - ${SITE_NAME}`
+    : `Forum - ${SITE_NAME}`;
   const pageDescription = isSearching
     ? `Search results for "${queryLabel}" in the Toon Ranks forum.`
     : "Community forum on Toon Ranks.";
@@ -266,7 +271,7 @@ export default function ForumPage() {
         <meta property="og:url" content={canonical} />
         <meta
           property="og:image"
-          content="https://toonranks.com/android-chrome-512x512.png"
+          content={DEFAULT_SOCIAL_IMAGE}
         />
         <meta name="twitter:card" content="summary_large_image" />
       </Helmet>

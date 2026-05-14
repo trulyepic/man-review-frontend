@@ -22,6 +22,8 @@ import ThreadPage from "./pages/ThreadPage";
 import PublicReadingListPage from "./pages/PublicReadingListPage";
 import PendingTitlesPage from "./pages/PendingTitlesPage";
 import MySubmissionsPage from "./pages/MySubmissionsPage";
+import TermsPage from "./pages/TermsPage";
+import PrivacyPage from "./pages/PrivacyPage";
 import { useEffect, useState } from "react";
 import { SessionExpiredModal } from "./components/SessionExpiredModal";
 
@@ -58,6 +60,8 @@ function App() {
                   element={<FilteredSeriesPage />}
                 />
                 <Route path="/about" element={<AboutPage />} />
+                <Route path="/terms" element={<TermsPage />} />
+                <Route path="/privacy" element={<PrivacyPage />} />
                 <Route
                   path="/how-rankings-work"
                   element={<RankingsInfoPage />}

@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { resendVerificationEmail, verifyEmail } from "../api/manApi";
 import ReCAPTCHA from "react-google-recaptcha";
+import { NoIndexSeo } from "../components/Seo";
+import { SITE_NAME } from "../config/site";
 
 const VerifyEmailPage = () => {
   const [searchParams] = useSearchParams();
@@ -62,6 +64,7 @@ const VerifyEmailPage = () => {
 
   return (
     <div className="dark-theme-shell flex min-h-screen items-center justify-center px-4 py-10">
+      <NoIndexSeo title={`Verify Email | ${SITE_NAME}`} />
       <div className="w-full max-w-md rounded-[1.75rem] border border-slate-200 bg-white/92 p-6 shadow-[0_24px_70px_rgba(15,23,42,0.14)] dark:border-[#3a3028] dark:bg-[linear-gradient(145deg,_rgba(30,24,20,0.98),_rgba(21,17,14,0.98))]">
         <div className="text-center">
           {status === "verifying" && (

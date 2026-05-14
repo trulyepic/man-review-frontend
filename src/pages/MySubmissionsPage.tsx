@@ -4,6 +4,8 @@ import { getMySubmittedSeries, type PendingSeries } from "../api/manApi";
 import { useUser } from "../login/useUser";
 import { canSubmitSeriesUser } from "../util/roleUtils";
 import EditSeriesModal from "../components/EditSeriesModal";
+import { NoIndexSeo } from "../components/Seo";
+import { SITE_NAME } from "../config/site";
 
 function statusLabel(status?: string | null) {
   if (!status) return "Pending review";
@@ -48,6 +50,7 @@ export default function MySubmissionsPage() {
   if (!canSubmit) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-10">
+        <NoIndexSeo title={`My Submissions | ${SITE_NAME}`} />
         <div className="dark-theme-shell rounded-[28px] border border-slate-200 p-8 text-center shadow-[0_24px_60px_-42px_rgba(15,23,42,0.45)]">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
             Submission access
@@ -65,6 +68,7 @@ export default function MySubmissionsPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 md:px-8 lg:px-10">
+      <NoIndexSeo title={`My Submissions | ${SITE_NAME}`} />
       <section className="dark-theme-shell overflow-hidden rounded-[30px] border border-slate-200 shadow-[0_28px_70px_-46px_rgba(15,23,42,0.55)]">
         <div className="border-b border-slate-200/80 px-5 py-5 dark:border-[#342a23] sm:px-6">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
@@ -98,7 +102,7 @@ export default function MySubmissionsPage() {
             </div>
           ) : items.length === 0 ? (
             <div className="dark-theme-card rounded-[24px] border border-slate-200 px-5 py-6 text-sm text-slate-600 dark:text-slate-300">
-              You haven’t submitted any titles yet.
+              You haven't submitted any titles yet.
             </div>
           ) : (
             <div className="grid gap-4 lg:grid-cols-2">

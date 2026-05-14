@@ -15,6 +15,11 @@ import RatingInfoTooltip from "../components/RatingInfoTooltip";
 import { getDisplayVoteCounts } from "../util/displayVoteCounts";
 import { isAdminRole } from "../util/roleUtils";
 import { useUser } from "../login/useUser";
+import {
+  absoluteUrl,
+  DEFAULT_SOCIAL_IMAGE,
+  SITE_NAME,
+} from "../config/site";
 
 const dummyData = {
   id: 1,
@@ -201,7 +206,7 @@ const SeriesDetailPage = () => {
   return (
     <>
       <Helmet>
-        <title>{displayTitle} | Toon Ranks</title>
+        <title>{displayTitle} | {SITE_NAME}</title>
         <meta
           name="description"
           content={
@@ -209,9 +214,9 @@ const SeriesDetailPage = () => {
             "Explore detailed information and ratings for this manga/manhwa/manhua series."
           }
         />
-        <link rel="canonical" href={`https://toonranks.com/series/${id}`} />
+        <link rel="canonical" href={absoluteUrl(`/series/${id}`)} />
         <meta property="og:type" content="article" />
-        <meta property="og:title" content={`${displayTitle} | Toon Ranks`} />
+        <meta property="og:title" content={`${displayTitle} | ${SITE_NAME}`} />
         <meta
           property="og:description"
           content={
@@ -223,15 +228,12 @@ const SeriesDetailPage = () => {
           property="og:image"
           content={
             seriesDetail?.series_cover_url ||
-            "https://toonranks.com/android-chrome-512x512.png"
+            DEFAULT_SOCIAL_IMAGE
           }
         />
-        <meta
-          property="og:url"
-          content={`https://toonranks.com/series/${id}`}
-        />
+        <meta property="og:url" content={absoluteUrl(`/series/${id}`)} />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={`${displayTitle} | Toon Ranks`} />
+        <meta name="twitter:title" content={`${displayTitle} | ${SITE_NAME}`} />
         <meta
           name="twitter:description"
           content={
@@ -243,7 +245,7 @@ const SeriesDetailPage = () => {
           name="twitter:image"
           content={
             seriesDetail?.series_cover_url ||
-            "https://toonranks.com/android-chrome-512x512.png"
+            DEFAULT_SOCIAL_IMAGE
           }
         />
 
@@ -260,7 +262,7 @@ const SeriesDetailPage = () => {
               ? { "@type": "Person", name: seriesDetail.artist }
               : undefined,
             image: seriesDetail?.series_cover_url,
-            url: `https://toonranks.com/series/${id}`,
+            url: absoluteUrl(`/series/${id}`),
             description: seriesDetail?.synopsis?.slice(0, 300),
             aggregateRating:
               avgScore !== "-"

@@ -10,6 +10,8 @@ import {
 import { useUser } from "../login/useUser";
 import { Link } from "react-router-dom";
 import { ConfirmModal } from "../components/ConfirmModal";
+import { NoIndexSeo } from "../components/Seo";
+import { SITE_NAME } from "../config/site";
 
 const typeOptions: IssueType[] = ["BUG", "FEATURE", "CONTENT", "OTHER"];
 const statusOptions: IssueStatus[] = [
@@ -143,6 +145,7 @@ export default function IssuesPage() {
 
   return (
     <div className="dark-theme-shell mx-auto max-w-6xl px-4 py-8">
+      <NoIndexSeo title={`Site Updates & Known Issues | ${SITE_NAME}`} />
       <div className="mb-1 flex items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-slate-900 dark:text-stone-50 md:text-3xl">
           Site Updates & Known Issues

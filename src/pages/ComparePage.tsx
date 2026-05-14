@@ -9,6 +9,8 @@ import {
   getDisplayVoteCount,
   getDisplayVoteCounts,
 } from "../util/displayVoteCounts";
+import { NoIndexSeo } from "../components/Seo";
+import { SITE_NAME } from "../config/site";
 
 type CompareItem = {
   id: number;
@@ -250,6 +252,7 @@ function ComparePage() {
 
   return (
     <div className="mx-auto w-full max-w-7xl px-3 pb-10 pt-5 sm:px-6 sm:pb-12 sm:pt-6 lg:px-8">
+      <NoIndexSeo title={`Compare | ${SITE_NAME}`} />
       <section className={`${shellCardClass} px-4 py-5 sm:px-7 sm:py-7`}>
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
