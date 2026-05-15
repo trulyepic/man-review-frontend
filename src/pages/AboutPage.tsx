@@ -3,6 +3,7 @@
 import { Helmet } from "react-helmet";
 import SocialLinks from "../components/SocialLinks";
 import { absoluteUrl, SITE_NAME } from "../config/site";
+import { infoPageBodyText, infoPageHeadingText } from "../util/infoPageStyles";
 
 const AboutPage = () => {
   return (
@@ -23,8 +24,10 @@ const AboutPage = () => {
         <meta property="og:type" content="website" />
       </Helmet>
 
-      <h1 className="text-3xl font-bold mb-4">About {SITE_NAME}</h1>
-      <p className="text-gray-700 mb-4 leading-relaxed">
+      <h1 className={`mb-4 text-3xl font-bold ${infoPageHeadingText}`}>
+        About {SITE_NAME}
+      </h1>
+      <p className={`mb-4 leading-relaxed ${infoPageBodyText}`}>
         <strong>{SITE_NAME}</strong> is a fan-driven platform built for readers
         who love discovering and ranking the best
         <span className="font-medium text-blue-600"> Manhwa</span>,
@@ -34,12 +37,12 @@ const AboutPage = () => {
         adventures, this platform helps you find top-rated series and share your
         opinions.
       </p>
-      <p className="text-gray-700 mb-4 leading-relaxed">
+      <p className={`mb-4 leading-relaxed ${infoPageBodyText}`}>
         Created by enthusiasts for enthusiasts, our goal is to provide a modern,
         community-powered experience that blends great UI, fair voting, and rich
         series detail.
       </p>
-      <p className="text-gray-700 mb-4 leading-relaxed">
+      <p className={`mb-4 leading-relaxed ${infoPageBodyText}`}>
         Want to contribute or suggest improvements? Follow us on{" "}
         <SocialLinks /> for rankings, teasers, and community highlights, or use
         the{" "}
