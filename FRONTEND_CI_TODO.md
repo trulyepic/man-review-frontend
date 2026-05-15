@@ -25,11 +25,11 @@ Suggested branch: `frontend-ci-phase-2-test-foundation`
 
 Suggested branch: `frontend-ci-phase-3-github-actions`
 
-- [ ] Add `.github/workflows/frontend-ci.yml`.
-- [ ] Run on pull requests to `main`.
-- [ ] Run on pushes to `main`.
-- [ ] Use Node 20 and `npm ci`.
-- [ ] Gate on lint, tests, and build.
+- [x] Add `.github/workflows/frontend-ci.yml`.
+- [x] Run on pull requests to `main`.
+- [x] Run on pushes to `main`.
+- [x] Use Node 20 and `npm ci`.
+- [x] Gate on lint, tests, and build.
 
 ## Phase 4: Browser Smoke Tests
 
