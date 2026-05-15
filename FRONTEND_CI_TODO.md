@@ -15,11 +15,11 @@ Branch: `frontend-ci-phase-1-lint-baseline`
 
 Suggested branch: `frontend-ci-phase-2-test-foundation`
 
-- [ ] Add Vitest, React Testing Library, jsdom, and jest-dom.
-- [ ] Add `test` and `test:run` npm scripts.
-- [ ] Add test setup config.
-- [ ] Add first smoke/component tests for stable public surfaces.
-- [ ] Confirm tests, lint, and build pass locally.
+- [x] Add Vitest, React Testing Library, jsdom, and jest-dom.
+- [x] Add `test` and `test:run` npm scripts.
+- [x] Add test setup config.
+- [x] Add first smoke/component tests for stable public surfaces.
+- [x] Confirm tests, lint, and build pass locally.
 
 ## Phase 3: GitHub Actions CI
 
