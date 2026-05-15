@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { UsersIcon } from "@heroicons/react/24/outline";
 import { UserIcon } from "lucide-react";
 import { getSeriesDetailById } from "../api/manApi";
-import { useTheme } from "../components/ThemeContext";
+import { useTheme } from "../components/useTheme";
 import type { SeriesDetailData } from "../types/types";
 import {
   getDisplayVoteCount,

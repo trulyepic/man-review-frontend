@@ -118,7 +118,7 @@ export default function SeriesDetail({
         updateRating(cat, totalSet.total / totalSet.count);
       }
     });
-  }, [seriesDetail]);
+  }, [seriesDetail, updateRating]);
 
   const handleVote = async (category: Category, value: number) => {
     if (votes[category] !== null) return;

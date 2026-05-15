@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet";
 import {
   deleteSeries,
@@ -18,7 +18,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import ManCard from "../components/ManCard";
 import ReadingListModal from "../components/ReadingListModal";
 import ShimmerLoader from "../components/ShimmerLoader";
-import { useSearch } from "../components/SearchContext";
+import { useSearch } from "../components/useSearch";
 import { useUser } from "../login/useUser";
 import { isAdminUser } from "../util/roleUtils";
 import {
@@ -50,19 +50,22 @@ const FilteredSeriesPage = () => {
   const [modalSeriesId, setModalSeriesId] = useState<number | undefined>();
   const [myLists, setMyLists] = useState<ReadingList[] | null>(null);
 
-  const normalizeGenre = (genre: string) =>
-    genre
-      .split(" ")
-      .map((word) =>
-        word ? word[0].toUpperCase() + word.slice(1).toLowerCase() : word
-      )
-      .join(" ")
-      .replace(/\bSci-fi\b/gi, "Sci-Fi");
+  const normalizeGenre = useCallback(
+    (genre: string) =>
+      genre
+        .split(" ")
+        .map((word) =>
+          word ? word[0].toUpperCase() + word.slice(1).toLowerCase() : word
+        )
+        .join(" ")
+        .replace(/\bSci-fi\b/gi, "Sci-Fi"),
+    []
+  );
 
   const activeGenre = useMemo(() => {
     const value = searchTerm.trim();
     return value ? normalizeGenre(value) : null;
-  }, [searchTerm]);
+  }, [searchTerm, normalizeGenre]);
 
   const derivedGenres = useMemo(() => {
     const set = new Set<string>();
@@ -79,7 +82,7 @@ const FilteredSeriesPage = () => {
     if (activeGenre) set.add(activeGenre);
 
     return Array.from(set).sort((a, b) => a.localeCompare(b));
-  }, [items, activeGenre]);
+  }, [items, activeGenre, normalizeGenre]);
 
   useEffect(() => {
     let ignore = false;
@@ -130,8 +133,8 @@ const FilteredSeriesPage = () => {
     }
   };
 
-  const loadSeries = async (pageToLoad: number) => {
-    if (!seriesType || loading || !hasMore) return;
+  const loadSeries = useCallback(async (pageToLoad: number) => {
+    if (!seriesType || !hasMore) return;
     setLoading(true);
 
     controllerRef.current?.abort();
@@ -145,9 +148,11 @@ const FilteredSeriesPage = () => {
         controllerRef.current.signal
       );
 
-      const existingIds = new Set(items.map((item) => item.id));
-      const unique = all.filter((item) => !existingIds.has(item.id));
-      setItems((prev) => [...prev, ...unique]);
+      setItems((prev) => {
+        const existingIds = new Set(prev.map((item) => item.id));
+        const unique = all.filter((item) => !existingIds.has(item.id));
+        return [...prev, ...unique];
+      });
 
       if (all.length < PAGE_SIZE) setHasMore(false);
     } catch (err: unknown) {
@@ -158,7 +163,7 @@ const FilteredSeriesPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [hasMore, seriesType]);
 
   useEffect(() => {
     if (!seriesType) return;
@@ -254,7 +259,7 @@ const FilteredSeriesPage = () => {
 
   useEffect(() => {
     if (!searchTerm.trim() && page > 1) loadSeries(page);
-  }, [page]);
+  }, [loadSeries, page, searchTerm]);
 
   const handleDelete = async (id: number) => {
     if (!confirm("Are you sure you want to delete this series?")) return;
