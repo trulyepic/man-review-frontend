@@ -1,22 +1,15 @@
 import {
-  createContext,
-  useContext,
   useEffect,
   useMemo,
   useState,
 } from "react";
-
-type Theme = "light" | "dark";
-
-type ThemeContextValue = {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
-  toggleTheme: () => void;
-};
+import {
+  ThemeContext,
+  type Theme,
+  type ThemeContextValue,
+} from "./themeContextValue";
 
 const STORAGE_KEY = "toonranks-theme";
-
-const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 function getInitialTheme(): Theme {
   if (typeof window === "undefined") return "light";
@@ -50,12 +43,4 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   return (
     <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
   );
-}
-
-export function useTheme() {
-  const ctx = useContext(ThemeContext);
-  if (!ctx) {
-    throw new Error("useTheme must be used within ThemeProvider");
-  }
-  return ctx;
 }

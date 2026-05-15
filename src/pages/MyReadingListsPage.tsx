@@ -131,9 +131,10 @@ function ListItems({
 
   // load first page on mount
   useEffect(() => {
+    if (initialCount <= 0) return;
+
     let ignore = false;
     const run = async () => {
-      if (!hasMore || loading) return;
       setLoading(true);
       try {
         const res = await getReadingListItemsPaged(listId, 1, PAGE_SIZE_ITEMS);
@@ -149,7 +150,7 @@ function ListItems({
     return () => {
       ignore = true;
     };
-  }, [listId]);
+  }, [initialCount, listId]);
 
   // summaries for the currently fetched items
   useEffect(() => {

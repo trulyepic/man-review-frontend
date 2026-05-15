@@ -1,7 +1,7 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { UserContext } from "./UserContext";
-import type { User, UserContextType } from "../types/types";
+import type { User } from "../types/types";
 import { forceLogout, scheduleLogoutAtJwtExp } from "../util/authUtils";
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
@@ -44,8 +44,3 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export function useUser(): UserContextType {
-  const ctx = useContext(UserContext);
-  if (!ctx) throw new Error("useUser must be used within a UserProvider");
-  return ctx;
-}

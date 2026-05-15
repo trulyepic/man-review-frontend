@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import SeriesDetail from "../components/SeriesDetail";
 import AddSeriesDetailModal from "../components/AddSeriesDetailModal";
@@ -148,18 +148,21 @@ const SeriesDetailPage = () => {
 
         const num = (k: string) =>
           (detail as unknown as Record<string, number | undefined>)[k];
-        const newRatings = { ...ratings };
-        for (const cat in newRatings) {
-          const base = cat.toLowerCase().replace(" / ", "_");
-          const count = num(`${base}_count`);
-          const total = num(`${base}_total`);
-          newRatings[cat] =
-            typeof count === "number" && count > 0 && typeof total === "number"
-              ? total / count
-              : -1;
-        }
-
-        setRatings(newRatings);
+        setRatings((prev) => {
+          const nextRatings = { ...prev };
+          for (const cat in nextRatings) {
+            const base = cat.toLowerCase().replace(" / ", "_");
+            const count = num(`${base}_count`);
+            const total = num(`${base}_total`);
+            nextRatings[cat] =
+              typeof count === "number" &&
+              count > 0 &&
+              typeof total === "number"
+                ? total / count
+                : -1;
+          }
+          return nextRatings;
+        });
 
         const baseCounts = detail.vote_counts || {};
         setCounts(baseCounts);
@@ -196,12 +199,12 @@ const SeriesDetailPage = () => {
     };
   }, [id]);
 
-  const updateRating = (category: string, avg: number) => {
+  const updateRating = useCallback((category: string, avg: number) => {
     setRatings((prev) => ({
       ...prev,
       [category]: avg,
     }));
-  };
+  }, []);
 
   return (
     <>

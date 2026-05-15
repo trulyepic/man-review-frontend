@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import ManCard from "../components/ManCard";
 import AddSeriesModal from "../components/AddSeriesModal";
 import EditSeriesModal from "../components/EditSeriesModal";
@@ -12,7 +12,7 @@ import {
   type Series,
 } from "../api/manApi";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { useSearch } from "../components/SearchContext";
+import { useSearch } from "../components/useSearch";
 import ShimmerLoader from "../components/ShimmerLoader";
 import { Helmet } from "react-helmet";
 import CompareManager from "../components/CompareManager";
@@ -54,12 +54,15 @@ const Home = () => {
   const canSubmitSeries = canSubmitSeriesUser(user);
 
   // Normalize a single genre label (e.g., "sci-fi" -> "Sci-Fi")
-  const normalizeGenre = (g: string) =>
-    g
-      .split(" ")
-      .map((w) => (w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : w))
-      .join(" ")
-      .replace(/\bSci-fi\b/gi, "Sci-Fi");
+  const normalizeGenre = useCallback(
+    (g: string) =>
+      g
+        .split(" ")
+        .map((w) => (w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : w))
+        .join(" ")
+        .replace(/\bSci-fi\b/gi, "Sci-Fi"),
+    []
+  );
 
   // Build unique, sorted genre list from currently loaded items
   const derivedGenres = useMemo(() => {
@@ -74,7 +77,7 @@ const Home = () => {
       pieces.forEach((p) => set.add(p));
     }
     return Array.from(set).sort((a, b) => a.localeCompare(b));
-  }, [items]);
+  }, [items, normalizeGenre]);
 
   // Determine active genre from searchTerm if it matches one of the derived genres
   const activeGenre =
@@ -132,7 +135,7 @@ const Home = () => {
     }
   };
 
-  const loadSeries = async () => {
+  const loadSeries = useCallback(async () => {
     if (!hasMore) return;
     setLoading(true);
 
@@ -150,7 +153,7 @@ const Home = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [hasMore, page]);
 
   useEffect(() => {
     if (compareError) {
@@ -217,7 +220,7 @@ const Home = () => {
 
   useEffect(() => {
     if (!searchTerm) loadSeries();
-  }, [page, searchTerm]);
+  }, [loadSeries, page, searchTerm]);
 
   const handleDelete = async (id: number) => {
     if (!confirm("Are you sure you want to delete this series?")) return;

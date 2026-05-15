@@ -9,11 +9,11 @@ import {
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { BookmarkIcon } from "lucide-react";
-import { useSearch } from "./SearchContext";
+import { useSearch } from "./useSearch";
 import { useUser } from "../login/useUser";
 import SocialLinks from "./SocialLinks";
 import myHomeLogo from "../images/logo/myHomeLogo.png";
-import { useTheme } from "./ThemeContext";
+import { useTheme } from "./useTheme";
 import { canSubmitSeriesUser, isAdminUser } from "../util/roleUtils";
 import { searchSeries, type RankedSeries } from "../api/manApi";
 
