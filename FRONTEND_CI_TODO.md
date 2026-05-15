@@ -35,10 +35,10 @@ Suggested branch: `frontend-ci-phase-3-github-actions`
 
 Suggested branch: `frontend-ci-phase-4-browser-smoke`
 
-- [ ] Add Playwright after the unit/component test foundation is stable.
-- [ ] Smoke test public routes: `/`, `/about`, `/contact`, `/terms`, `/privacy`, `/how-rankings-work`.
-- [ ] Check that pages render non-empty content and no obvious route fallback failures occur.
-- [ ] Decide whether browser tests should block every PR or run on selected branches.
+- [x] Add Playwright after the unit/component test foundation is stable.
+- [x] Smoke test public routes: `/`, `/about`, `/contact`, `/terms`, `/privacy`, `/how-rankings-work`.
+- [x] Check that pages render non-empty content and no obvious route fallback failures occur.
+- [x] Decide whether browser tests should block every PR or run on selected branches.
 
 ## Later
 
