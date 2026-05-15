@@ -40,8 +40,17 @@ Suggested branch: `frontend-ci-phase-4-browser-smoke`
 - [x] Check that pages render non-empty content and no obvious route fallback failures occur.
 - [x] Decide whether browser tests should block every PR or run on selected branches.
 
+## Phase 5: Amplify CD Visibility
+
+Suggested branch: `frontend-cd-amplify-visibility`
+
+- [x] Add GitHub visibility for Amplify deployment status after pushes to `main`.
+- [x] Wait for Amplify deploy after CI checks pass on `main`.
+- [x] Use GitHub OIDC with an AWS IAM role instead of long-lived AWS access keys.
+- [x] Document required GitHub variables and AWS role permissions.
+
 ## Later
 
 - [ ] Consider coverage thresholds after tests cover meaningful logic.
-- [ ] Consider lint warning cleanup for hook dependency and Fast Refresh warnings.
+- [x] Clean up lint warnings for hook dependency and Fast Refresh warnings.
 - [ ] Consider bundle size monitoring if the Vite chunk warning becomes a release concern.
