@@ -11,7 +11,7 @@ const Footer = () => {
         <div className="rounded-[28px] border border-slate-200 bg-white/90 px-6 py-8 shadow-[0_20px_50px_-40px_rgba(15,23,42,0.45)] backdrop-blur-sm dark-theme-shell sm:px-8">
           <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
             <div className="max-w-md">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500 dark:text-slate-400">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-blue-600 dark:text-blue-300">
                 {SITE_NAME}
               </p>
               <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">

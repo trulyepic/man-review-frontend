@@ -8,6 +8,7 @@ import {
   OPERATOR_NAME,
   SITE_NAME,
 } from "../config/site";
+import { infoPageBodyText, infoPageHeadingText } from "../util/infoPageStyles";
 
 const ContactPage = () => {
   return (
@@ -27,8 +28,10 @@ const ContactPage = () => {
         <meta property="og:url" content={absoluteUrl("/contact")} />
         <meta property="og:type" content="website" />
       </Helmet>
-      <h1 className="text-3xl font-bold mb-4">Contact Us</h1>
-      <p className="text-gray-700 mb-4">
+      <h1 className={`mb-4 text-3xl font-bold ${infoPageHeadingText}`}>
+        Contact Us
+      </h1>
+      <p className={`mb-4 ${infoPageBodyText}`}>
         Toon Ranks is operated by {OPERATOR_NAME}. For questions, suggestions,
         or collaborations, feel free to reach out to us directly:
       </p>
@@ -37,7 +40,7 @@ const ContactPage = () => {
           {CONTACT_EMAIL}
         </a>
       </p>
-      <p className="text-gray-700 mt-6">
+      <p className={`mt-6 ${infoPageBodyText}`}>
         Or follow us on <SocialLinks /> to stay updated!
       </p>
     </div>

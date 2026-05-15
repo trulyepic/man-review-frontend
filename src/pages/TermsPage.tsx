@@ -5,6 +5,11 @@ import {
   OPERATOR_NAME,
   SITE_NAME,
 } from "../config/site";
+import {
+  infoPageBodyText,
+  infoPageHeadingText,
+  infoPageSubtleText,
+} from "../util/infoPageStyles";
 
 const sectionClass = "space-y-3";
 
@@ -27,16 +32,16 @@ export default function TermsPage() {
         <meta property="og:type" content="website" />
       </Helmet>
 
-      <h1 className="text-3xl font-bold text-slate-900 dark:text-stone-50">
+      <h1 className={`text-3xl font-bold ${infoPageHeadingText}`}>
         Terms of Service
       </h1>
-      <p className="mt-3 text-sm text-slate-500 dark:text-stone-400">
+      <p className={`mt-3 text-sm ${infoPageSubtleText}`}>
         Last updated: May 14, 2026
       </p>
 
-      <div className="mt-8 space-y-8 text-slate-700 dark:text-stone-300">
+      <div className={`mt-8 space-y-8 ${infoPageBodyText}`}>
         <section className={sectionClass}>
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+          <h2 className={`text-xl font-semibold ${infoPageHeadingText}`}>
             Operator
           </h2>
           <p>
@@ -47,7 +52,7 @@ export default function TermsPage() {
         </section>
 
         <section className={sectionClass}>
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+          <h2 className={`text-xl font-semibold ${infoPageHeadingText}`}>
             Accounts
           </h2>
           <p>
@@ -58,7 +63,7 @@ export default function TermsPage() {
         </section>
 
         <section className={sectionClass}>
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+          <h2 className={`text-xl font-semibold ${infoPageHeadingText}`}>
             Ratings, Votes, and Rankings
           </h2>
           <p>
@@ -69,7 +74,7 @@ export default function TermsPage() {
         </section>
 
         <section className={sectionClass}>
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+          <h2 className={`text-xl font-semibold ${infoPageHeadingText}`}>
             User Content
           </h2>
           <p>
@@ -82,7 +87,7 @@ export default function TermsPage() {
         </section>
 
         <section className={sectionClass}>
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+          <h2 className={`text-xl font-semibold ${infoPageHeadingText}`}>
             Reading Lists and Public Sharing
           </h2>
           <p>
@@ -93,7 +98,7 @@ export default function TermsPage() {
         </section>
 
         <section className={sectionClass}>
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+          <h2 className={`text-xl font-semibold ${infoPageHeadingText}`}>
             Reports and Feedback
           </h2>
           <p>
@@ -104,7 +109,7 @@ export default function TermsPage() {
         </section>
 
         <section className={sectionClass}>
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+          <h2 className={`text-xl font-semibold ${infoPageHeadingText}`}>
             Disclaimers
           </h2>
           <p>
@@ -116,7 +121,7 @@ export default function TermsPage() {
         </section>
 
         <section className={sectionClass}>
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+          <h2 className={`text-xl font-semibold ${infoPageHeadingText}`}>
             Contact
           </h2>
           <p>

@@ -1,5 +1,10 @@
 import { Helmet } from "react-helmet";
 import { absoluteUrl, SITE_NAME } from "../config/site";
+import {
+  infoPageBodyText,
+  infoPageHeadingText,
+  infoPageMutedText,
+} from "../util/infoPageStyles";
 
 const RankingsInfoPage = () => {
   return (
@@ -24,12 +29,12 @@ const RankingsInfoPage = () => {
         How Rankings Work
       </h1>
 
-      <p className="mb-4 text-gray-700">
+      <p className={`mb-4 ${infoPageBodyText}`}>
         {SITE_NAME} is powered by the votes of our community. Every ranking is
         calculated from user-submitted scores across five core categories:
       </p>
 
-      <ul className="list-disc list-inside space-y-2 mb-6 text-gray-800">
+      <ul className={`mb-6 list-inside list-disc space-y-2 ${infoPageBodyText}`}>
         <li>
           <strong>Story</strong> - How strong, compelling, or original is the
           plot?
@@ -51,17 +56,17 @@ const RankingsInfoPage = () => {
         </li>
       </ul>
 
-      <h2 className="text-2xl font-semibold mt-8 mb-3 text-gray-800">
+      <h2 className={`mb-3 mt-8 text-2xl font-semibold ${infoPageHeadingText}`}>
         How Scores Are Calculated
       </h2>
-      <ol className="list-decimal list-inside space-y-2 text-gray-700">
+      <ol className={`list-inside list-decimal space-y-2 ${infoPageBodyText}`}>
         <li>User votes are collected for each category.</li>
         <li>Each category score is averaged:</li>
-        <li className="pl-4 text-sm italic text-gray-600">
+        <li className={`pl-4 text-sm italic ${infoPageMutedText}`}>
           Average = Total Score / Number of Votes
         </li>
         <li>We compute the final score by averaging the 5 category scores:</li>
-        <li className="pl-4 text-sm italic text-gray-600">
+        <li className={`pl-4 text-sm italic ${infoPageMutedText}`}>
           Final Score = (Story + Characters + World Building + Art + Drama) / 5
         </li>
         <li>
@@ -70,7 +75,7 @@ const RankingsInfoPage = () => {
         </li>
       </ol>
 
-      <p className="mt-6 text-gray-700">
+      <p className={`mt-6 ${infoPageBodyText}`}>
         Each user can only vote once per category per series, helping keep
         rankings fair and balanced.
       </p>
