@@ -166,7 +166,7 @@ function ComparePage() {
           items.map((item) => getSeriesDetailById(item.id))
         );
         if (!ignore) setDetails(results);
-      } catch (err) {
+      } catch {
         if (!ignore) {
           setError("We could not load the comparison details right now.");
         }
