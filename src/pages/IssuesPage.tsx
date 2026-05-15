@@ -38,6 +38,25 @@ const badgeClasses: Record<IssueStatus, string> = {
     "bg-gray-100 text-gray-700 border-gray-300 dark:bg-[#241d19] dark:text-stone-300 dark:border-[#3a3028]",
 };
 
+type ApiErrorLike = {
+  response?: {
+    data?: {
+      detail?: unknown;
+    };
+  };
+  message?: unknown;
+};
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error && typeof error === "object") {
+    const apiError = error as ApiErrorLike;
+    const detail = apiError.response?.data?.detail;
+    if (typeof detail === "string") return detail;
+    if (typeof apiError.message === "string") return apiError.message;
+  }
+  return fallback;
+}
+
 function StatusBadge({ status }: { status: IssueStatus }) {
   return (
     <span
@@ -78,10 +97,8 @@ export default function IssuesPage() {
     try {
       const data = await listIssues(params);
       setItems(data);
-    } catch (e: any) {
-      setErrorMsg(
-        e?.response?.data?.detail || e?.message || "Failed to load reports"
-      );
+    } catch (e: unknown) {
+      setErrorMsg(getErrorMessage(e, "Failed to load reports"));
     } finally {
       setLoading(false);
     }
@@ -115,10 +132,8 @@ export default function IssuesPage() {
     );
     try {
       await adminUpdateIssueStatus(id, next);
-    } catch (e: any) {
-      setErrorMsg(
-        e?.response?.data?.detail || e?.message || "Failed to update status"
-      );
+    } catch (e: unknown) {
+      setErrorMsg(getErrorMessage(e, "Failed to update status"));
       await fetchData();
     }
   };
@@ -135,10 +150,8 @@ export default function IssuesPage() {
     try {
       await adminDeleteIssue(confirmDeleteId);
       setConfirmDeleteId(null);
-    } catch (e: any) {
-      setErrorMsg(
-        e?.response?.data?.detail || e?.message || "Failed to delete report"
-      );
+    } catch (e: unknown) {
+      setErrorMsg(getErrorMessage(e, "Failed to delete report"));
       setItems(snapshot);
     }
   };
