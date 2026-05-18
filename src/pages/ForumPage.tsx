@@ -21,6 +21,7 @@ import { stripMdHeading } from "../util/strings";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { useNotice } from "../hooks/useNotice";
 import { NoticeModal } from "../components/NoticeModal";
+import UserAvatar from "../components/UserAvatar";
 
 const MAX_THREADS_PER_USER = 10;
 const MAX_SERIES_REFS = 10;
@@ -411,10 +412,26 @@ export default function ForumPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  <div className="text-xs text-gray-500 dark:text-stone-400">
-                    {t.post_count} posts - updated{" "}
-                    {new Date(t.updated_at).toLocaleString()}
-                    {t.author_username ? ` - by ${t.author_username}` : null}
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-stone-400">
+                    <span>
+                      {t.post_count} posts - updated{" "}
+                      {new Date(t.updated_at).toLocaleString()}
+                    </span>
+                    {t.author_username ? (
+                      <span className="inline-flex items-center gap-1.5">
+                        <span>- by</span>
+                        <UserAvatar
+                          username={t.author_username}
+                          avatarUrl={t.author_avatar_url}
+                          avatarPreset={t.author_avatar_preset}
+                          size="sm"
+                          className="h-6 w-6 text-[10px]"
+                        />
+                        <span className="font-medium text-slate-700 dark:text-stone-200">
+                          {t.author_username}
+                        </span>
+                      </span>
+                    ) : null}
                   </div>
 
                   {isPatchNotes && (

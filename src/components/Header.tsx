@@ -16,6 +16,7 @@ import myHomeLogo from "../images/logo/myHomeLogo.png";
 import { useTheme } from "./useTheme";
 import { canSubmitSeriesUser, isAdminUser } from "../util/roleUtils";
 import { searchSeries, type RankedSeries } from "../api/manApi";
+import UserAvatar from "./UserAvatar";
 
 const DEFAULT_LABEL = "ALL";
 
@@ -349,6 +350,12 @@ const Header = () => {
                   onClick={() => setAccountMenuOpen((prev) => !prev)}
                   className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-100 px-3.5 py-2 text-sm font-semibold text-slate-700 ring-1 ring-inset ring-slate-200 transition hover:bg-slate-50 dark-theme-chip dark:text-slate-200"
                 >
+                  <UserAvatar
+                    username={user.username}
+                    avatarUrl={user.avatar_url}
+                    avatarPreset={user.avatar_preset}
+                    size="sm"
+                  />
                   {user.username}
                   <ChevronDownIcon className="h-4 w-4" />
                 </button>
@@ -628,8 +635,14 @@ const Header = () => {
                     <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
                       Account
                     </div>
-                    <div className="mt-1 text-sm font-semibold text-slate-800 dark:text-slate-100">
-                      {user.username}
+                    <div className="mt-2 flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
+                      <UserAvatar
+                        username={user.username}
+                        avatarUrl={user.avatar_url}
+                        avatarPreset={user.avatar_preset}
+                        size="sm"
+                      />
+                      <span>{user.username}</span>
                     </div>
                   </div>
                   <ChevronDownIcon
