@@ -1,5 +1,11 @@
 // types.ts
 export type UserRole = "ADMIN" | "GENERAL" | "CONTRIBUTOR" | (string & {});
+export type AvatarPreset = "blue" | "emerald" | "amber";
+
+export interface AvatarFields {
+  avatar_url?: string | null;
+  avatar_preset?: AvatarPreset | null;
+}
 
 export type SeriesDetailData = {
   id?: number;
@@ -34,7 +40,7 @@ export type SeriesDetailData = {
 //   role?: string;
 // }
 
-export interface User {
+export interface User extends AvatarFields {
   id: number;
   username: string;
   email?: string | null;
