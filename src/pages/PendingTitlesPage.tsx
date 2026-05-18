@@ -17,6 +17,7 @@ import { isAdminUser } from "../util/roleUtils";
 import { NoIndexSeo } from "../components/Seo";
 import { SITE_NAME } from "../config/site";
 import UserAvatar from "../components/UserAvatar";
+import { inlineUsernameClassName } from "../util/userDisplay";
 
 const roleOptions: UserRole[] = ["GENERAL", "CONTRIBUTOR", "ADMIN"];
 
@@ -393,7 +394,9 @@ export default function PendingTitlesPage() {
                                     avatarPreset={account.avatar_preset}
                                     size="sm"
                                   />
-                                  {account.username}
+                                  <span className={inlineUsernameClassName(account.role)}>
+                                    {account.username}
+                                  </span>
                                 </span>
                               </td>
                               <td className="px-4 py-3 text-slate-600 dark:text-stone-300">
