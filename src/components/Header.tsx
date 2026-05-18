@@ -207,14 +207,12 @@ const Header = () => {
     };
   }, [mobileSearchOpen, mobileSearchQuery]);
 
-const readingListIdle =
-  "bg-gradient-to-r from-blue-50 to-sky-100 text-blue-700 ring-1 ring-inset ring-blue-200 hover:from-blue-100 hover:to-sky-100 dark:from-[#221c18] dark:to-[#171310] dark:text-blue-300 dark:ring-[#342b24] dark:hover:from-[#2a221d] dark:hover:to-[#1d1713]";
-  const readingListActive =
-    selectedNavClasses;
+  const readingListIdle =
+    "bg-gradient-to-r from-blue-50 to-sky-100 text-blue-700 ring-1 ring-inset ring-blue-200 hover:from-blue-100 hover:to-sky-100 dark:from-[#221c18] dark:to-[#171310] dark:text-blue-300 dark:ring-[#342b24] dark:hover:from-[#2a221d] dark:hover:to-[#1d1713]";
+  const readingListActive = selectedNavClasses;
   const adminLinkIdle =
     "bg-white text-slate-700 ring-1 ring-inset ring-slate-200 hover:bg-slate-50 dark:from-[#221c18] dark:to-[#171310] dark:bg-[linear-gradient(145deg,_rgba(32,26,22,0.95),_rgba(22,18,15,0.95))] dark:text-amber-200 dark:ring-[#342b24] dark:hover:bg-[#2a221d]";
-  const adminLinkActive =
-    selectedNavClasses;
+  const adminLinkActive = selectedNavClasses;
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl dark:border-[#322922]/80 dark:bg-[radial-gradient(circle_at_top_left,_rgba(45,212,191,0.08),_transparent_24%),linear-gradient(180deg,_rgba(24,19,16,0.97),_rgba(18,14,12,0.97))]">
@@ -579,6 +577,34 @@ const readingListIdle =
               </div>
             </div>
 
+            <div className="flex items-center justify-between rounded-[28px] border border-slate-200 bg-white/90 p-4 shadow-sm dark-theme-card">
+              <div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
+                  Display
+                </div>
+                <div className="mt-1 text-sm font-semibold text-slate-800 dark:text-slate-100">
+                  {theme === "dark" ? "Dark mode" : "Light mode"}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100 dark-theme-card dark:text-slate-200 dark:hover:bg-[#241d19]"
+                aria-label={
+                  theme === "dark"
+                    ? "Switch to light mode"
+                    : "Switch to dark mode"
+                }
+              >
+                {theme === "dark" ? (
+                  <SunIcon className="h-4 w-4" />
+                ) : (
+                  <MoonIcon className="h-4 w-4" />
+                )}
+                {theme === "dark" ? "Light" : "Dark"}
+              </button>
+            </div>
+
             {user ? (
               <div className="rounded-[28px] border border-slate-200 bg-white/90 p-4 shadow-sm dark-theme-card">
                 <button
@@ -594,28 +620,11 @@ const readingListIdle =
                       {user.username}
                     </div>
                   </div>
-                  <div className="inline-flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleTheme();
-                      }}
-                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100 dark-theme-card dark:text-slate-200 dark:hover:bg-[#241d19]"
-                    >
-                      {theme === "dark" ? (
-                        <SunIcon className="h-4 w-4" />
-                      ) : (
-                        <MoonIcon className="h-4 w-4" />
-                      )}
-                      {theme === "dark" ? "Light" : "Dark"}
-                    </button>
-                    <ChevronDownIcon
-                      className={`h-5 w-5 text-slate-500 transition-transform dark:text-slate-300 ${
-                        mobileAccountOpen ? "rotate-180" : ""
-                      }`}
-                    />
-                  </div>
+                  <ChevronDownIcon
+                    className={`h-5 w-5 text-slate-500 transition-transform dark:text-slate-300 ${
+                      mobileAccountOpen ? "rotate-180" : ""
+                    }`}
+                  />
                 </button>
 
                 {mobileAccountOpen && (
@@ -676,20 +685,20 @@ const readingListIdle =
                   Account
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                <NavLink
-                  to="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-2xl bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
-                >
-                  Login
-                </NavLink>
-                <NavLink
-                  to="/signup"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:bg-[#181310] dark:text-slate-200 dark:hover:bg-[#241d19]"
-                >
-                  Sign Up
-                </NavLink>
+                  <NavLink
+                    to="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="rounded-2xl bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+                  >
+                    Login
+                  </NavLink>
+                  <NavLink
+                    to="/signup"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:bg-[#181310] dark:text-slate-200 dark:hover:bg-[#241d19]"
+                  >
+                    Sign Up
+                  </NavLink>
                 </div>
               </div>
             )}
