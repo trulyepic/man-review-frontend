@@ -16,6 +16,7 @@ import { useUser } from "../login/useUser";
 import { isAdminUser } from "../util/roleUtils";
 import { NoIndexSeo } from "../components/Seo";
 import { SITE_NAME } from "../config/site";
+import UserAvatar from "../components/UserAvatar";
 
 const roleOptions: UserRole[] = ["GENERAL", "CONTRIBUTOR", "ADMIN"];
 
@@ -385,7 +386,15 @@ export default function PendingTitlesPage() {
                           {users.map((account) => (
                             <tr key={account.id} className="dark-theme-card-soft">
                               <td className="px-4 py-3 font-medium text-slate-900 dark:text-stone-100">
-                                {account.username}
+                                <span className="inline-flex items-center gap-2">
+                                  <UserAvatar
+                                    username={account.username}
+                                    avatarUrl={account.avatar_url}
+                                    avatarPreset={account.avatar_preset}
+                                    size="sm"
+                                  />
+                                  {account.username}
+                                </span>
                               </td>
                               <td className="px-4 py-3 text-slate-600 dark:text-stone-300">
                                 {account.email || "—"}
