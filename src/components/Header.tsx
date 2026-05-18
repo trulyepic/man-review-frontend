@@ -388,6 +388,18 @@ const Header = () => {
                         </NavLink>
                       )}
                       <NavLink
+                        to="/account"
+                        onClick={() => setAccountMenuOpen(false)}
+                        className={({ isActive }) =>
+                          [
+                            "inline-flex items-center justify-center gap-1.5 rounded-2xl px-4 py-3 text-sm font-semibold transition shadow-sm",
+                            isActive ? readingListActive : readingListIdle,
+                          ].join(" ")
+                        }
+                      >
+                        Profile
+                      </NavLink>
+                      <NavLink
                         to="/my-lists"
                         onClick={() => setAccountMenuOpen(false)}
                         className={({ isActive }) =>
@@ -657,6 +669,18 @@ const Header = () => {
                         My Submissions
                       </NavLink>
                     )}
+                    <NavLink
+                      to="/account"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={({ isActive }) =>
+                        [
+                          "inline-flex w-full items-center justify-center gap-1.5 rounded-2xl px-4 py-3 text-sm font-semibold transition shadow-sm",
+                          isActive ? readingListActive : readingListIdle,
+                        ].join(" ")
+                      }
+                    >
+                      Profile
+                    </NavLink>
                     <NavLink
                       to="/my-lists"
                       onClick={() => setMobileMenuOpen(false)}
