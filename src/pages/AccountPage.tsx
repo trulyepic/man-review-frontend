@@ -12,6 +12,7 @@ import { NoIndexSeo } from "../components/Seo";
 import { useUser } from "../login/useUser";
 import type { AvatarPreset, User } from "../types/types";
 import { AVATAR_PRESETS, normalizeAvatarPreset } from "../util/avatar";
+import { usernameClassName } from "../util/userDisplay";
 
 type CropDraft = {
   file: File;
@@ -28,20 +29,6 @@ function saveUser(nextUser: User, setUser: (user: User) => void) {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
-}
-
-function profileNameClassName(role?: string | null) {
-  const normalized = String(role || "").toUpperCase();
-
-  if (normalized === "ADMIN") {
-    return "bg-gradient-to-r from-amber-300 via-orange-300 to-rose-300 bg-clip-text text-transparent";
-  }
-
-  if (normalized === "CONTRIBUTOR") {
-    return "bg-gradient-to-r from-blue-300 via-sky-300 to-cyan-200 bg-clip-text text-transparent";
-  }
-
-  return "text-slate-950 dark:text-white";
 }
 
 async function imageFromFile(file: File): Promise<CropDraft> {
@@ -275,7 +262,7 @@ export default function AccountPage() {
               className="h-28 w-28 text-4xl"
             />
             <h2
-              className={`mt-5 text-2xl font-black ${profileNameClassName(
+              className={`mt-5 text-2xl font-black ${usernameClassName(
                 user.role
               )}`}
             >

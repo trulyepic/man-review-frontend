@@ -22,6 +22,7 @@ import { ConfirmModal } from "../components/ConfirmModal";
 import { useNotice } from "../hooks/useNotice";
 import { NoticeModal } from "../components/NoticeModal";
 import UserAvatar from "../components/UserAvatar";
+import { inlineUsernameClassName } from "../util/userDisplay";
 
 const MAX_THREADS_PER_USER = 10;
 const MAX_SERIES_REFS = 10;
@@ -427,7 +428,11 @@ export default function ForumPage() {
                           size="sm"
                           className="h-6 w-6 text-[10px]"
                         />
-                        <span className="font-medium text-slate-700 dark:text-stone-200">
+                        <span
+                          className={`font-medium ${inlineUsernameClassName(
+                            t.author_role
+                          )}`}
+                        >
                           {t.author_username}
                         </span>
                       </span>

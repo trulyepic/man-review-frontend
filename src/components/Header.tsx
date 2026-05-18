@@ -17,6 +17,7 @@ import { useTheme } from "./useTheme";
 import { canSubmitSeriesUser, isAdminUser } from "../util/roleUtils";
 import { searchSeries, type RankedSeries } from "../api/manApi";
 import UserAvatar from "./UserAvatar";
+import { inlineUsernameClassName } from "../util/userDisplay";
 
 const DEFAULT_LABEL = "ALL";
 
@@ -356,7 +357,9 @@ const Header = () => {
                     avatarPreset={user.avatar_preset}
                     size="sm"
                   />
-                  {user.username}
+                  <span className={inlineUsernameClassName(user.role)}>
+                    {user.username}
+                  </span>
                   <ChevronDownIcon className="h-4 w-4" />
                 </button>
 
@@ -642,7 +645,9 @@ const Header = () => {
                         avatarPreset={user.avatar_preset}
                         size="sm"
                       />
-                      <span>{user.username}</span>
+                      <span className={inlineUsernameClassName(user.role)}>
+                        {user.username}
+                      </span>
                     </div>
                   </div>
                   <ChevronDownIcon

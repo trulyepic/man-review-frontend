@@ -34,6 +34,7 @@ import { useNotice } from "../hooks/useNotice";
 import { NoticeModal } from "../components/NoticeModal";
 import { HeartButton } from "../components/HeartButton";
 import UserAvatar from "../components/UserAvatar";
+import { inlineUsernameClassName } from "../util/userDisplay";
 import {
   DEFAULT_SOCIAL_IMAGE,
   SITE_NAME,
@@ -885,7 +886,7 @@ export default function ThreadPage() {
                     <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 font-semibold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
                       Original post
                     </span>
-                    <span className="inline-flex items-center gap-1.5 font-medium text-slate-700 dark:text-slate-200">
+                    <span className="inline-flex items-center gap-1.5 font-medium">
                       <UserAvatar
                         username={posts[0].author_username || "Anonymous"}
                         avatarUrl={posts[0].author_avatar_url}
@@ -893,7 +894,9 @@ export default function ThreadPage() {
                         size="sm"
                         className="h-6 w-6 text-[10px]"
                       />
-                      {posts[0].author_username || "Anonymous"}
+                      <span className={inlineUsernameClassName(posts[0].author_role)}>
+                        {posts[0].author_username || "Anonymous"}
+                      </span>
                     </span>
                     <span>{new Date(posts[0].created_at).toLocaleString()}</span>
                   </div>
@@ -1307,7 +1310,7 @@ function ReplyBranch({
             >
               {labelText}
             </span>
-            <span className="inline-flex items-center gap-1.5 font-medium text-slate-700 dark:text-slate-200">
+            <span className="inline-flex items-center gap-1.5 font-medium">
               <UserAvatar
                 username={post.author_username || "Anonymous"}
                 avatarUrl={post.author_avatar_url}
@@ -1315,7 +1318,9 @@ function ReplyBranch({
                 size="sm"
                 className="h-6 w-6 text-[10px]"
               />
-              {post.author_username || "Anonymous"}
+              <span className={inlineUsernameClassName(post.author_role)}>
+                {post.author_username || "Anonymous"}
+              </span>
             </span>
             <span>{new Date(post.created_at).toLocaleString()}</span>
           </div>
