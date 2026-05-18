@@ -416,7 +416,7 @@
 // };
 
 // src/api/manApi.ts
-import type { SeriesDetailData } from "../types/types";
+import type { AvatarFields, AvatarPreset, SeriesDetailData } from "../types/types";
 import { api } from "./client"; // <-- your shared Axios instance
 import { isAxiosError } from "axios";
 
@@ -453,6 +453,8 @@ export type ForumThread = {
   id: number;
   title: string;
   author_username?: string | null;
+  author_avatar_url?: string | null;
+  author_avatar_preset?: AvatarPreset | null;
   created_at: string;
   updated_at: string;
   post_count: number;
@@ -464,6 +466,8 @@ export type ForumThread = {
 export type ForumPost = {
   id: number;
   author_username?: string | null;
+  author_avatar_url?: string | null;
+  author_avatar_preset?: AvatarPreset | null;
   content_markdown: string;
   created_at: string;
   updated_at: string;
@@ -555,7 +559,7 @@ export interface ReadingList {
 
 // ---------- Auth Types ----------
 export type UserRole = "ADMIN" | "GENERAL" | "CONTRIBUTOR" | (string & {});
-export interface AuthUser {
+export interface AuthUser extends AvatarFields {
   id: number;
   username: string;
   email?: string | null;
@@ -568,6 +572,9 @@ export interface AuthResponse {
   access_token: string;
   user: AuthUser;
 }
+export type UserAvatar = Pick<AuthUser, "id" | "username" | "role"> &
+  Required<Pick<AvatarFields, "avatar_preset">> &
+  Pick<AvatarFields, "avatar_url">;
 
 export type UpdateThreadResponse = {
   thread: ForumThread;
@@ -824,6 +831,41 @@ export const resendVerificationEmail = async (payload: {
     payload
   );
   return res.data;
+};
+
+export const uploadMyAvatar = async (file: File): Promise<UserAvatar> => {
+  const form = new FormData();
+  form.append("file", file);
+
+  const res = await api.post<UserAvatar>("/auth/me/avatar", form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res.data;
+};
+
+export const selectMyAvatarPreset = async (
+  avatar_preset: AvatarPreset
+): Promise<UserAvatar> => {
+  const res = await api.patch<UserAvatar>("/auth/me/avatar/preset", {
+    avatar_preset,
+  });
+  return res.data;
+};
+
+export const resetMyAvatar = async (): Promise<UserAvatar> => {
+  const res = await api.delete<UserAvatar>("/auth/me/avatar");
+  return res.data;
+};
+
+export const mergeStoredAuthUser = (
+  fields: Partial<AvatarFields>
+): AuthUser | null => {
+  const current = getCurrentUser();
+  if (!current) return null;
+
+  const next = { ...current, ...fields };
+  localStorage.setItem("user", JSON.stringify(next));
+  return next;
 };
 
 // ---------- Series Details / Voting ----------
